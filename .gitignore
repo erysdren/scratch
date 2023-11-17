@@ -5,6 +5,9 @@
 # cmake builds
 /**/cmake-build*/
 
+# tiled
+*.tiled-session
+
 # objects and executables
 *.o
 *.obj
@@ -26,6 +29,9 @@
 # prey95
 /c/prey95/bsp2ply
 /c/prey95/wad2png
+
+# ray
+/c/ray/ray
 
 # rott_tool
 /c/rott_tool/rott_tool
