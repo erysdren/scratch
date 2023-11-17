@@ -1,0 +1,42 @@
+
+# local only files
+/**/untracked/
+
+# objects and executables
+*.o
+*.obj
+*.err
+*.com
+*.exe
+*.EXE
+*.img
+
+# cpu8086
+/c/cpu8086/cpu8086
+
+# lev_tool
+/c/lev_tool/lev_tool
+
+# ne_tool
+/c/ne_tool/ne_tool
+
+# rott_tool
+/c/rott_tool/rott_tool
+/c/rott_tool/*.rtl
+/c/rott_tool/*.rtc
+/c/rott_tool/*.wad
+
+# troika_texture_tool
+/c/troika_texture_tool/ttt
+/c/troika_texture_tool/*.tth
+/c/troika_texture_tool/*.ttz
+/c/troika_texture_tool/*.vmt
+/c/troika_texture_tool/*.vtf
+
+# unpak_hrot
+/c/unpak_hrot/unpak_hrot
+/c/unpak_hrot/*.pak
+
+# unwal
+/c/unwal/unwal
+/c/unwal/*.wal

@@ -1,0 +1,32 @@
+
+The subdirectories in this repository fall under different licenses which are
+enumerated here. Most subdirectory licenses reflect the projects that they are
+derivatives or components of.
+
++-----------------------------------------------------------------------------+
+|    3-Clause BSD                                    /licenses/LICENSE.BSD    |
++-----------------------------------------------------------------------------+
+
+/arcan/*
+
++-----------------------------------------------------------------------------+
+|    MIT                                             /licenses/LICENSE.MIT    |
++-----------------------------------------------------------------------------+
+
+/c/cpu8086/*
+/c/dos_utils/*
+/c/fixed_point_math/*
+/c/lev_tool/*
+/c/ne_tool/*
+/c/prey95/*
+/c/rott_tool/*
+/c/troika_texture_tool/*
+/c/unpak_hrot/*
+/c/unwal/*
+/c/upkg/*
+
++-----------------------------------------------------------------------------+
+|    GNU GPLv3                                      /licenses/LICENSE.GPL3    |
++-----------------------------------------------------------------------------+
+
+/c/ia16/*
