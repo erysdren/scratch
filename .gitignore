@@ -23,6 +23,10 @@
 # ne_tool
 /c/ne_tool/ne_tool
 
+# prey95
+/c/prey95/bsp2ply
+/c/prey95/wad2png
+
 # rott_tool
 /c/rott_tool/rott_tool
 /c/rott_tool/*.rtl
