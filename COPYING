@@ -24,6 +24,7 @@ derivatives or components of.
 /c/unpak_hrot/*
 /c/unwal/*
 /c/upkg/*
+/cpp/h2inc-llvm/*
 
 +-----------------------------------------------------------------------------+
 |    GNU GPLv3                                      /licenses/LICENSE.GPL3    |
