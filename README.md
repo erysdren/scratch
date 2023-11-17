@@ -6,3 +6,5 @@ are organized by programming language.
 
 The subdirectories in this repository may fall under different licenses, please
 see [COPYING](./COPYING) for details.
+
+Copyright (c) 2023 erysdren (it/she/they)
