@@ -11,11 +11,17 @@ int main(int argc, char **argv)
 	/* create struct on the stack */
 	rtl_t rtl;
 
-	/* load rtl file data into struct */
-	if (!rtl_load(argv[1], &rtl))
-		printf("Failed to load \"%s\", error: \"%s\"\n", argv[1], rtl.error);
-	else
-		printf("Loaded %d maps from \"%s\"\n", rtl.num_maps, argv[1]);
+	/* allocate a map */
+	rtl_allocate(1, false, &rtl);
+
+	/* name */
+	snprintf(rtl.maps[0].name, 22, "My Map!!");
+
+	/* regenerate CRCs */
+	rtl_generate_crc(&rtl);
+
+	/* save to disk */
+	rtl_save("test.rtl", &rtl);
 
 	/* free associated data in the struct */
 	rtl_free(&rtl);

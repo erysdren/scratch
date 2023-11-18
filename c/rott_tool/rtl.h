@@ -39,8 +39,17 @@ typedef struct rtl_t {
 	const char *error; /* pointer to string if rtl_load() returns false */
 } rtl_t;
 
+/* allocate RTL/RTC in memory */
+bool rtl_allocate(int num_maps, bool commbat, rtl_t *rtl);
+
 /* load RTL/RTC file from filename */
 bool rtl_load(const char *filename, rtl_t *rtl);
+
+/* save RTL structure to disk */
+bool rtl_save(const char *filename, rtl_t *rtl);
+
+/* generate crc for all maps */
+bool rtl_generate_crc(rtl_t *rtl);
 
 /* free RTL/RTC file data */
 void rtl_free(rtl_t *rtl);
