@@ -79,6 +79,54 @@ static int rtl_get_num_maps(FILE *file)
 	return i;
 }
 
+/* compress and write plane with run-length encoding */
+static uint32_t rtl_write_plane(FILE *file, uint16_t *plane, uint16_t tag)
+{
+	uint32_t startpos = ftell(file);
+	int read = 0;
+	uint16_t count;
+
+	/* compress and write source data */
+	while (read < RTL_PLANE_SIZE)
+	{
+		count = 1;
+
+		/* read word from source */
+		uint16_t value = *plane++;
+		read++;
+
+		/* count repetitions */
+		while (*plane == value && read < RTL_PLANE_SIZE)
+		{
+			count++; /* repetitions */
+			plane++; /* source data */
+			read++; /* total number of bytes read */
+		}
+
+		/* if more than 3 repetitions, or the value is the same as the tag */
+		if (count > 3 || value == tag)
+		{
+			fwrite(&tag, 2, 1, file); /* tag */
+			fwrite(&count, 2, 1, file); /* repetitions */
+			fwrite(&value, 2, 1, file); /* value */
+
+			printf("compressed %u words with value 0x%04x\n", count, value);
+		}
+		else
+		{
+			/* otherwise write out the read values */
+			for (int i = 0; i < count; i++)
+			{
+				fwrite(&value, 2, 1, file);
+			}
+
+			printf("wrote %u words\n", count);
+		}
+	}
+
+	return ftell(file) - startpos;
+}
+
 /* read plane from map */
 static void rtl_read_plane(FILE *file, int ofs, int len, uint16_t tag, uint16_t *buffer)
 {
@@ -163,7 +211,7 @@ static void rtl_read_map(FILE *file, int i, rtl_map_t *map)
 /* crc generator */
 #define FNV_OFFSET 2166136261UL
 #define FNV_PRIME 16777619UL
-static uint32_t hash(void *buf, int len)
+static uint32_t rtl_hash(void *buf, int len)
 {
 	uint32_t hash = FNV_OFFSET;
 
@@ -181,9 +229,9 @@ bool rtl_generate_crc(rtl_t *rtl)
 {
 	for (int i = 0; i < rtl->num_maps; i++)
 	{
-		rtl->maps[i].crc = hash(rtl->maps[i].walls, RTL_PLANE_SIZE);
-		rtl->maps[i].crc ^= hash(rtl->maps[i].sprites, RTL_PLANE_SIZE);
-		rtl->maps[i].crc ^= hash(rtl->maps[i].infos, RTL_PLANE_SIZE);
+		rtl->maps[i].crc = rtl_hash(rtl->maps[i].walls, RTL_PLANE_SIZE);
+		rtl->maps[i].crc ^= rtl_hash(rtl->maps[i].sprites, RTL_PLANE_SIZE);
+		rtl->maps[i].crc ^= rtl_hash(rtl->maps[i].infos, RTL_PLANE_SIZE);
 	}
 
 	return true;
@@ -400,7 +448,16 @@ bool rtl_save(const char *filename, rtl_t *rtl)
 		fwrite(whatever, 1, 60, file);
 	}
 
-	/* todo: write compressed level data */
+	/* write plane data */
+	for (int i = 0; i < rtl->num_maps; i++)
+	{
+		uint32_t len_walls = rtl_write_plane(file, rtl->maps[i].walls, rtl_tag);
+		printf("walls: %u\n", len_walls);
+		uint32_t len_sprites = rtl_write_plane(file, rtl->maps[i].sprites, rtl_tag);
+		printf("sprites: %u\n", len_sprites);
+		uint32_t len_infos = rtl_write_plane(file, rtl->maps[i].infos, rtl_tag);
+		printf("infos: %u\n", len_infos);
+	}
 
 	/* return success */
 	return true;

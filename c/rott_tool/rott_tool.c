@@ -11,15 +11,6 @@ int main(int argc, char **argv)
 	/* create struct on the stack */
 	rtl_t rtl;
 
-	/* allocate a map */
-	rtl_allocate(1, false, &rtl);
-
-	/* name */
-	snprintf(rtl.maps[0].name, 22, "My Map!!");
-
-	/* regenerate CRCs */
-	rtl_generate_crc(&rtl);
-
 	/* save to disk */
 	rtl_save("test.rtl", &rtl);
 
