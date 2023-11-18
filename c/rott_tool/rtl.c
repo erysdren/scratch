@@ -110,7 +110,7 @@ static uint32_t rtl_write_plane(FILE *file, uint16_t *plane, uint16_t tag)
 			fwrite(&count, 2, 1, file); /* repetitions */
 			fwrite(&value, 2, 1, file); /* value */
 
-			printf("compressed %u words with value 0x%04x\n", count, value);
+			printf("wrote %u compressed words with value 0x%04x\n", count, value);
 		}
 		else
 		{
