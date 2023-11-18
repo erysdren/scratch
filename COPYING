@@ -27,6 +27,7 @@ derivatives or components of.
 /c/unwal/*
 /c/upkg/*
 /cpp/h2inc-llvm/*
+/python/tmj2map/*
 
 +-----------------------------------------------------------------------------+
 |    GNU GPLv3                                      /licenses/LICENSE.GPL3    |

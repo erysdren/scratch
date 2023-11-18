@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# imports
+import json
+import sys
+
+# constants
+CUBE_SIZE = [64, 64, 64]
+
+# help text
+def print_help():
+	print("Usage: tmj2map [level.tmj] [level.map]")
+	exit(0)
+
+# write map header
+def write_map_header(file):
+	file.write("// Game: Quake\n")
+	file.write("// Format: Valve\n")
+	# file.write("// entity 0\n")
+	file.write("{\n")
+	file.write("\"mapversion\" \"220\"\n")
+	file.write("\"classname\" \"worldspawn\"\n")
+
+# write map footer
+def write_map_footer(file):
+	file.write("}\n")
+
+# write brush to map file
+def write_map_brush(file, origin, size, texture):
+
+	# start brush
+	# file.write("// brush {0}\n".format(i))
+	file.write("{\n")
+
+	# write faces
+	file.write("( {1} {5} {6} ) ( {1} {2} {6} ) ( {1} {2} {3} ) {0} [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
+	file.write("( {1} {2} {6} ) ( {4} {2} {6} ) ( {4} {2} {3} ) {0} [ 1 0 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
+	file.write("( {4} {2} {3} ) ( {4} {5} {3} ) ( {1} {5} {3} ) {0} [ 1 0 0 0 ] [ 0 -1 0 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
+	file.write("( {1} {5} {6} ) ( {4} {5} {6} ) ( {4} {2} {6} ) {0} [ 1 0 0 0 ] [ 0 -1 0 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
+	file.write("( {4} {5} {3} ) ( {4} {5} {6} ) ( {1} {5} {6} ) {0} [ 1 0 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
+	file.write("( {4} {2} {6} ) ( {4} {5} {6} ) ( {4} {5} {3} ) {0} [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
+
+	# end brush
+	file.write("}\n")
+
+# write ceiling to map file
+def write_ceiling(file, size, height, texture):
+	size = [size[0] * CUBE_SIZE[0], size[1] * CUBE_SIZE[1], CUBE_SIZE[2]]
+	origin = [0, 0, CUBE_SIZE[2] * height]
+	write_map_brush(file, origin, size, texture)
+
+# write floor to map file
+def write_floor(file, size, texture):
+	size = [size[0] * CUBE_SIZE[0], size[1] * CUBE_SIZE[1], CUBE_SIZE[2]]
+	origin = [0, 0, -CUBE_SIZE[2]]
+	write_map_brush(file, origin, size, texture)
+
+# write wall to map file at specified grid position
+def write_wall(file, origin, texture, height):
+	origin = [origin[0] * CUBE_SIZE[0], origin[1] * CUBE_SIZE[1], 0]
+	size = [CUBE_SIZE[0], CUBE_SIZE[1], CUBE_SIZE[2] * height]
+	write_map_brush(file, origin, size, texture)
+
+# main
+if __name__ == "__main__":
+
+	# sanity check
+	if len(sys.argv) < 3:
+		print("Error: Must provide input and output files!")
+		print_help()
+
+	# input and output filenames
+	input_filename = sys.argv[1]
+	output_filename = sys.argv[2]
+
+	# open for reading
+	input_file = open(input_filename, "r")
+	input_json = json.load(input_file)
+
+	print(f"Successfully opened \"{input_filename}\" for reading")
+
+	# open for writing
+	output_file = open(output_filename, "w")
+
+	print(f"Successfully opened \"{output_filename}\" for writing")
+
+	# write file header
+	write_map_header(output_file)
+
+	# write floor and ceiling
+	write_floor(output_file, [input_json["width"], input_json["height"]], "floor")
+	write_ceiling(output_file, [input_json["width"], input_json["height"]], 4, "ceiling")
+
+	# write walls
+	for layer in input_json["layers"]:
+
+		# walls wall layers
+		if layer["name"] == "walls":
+
+			# get width and height
+			height = layer["height"]
+			width = layer["width"]
+
+			# iterate over layer data
+			for y in range(height):
+				for x in range(width):
+					value = layer["data"][y * width + x]
+					if value > 0:
+						write_wall(output_file, [x, y], "walls/" + str(value), 4)
+
+	# write file footer
+	write_map_footer(output_file)
+
+	# clean up file handles
+	input_file.close()
+	output_file.close()
