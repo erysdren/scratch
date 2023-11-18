@@ -109,8 +109,6 @@ static uint32_t rtl_write_plane(FILE *file, uint16_t *plane, uint16_t tag)
 			fwrite(&tag, 2, 1, file); /* tag */
 			fwrite(&count, 2, 1, file); /* repetitions */
 			fwrite(&value, 2, 1, file); /* value */
-
-			printf("wrote %u compressed words with value 0x%04x\n", count, value);
 		}
 		else
 		{
@@ -119,8 +117,6 @@ static uint32_t rtl_write_plane(FILE *file, uint16_t *plane, uint16_t tag)
 			{
 				fwrite(&value, 2, 1, file);
 			}
-
-			printf("wrote %u words\n", count);
 		}
 	}
 
@@ -448,15 +444,37 @@ bool rtl_save(const char *filename, rtl_t *rtl)
 		fwrite(whatever, 1, 60, file);
 	}
 
+	/* allocate some arrays to store values */
+	uint32_t ofs_walls_array[rtl->num_maps];
+	uint32_t ofs_sprites_array[rtl->num_maps];
+	uint32_t ofs_infos_array[rtl->num_maps];
+	uint32_t len_walls_array[rtl->num_maps];
+	uint32_t len_sprites_array[rtl->num_maps];
+	uint32_t len_infos_array[rtl->num_maps];
+
 	/* write plane data */
 	for (int i = 0; i < rtl->num_maps; i++)
 	{
-		uint32_t len_walls = rtl_write_plane(file, rtl->maps[i].walls, rtl_tag);
-		printf("walls: %u\n", len_walls);
-		uint32_t len_sprites = rtl_write_plane(file, rtl->maps[i].sprites, rtl_tag);
-		printf("sprites: %u\n", len_sprites);
-		uint32_t len_infos = rtl_write_plane(file, rtl->maps[i].infos, rtl_tag);
-		printf("infos: %u\n", len_infos);
+		ofs_walls_array[i] = ftell(file);
+		len_walls_array[i] = rtl_write_plane(file, rtl->maps[i].walls, rtl_tag);
+
+		ofs_sprites_array[i] = ftell(file);
+		len_sprites_array[i] = rtl_write_plane(file, rtl->maps[i].sprites, rtl_tag);
+
+		ofs_infos_array[i] = ftell(file);
+		len_infos_array[i] = rtl_write_plane(file, rtl->maps[i].infos, rtl_tag);
+	}
+
+	/* now write the offsets and lengths */
+	for (int i = 0; i < rtl->num_maps; i++)
+	{
+		fseek(file, (i * 64) + 8 + 16, SEEK_SET);
+		fwrite(&ofs_walls_array[i], 4, 1, file);
+		fwrite(&ofs_sprites_array[i], 4, 1, file);
+		fwrite(&ofs_infos_array[i], 4, 1, file);
+		fwrite(&len_walls_array[i], 4, 1, file);
+		fwrite(&len_sprites_array[i], 4, 1, file);
+		fwrite(&len_infos_array[i], 4, 1, file);
 	}
 
 	/* return success */
