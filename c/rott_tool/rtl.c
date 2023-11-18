@@ -437,11 +437,9 @@ bool rtl_save(const char *filename, rtl_t *rtl)
 	/* write the remaining blank headers */
 	for (int i = 0; i < RTL_MAX_MAPS - rtl->num_maps; i++)
 	{
-		uint32_t used = 0;
-		char whatever[60] = {0};
+		char whatever[64] = {0};
 
-		fwrite(&used, 4, 1, file);
-		fwrite(whatever, 1, 60, file);
+		fwrite(whatever, 1, 64, file);
 	}
 
 	/* allocate some arrays to store values */
