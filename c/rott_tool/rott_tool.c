@@ -10,25 +10,26 @@ int main(int argc, char **argv)
 {
 	/* create struct on the stack */
 	rtl_t rtl;
+	int temp;
 
-	/* allocate level in memory */
-	if (!rtl_allocate(1, false, &rtl))
+	/* load map */
+	if (!rtl_load("darkwar.rtl", &rtl))
 		return 1;
 
-	/* make a "map" */
-	rtl.maps[0].flags = 0x1;
-	snprintf(rtl.maps[0].name, 22, "My Map!!");
-	rtl_generate_crc(&rtl);
+	/* hack hack hack */
+	temp = rtl.num_maps;
+	rtl.num_maps = 1;
 
-	/* save to disk */
-	if (!rtl_save("test.rtl", &rtl))
+	/* re-save one map */
+	if (!rtl_save("test01.rtl", &rtl))
 		return 2;
 
 	/* free allocated data */
+	rtl.num_maps = temp;
 	rtl_free(&rtl);
 
-	/* reload map */
-	if (!rtl_load("test.rtl", &rtl))
+	/* test */
+	if (!rtl_load("test01.rtl", &rtl))
 		return 3;
 
 	/* free allocated data */

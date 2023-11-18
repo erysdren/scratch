@@ -91,16 +91,16 @@ static uint32_t rtl_write_plane(FILE *file, uint16_t *plane, uint16_t tag)
 	{
 		count = 1;
 
-		/* read word from source */
+		/* read 16-bit word from source */
 		uint16_t value = *plane++;
-		read++;
+		read += 2;
 
 		/* count repetitions */
 		while (*plane == value && read < RTL_PLANE_SIZE)
 		{
 			count++; /* repetitions */
 			plane++; /* source data */
-			read++; /* total number of bytes read */
+			read += 2; /* total number of bytes read */
 		}
 
 		/* if more than 3 repetitions, or the value is the same as the tag */
