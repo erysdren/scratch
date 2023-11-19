@@ -118,7 +118,6 @@ if __name__ == "__main__":
 					if value > 0:
 						write_wall(output_file, [x, y], "walls/" + str(value), 4)
 
-
 	# write file footer
 	write_map_footer(output_file)
 
