@@ -1,0 +1,24 @@
+{ "columns":0,
+ "grid":
+    {
+     "height":1,
+     "orientation":"orthogonal",
+     "width":1
+    },
+ "margin":0,
+ "name":"ray",
+ "spacing":0,
+ "tilecount":24,
+ "tiledversion":"1.10.2",
+ "tileheight":64,
+ "tiles":[
+        {
+         "id":1,
+         "image":"entities\/player.png",
+         "imageheight":64,
+         "imagewidth":64
+        }],
+ "tilewidth":64,
+ "type":"tileset",
+ "version":"1.10"
+}
