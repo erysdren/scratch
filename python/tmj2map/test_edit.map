@@ -2688,3 +2688,15 @@
 ( 2048 0 320 ) ( 2048 2048 320 ) ( 2048 2048 256 ) 64_grey_3 [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1
 }
 }
+// entity 1
+{
+"classname" "info_player_start"
+"origin" "960 768 32"
+"angle" "90"
+}
+// entity 2
+{
+"classname" "info_player_start"
+"origin" "320 960 32"
+"angle" "90"
+}
