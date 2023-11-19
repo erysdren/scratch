@@ -62,6 +62,15 @@ def write_wall(file, origin, texture, height):
 	size = [CUBE_SIZE[0], CUBE_SIZE[1], CUBE_SIZE[2] * height]
 	write_map_brush(file, origin, size, texture)
 
+# write entity to map file
+def write_entity(file, origin, name):
+	origin[0] = origin[0] * CUBE_SIZE[0] + (CUBE_SIZE[0] / 2)
+	origin[1] = origin[1] * CUBE_SIZE[1] + (CUBE_SIZE[1] / 2)
+	file.write("{\n")
+	file.write("\"origin\" \"{0} {1} {2}\"\n".format(origin[0], origin[1], CUBE_SIZE[2] / 2))
+	file.write("\"classname\" \"{0}\"\n".format(name))
+	file.write("}\n")
+
 # main
 if __name__ == "__main__":
 
@@ -95,7 +104,7 @@ if __name__ == "__main__":
 	# write walls
 	for layer in input_json["layers"]:
 
-		# walls wall layers
+		# walls layer
 		if layer["name"] == "walls":
 
 			# get width and height
@@ -109,8 +118,25 @@ if __name__ == "__main__":
 					if value > 0:
 						write_wall(output_file, [x, y], "walls/" + str(value), 4)
 
+
 	# write file footer
 	write_map_footer(output_file)
+
+	# write entities
+	for layer in input_json["layers"]:
+		if layer["name"] == "entities":
+
+			# get width and height
+			height = layer["height"]
+			width = layer["width"]
+
+			# iterate over layer data
+			for y in range(height):
+				for x in range(width):
+					value = layer["data"][y * width + x]
+					if value > 0:
+						write_entity(output_file, [x, y], "ent_" + str(value))
+
 
 	# clean up file handles
 	input_file.close()
