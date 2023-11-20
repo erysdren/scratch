@@ -6,7 +6,7 @@
      "width":1
     },
  "margin":0,
- "name":"ray",
+ "name":"walls",
  "spacing":0,
  "tilecount":24,
  "tiledversion":"1.10.2",

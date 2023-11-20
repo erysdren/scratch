@@ -10,5 +10,24 @@
     "properties": [
     ],
     "propertyTypes": [
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 1,
+            "members": [
+                {
+                    "name": "ceiling_height",
+                    "type": "int",
+                    "value": 1
+                }
+            ],
+            "name": "LEVEL",
+            "type": "class",
+            "useAs": [
+                "property",
+                "map",
+                "project"
+            ]
+        }
     ]
 }

@@ -6,9 +6,9 @@
      "width":1
     },
  "margin":0,
- "name":"ray",
+ "name":"entities",
  "spacing":0,
- "tilecount":24,
+ "tilecount":1,
  "tiledversion":"1.10.2",
  "tileheight":64,
  "tiles":[
