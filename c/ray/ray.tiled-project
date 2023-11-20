@@ -13,6 +13,20 @@
         {
             "color": "#ffa0a0a4",
             "drawFill": true,
+            "id": 5,
+            "members": [
+            ],
+            "name": "Floor",
+            "type": "class",
+            "useAs": [
+                "property",
+                "tile",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
             "id": 1,
             "members": [
                 {
@@ -21,11 +35,39 @@
                     "value": 1
                 }
             ],
-            "name": "LEVEL",
+            "name": "Level",
             "type": "class",
             "useAs": [
                 "property",
                 "map",
+                "project"
+            ]
+        },
+        {
+            "color": "#ff80ff80",
+            "drawFill": true,
+            "id": 3,
+            "members": [
+            ],
+            "name": "Player Start",
+            "type": "class",
+            "useAs": [
+                "property",
+                "object",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 4,
+            "members": [
+            ],
+            "name": "Wall",
+            "type": "class",
+            "useAs": [
+                "property",
+                "tile",
                 "project"
             ]
         }
