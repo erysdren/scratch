@@ -17,6 +17,9 @@
 *.EXE
 *.img
 
+# brender_tile
+/c/brender_tile/brender_tile
+
 # cpu8086
 /c/cpu8086/cpu8086
 

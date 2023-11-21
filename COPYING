@@ -13,6 +13,7 @@ derivatives or components of.
 |    MIT                                             /licenses/LICENSE.MIT    |
 +-----------------------------------------------------------------------------+
 
+/c/brender_tile/*
 /c/cpu8086/*
 /c/dos_utils/*
 /c/fixed_point_math/*
