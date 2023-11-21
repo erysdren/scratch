@@ -62,7 +62,10 @@ br_error prog_init(br_actor *world, br_actor *camera, br_pixelmap *screen, br_pi
     /* move camera */
     BrMatrix34Translate(&prog.camera->t.t.mat, BR_SCALAR(0), BR_SCALAR(0), BR_SCALAR(2));
 
-    /* create level */
+    /* start counting time */
+    prog.ticks_then = SDL_GetTicks64();
+
+    /* create level scene */
     prog.level = BrActorAdd(prog.world, BrActorAllocate(BR_ACTOR_NONE, NULL));
     for (int y = 0; y < MAP_HEIGHT; y++)
     {
@@ -79,11 +82,6 @@ br_error prog_init(br_actor *world, br_actor *camera, br_pixelmap *screen, br_pi
            }
         }
     }
-
-    /* start counting time */
-    prog.ticks_then = SDL_GetTicks64();
-
-    /* create map scene */
 
     return BRE_OK;
 }
