@@ -25,9 +25,12 @@ map_t *map_allocate(int width, int height, int ceiling_height)
 /* free */
 void map_free(map_t *map)
 {
-	free(map->walls);
-	free(map->entities);
-	free(map);
+	if (map)
+	{
+		if (map->walls) free(map->walls);
+		if (map->entities) free(map->entities);
+		free(map);
+	}
 }
 
 /* load from tmj file */

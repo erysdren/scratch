@@ -1,4 +1,4 @@
-{ "class":"LEVEL",
+{ "class":"worldspawn",
  "compressionlevel":-1,
  "height":128,
  "infinite":false,
@@ -153,7 +153,7 @@
                  "name":"",
                  "point":true,
                  "rotation":0,
-                 "type":"Player Start",
+                 "type":"info_player_start",
                  "visible":true,
                  "width":0,
                  "x":955.143939393939,
@@ -168,6 +168,12 @@
  "nextlayerid":9,
  "nextobjectid":7,
  "orientation":"orthogonal",
+ "properties":[
+        {
+         "name":"ceiling_height",
+         "type":"int",
+         "value":4
+        }],
  "renderorder":"right-down",
  "tiledversion":"1.10.2",
  "tileheight":64,

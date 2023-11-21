@@ -7,69 +7,78 @@ import sys
 
 # constants
 CUBE_SIZE = [64, 64, 64]
+MAP_GAME = "Quake"
+MAP_FORMAT = "Valve"
 
-# help text
+# brush class
+class MapBrush:
+
+	def __init__(self, origin, size, texture):
+		self.origin = origin
+		self.size = size
+		self.texture = texture
+
+	def write(self, file):
+
+		# start brush
+		file.write("{\n")
+
+		# write faces
+		file.write("( {1} {5} {6} ) ( {1} {2} {6} ) ( {1} {2} {3} ) {0} [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(self.texture, self.origin[0], self.origin[1], self.origin[2], self.origin[0] + self.size[0], self.origin[1] + self.size[1], self.origin[2] + self.size[2]))
+		file.write("( {1} {2} {6} ) ( {4} {2} {6} ) ( {4} {2} {3} ) {0} [ 1 0 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(self.texture, self.origin[0], self.origin[1], self.origin[2], self.origin[0] + self.size[0], self.origin[1] + self.size[1], self.origin[2] + self.size[2]))
+		file.write("( {4} {2} {3} ) ( {4} {5} {3} ) ( {1} {5} {3} ) {0} [ 1 0 0 0 ] [ 0 -1 0 0 ] 0 1 1\n".format(self.texture, self.origin[0], self.origin[1], self.origin[2], self.origin[0] + self.size[0], self.origin[1] + self.size[1], self.origin[2] + self.size[2]))
+		file.write("( {1} {5} {6} ) ( {4} {5} {6} ) ( {4} {2} {6} ) {0} [ 1 0 0 0 ] [ 0 -1 0 0 ] 0 1 1\n".format(self.texture, self.origin[0], self.origin[1], self.origin[2], self.origin[0] + self.size[0], self.origin[1] + self.size[1], self.origin[2] + self.size[2]))
+		file.write("( {4} {5} {3} ) ( {4} {5} {6} ) ( {1} {5} {6} ) {0} [ 1 0 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(self.texture, self.origin[0], self.origin[1], self.origin[2], self.origin[0] + self.size[0], self.origin[1] + self.size[1], self.origin[2] + self.size[2]))
+		file.write("( {4} {2} {6} ) ( {4} {5} {6} ) ( {4} {5} {3} ) {0} [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(self.texture, self.origin[0], self.origin[1], self.origin[2], self.origin[0] + self.size[0], self.origin[1] + self.size[1], self.origin[2] + self.size[2]))
+
+		# end brush
+		file.write("}\n")
+
+# entity class
+class MapEntity:
+
+	def __init__(self):
+		self.brushes = []
+		self.keyvalues = []
+
+	def write(self, file):
+
+		# start entity
+		file.write("{\n")
+
+		# write keyvalues
+		for keyvalue in self.keyvalues:
+			file.write("\"{0}\" \"{1}\"\n".format(keyvalue[0], keyvalue[1]))
+
+		# write brushes
+		for brush in self.brushes:
+			brush.write(file)
+
+		# end entity
+		file.write("}\n")
+
+# print help text
 def print_help():
 	print("Usage: tmj2map [level.tmj] [level.map]")
 	exit(0)
 
-# write map header
-def write_map_header(file):
-	file.write("// Game: Quake\n")
-	file.write("// Format: Valve\n")
-	# file.write("// entity 0\n")
-	file.write("{\n")
-	file.write("\"mapversion\" \"220\"\n")
-	file.write("\"classname\" \"worldspawn\"\n")
-
-# write map footer
-def write_map_footer(file):
-	file.write("}\n")
-
-# write brush to map file
-def write_map_brush(file, origin, size, texture):
-
-	# start brush
-	# file.write("// brush {0}\n".format(i))
-	file.write("{\n")
-
-	# write faces
-	file.write("( {1} {5} {6} ) ( {1} {2} {6} ) ( {1} {2} {3} ) {0} [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
-	file.write("( {1} {2} {6} ) ( {4} {2} {6} ) ( {4} {2} {3} ) {0} [ 1 0 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
-	file.write("( {4} {2} {3} ) ( {4} {5} {3} ) ( {1} {5} {3} ) {0} [ 1 0 0 0 ] [ 0 -1 0 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
-	file.write("( {1} {5} {6} ) ( {4} {5} {6} ) ( {4} {2} {6} ) {0} [ 1 0 0 0 ] [ 0 -1 0 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
-	file.write("( {4} {5} {3} ) ( {4} {5} {6} ) ( {1} {5} {6} ) {0} [ 1 0 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
-	file.write("( {4} {2} {6} ) ( {4} {5} {6} ) ( {4} {5} {3} ) {0} [ 0 1 0 0 ] [ 0 0 -1 0 ] 0 1 1\n".format(texture, origin[0], origin[1], origin[2], origin[0] + size[0], origin[1] + size[1], origin[2] + size[2]))
-
-	# end brush
-	file.write("}\n")
-
-# write ceiling to map file
-def write_ceiling(file, size, height, texture):
+# make ceiling-sized brush
+def make_ceiling(size, height, texture):
 	size = [size[0] * CUBE_SIZE[0], size[1] * CUBE_SIZE[1], CUBE_SIZE[2]]
 	origin = [0, 0, CUBE_SIZE[2] * height]
-	write_map_brush(file, origin, size, texture)
+	return MapBrush(origin, size, texture)
 
-# write floor to map file
-def write_floor(file, size, texture):
+# make floor-sized brush
+def make_floor(size, texture):
 	size = [size[0] * CUBE_SIZE[0], size[1] * CUBE_SIZE[1], CUBE_SIZE[2]]
 	origin = [0, 0, -CUBE_SIZE[2]]
-	write_map_brush(file, origin, size, texture)
+	return MapBrush(origin, size, texture)
 
-# write wall to map file at specified grid position
-def write_wall(file, origin, texture, height):
+# make wall brush
+def make_wall(origin, texture, height):
 	origin = [origin[0] * CUBE_SIZE[0], origin[1] * CUBE_SIZE[1], 0]
 	size = [CUBE_SIZE[0], CUBE_SIZE[1], CUBE_SIZE[2] * height]
-	write_map_brush(file, origin, size, texture)
-
-# write entity to map file
-def write_entity(file, origin, name):
-	origin[0] = origin[0] * CUBE_SIZE[0] + (CUBE_SIZE[0] / 2)
-	origin[1] = origin[1] * CUBE_SIZE[1] + (CUBE_SIZE[1] / 2)
-	file.write("{\n")
-	file.write("\"origin\" \"{0} {1} {2}\"\n".format(origin[0], origin[1], CUBE_SIZE[2] / 2))
-	file.write("\"classname\" \"{0}\"\n".format(name))
-	file.write("}\n")
+	return MapBrush(origin, size, texture)
 
 # main
 if __name__ == "__main__":
@@ -87,55 +96,33 @@ if __name__ == "__main__":
 	input_file = open(input_filename, "r")
 	input_json = json.load(input_file)
 
-	print(f"Successfully opened \"{input_filename}\" for reading")
+	print("Successfully opened \"{0}\" for reading".format(input_filename))
 
 	# open for writing
 	output_file = open(output_filename, "w")
 
-	print(f"Successfully opened \"{output_filename}\" for writing")
+	print("Successfully opened \"{0}\" for writing".format(output_filename))
 
-	# write file header
-	write_map_header(output_file)
+	# write map header
+	output_file.write("// Game: {0}\n".format(MAP_GAME))
+	output_file.write("// Format: {0}\n".format(MAP_FORMAT))
 
-	# write floor and ceiling
-	write_floor(output_file, [input_json["width"], input_json["height"]], "floor")
-	write_ceiling(output_file, [input_json["width"], input_json["height"]], 4, "ceiling")
+	# create worldspawn
+	worldspawn = MapEntity()
 
-	# write walls
-	for layer in input_json["layers"]:
+	# add worldspawn keyvalues
+	worldspawn.keyvalues.append(["classname", "worldspawn"])
+	worldspawn.keyvalues.append(["mapversion", "220"])
 
-		# walls layer
-		if layer["name"] == "walls":
+	map_width = input_json["width"]
+	map_height = input_json["height"]
 
-			# get width and height
-			height = layer["height"]
-			width = layer["width"]
+	# add floor and ceiling
+	worldspawn.brushes.append(make_floor([map_width, map_height], "floor"))
+	worldspawn.brushes.append(make_ceiling([map_width, map_height], 4, "ceiling"))
 
-			# iterate over layer data
-			for y in range(height):
-				for x in range(width):
-					value = layer["data"][y * width + x]
-					if value > 0:
-						write_wall(output_file, [x, y], "walls/" + str(value), 4)
-
-	# write file footer
-	write_map_footer(output_file)
-
-	# write entities
-	for layer in input_json["layers"]:
-		if layer["name"] == "entities":
-
-			# get width and height
-			height = layer["height"]
-			width = layer["width"]
-
-			# iterate over layer data
-			for y in range(height):
-				for x in range(width):
-					value = layer["data"][y * width + x]
-					if value > 0:
-						write_entity(output_file, [x, y], "ent_" + str(value))
-
+	# write worldspawn
+	worldspawn.write(output_file)
 
 	# clean up file handles
 	input_file.close()
