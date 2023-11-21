@@ -111,10 +111,16 @@ br_error prog_render(void)
         BrMatrix34PreRotateY(&prog.camera->t.t.mat, BR_ANGLE_DEG(BR_SCALAR(-80) * BR_SCALAR(dt)));
 
     /* moving forward and back */
-    if (prog.keys[SDL_SCANCODE_UP])
+    if (prog.keys[SDL_SCANCODE_UP] || prog.keys[SDL_SCANCODE_W])
         BrMatrix34PreTranslate(&prog.camera->t.t.mat, BR_SCALAR(0), BR_SCALAR(0), BR_SCALAR(-8) * BR_SCALAR(dt));
-    if (prog.keys[SDL_SCANCODE_DOWN])
+    if (prog.keys[SDL_SCANCODE_DOWN] || prog.keys[SDL_SCANCODE_S])
         BrMatrix34PreTranslate(&prog.camera->t.t.mat, BR_SCALAR(0), BR_SCALAR(0), BR_SCALAR(8) * BR_SCALAR(dt));
+
+    /* moving left and right */
+    if (prog.keys[SDL_SCANCODE_A])
+        BrMatrix34PreTranslate(&prog.camera->t.t.mat, BR_SCALAR(-8) * BR_SCALAR(dt), BR_SCALAR(0), BR_SCALAR(0));
+    if (prog.keys[SDL_SCANCODE_D])
+        BrMatrix34PreTranslate(&prog.camera->t.t.mat, BR_SCALAR(8) * BR_SCALAR(dt), BR_SCALAR(0), BR_SCALAR(0));
 
     /* moving up and down */
     if (prog.keys[SDL_SCANCODE_PAGEUP])
