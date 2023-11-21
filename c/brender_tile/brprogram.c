@@ -48,6 +48,7 @@ static br_error BrProgramCreateScene(void)
     camdata = camera->type_data;
     camdata->field_of_view = BR_ANGLE_DEG(60);
     camdata->hither_z = BR_SCALAR(0.1);
+    camdata->yon_z = BR_SCALAR(2048);
     camdata->aspect = BR_DIV(BR_SCALAR(screen->width), BR_SCALAR(screen->height));
 
     order_table->min_z = camdata->hither_z;
