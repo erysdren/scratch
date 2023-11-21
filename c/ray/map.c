@@ -11,6 +11,9 @@ map_t *map_allocate(int width, int height, int ceiling_height)
 {
 	map_t *map;
 
+	if (!width || !height || !ceiling_height)
+		return NULL;
+
 	map = calloc(1, sizeof(map_t));
 	map->walls = calloc(width * height, sizeof(uint8_t));
 	map->entities = calloc(width * height, sizeof(uint8_t));
