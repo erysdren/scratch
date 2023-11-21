@@ -9,6 +9,8 @@
 /* map */
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24
+#define CAMERA_START_X 12
+#define CAMERA_START_Y 12
 static br_uint_8 map[MAP_HEIGHT][MAP_WIDTH] = {
 	{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
 	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
@@ -42,11 +44,45 @@ static struct {
     br_pixelmap *depth;
     br_actor *world;
     br_actor *camera;
+    br_actor *camera_bbox;
     br_actor *level;
     br_uint_64 ticks_then;
     br_uint_64 ticks_now;
     const Uint8 *keys;
 } prog;
+
+br_bounds get_absolute_bounds(br_actor *a)
+{
+    br_bounds r = a->model->bounds;
+
+    r.min.v[0] += a->t.t.translate.t.v[0];
+    r.min.v[1] += a->t.t.translate.t.v[1];
+    r.min.v[2] += a->t.t.translate.t.v[2];
+
+    r.max.v[0] += a->t.t.translate.t.v[0];
+    r.max.v[1] += a->t.t.translate.t.v[1];
+    r.max.v[2] += a->t.t.translate.t.v[2];
+
+    return r;
+}
+
+/* swept aabb */
+br_scalar aabb_swept(br_actor *a, br_actor *b, br_vector3 *normal)
+{
+    return BR_SCALAR(0);
+}
+
+/* aabb */
+br_boolean actor_overlapping(br_actor *a, br_actor *b)
+{
+    br_bounds a_abs = get_absolute_bounds(a);
+    br_bounds b_abs = get_absolute_bounds(b);
+
+    /* return true if colliding */
+    return !(a_abs.max.v[0] < b_abs.min.v[0] || a_abs.min.v[0] > b_abs.max.v[0] ||
+            a_abs.max.v[1] < b_abs.min.v[1] || a_abs.min.v[1] > b_abs.max.v[1] ||
+            a_abs.max.v[2] < b_abs.min.v[2] || a_abs.min.v[2] > b_abs.max.v[2]);
+}
 
 br_error prog_init(br_actor *world, br_actor *camera, br_pixelmap *screen, br_pixelmap *colour, br_pixelmap *depth)
 {
@@ -60,7 +96,11 @@ br_error prog_init(br_actor *world, br_actor *camera, br_pixelmap *screen, br_pi
     prog.depth = depth;
 
     /* move camera */
-    BrMatrix34Translate(&prog.camera->t.t.mat, BR_SCALAR(0), BR_SCALAR(0), BR_SCALAR(2));
+    BrMatrix34Translate(&prog.camera->t.t.mat, BR_SCALAR(CAMERA_START_X), BR_SCALAR(0), BR_SCALAR(CAMERA_START_Y));
+
+    prog.camera_bbox = BrActorAdd(prog.world, BrActorAllocate(BR_ACTOR_MODEL, NULL));
+    prog.camera_bbox->model = BrModelFind("cube.dat");
+    prog.camera_bbox->material = BrMaterialFind("checkerboard.mat");
 
     /* start counting time */
     prog.ticks_then = SDL_GetTicks64();
@@ -125,6 +165,17 @@ br_error prog_render(void)
         BrMatrix34PreTranslate(&prog.camera->t.t.mat, BR_SCALAR(0), BR_SCALAR(8) * BR_SCALAR(dt), BR_SCALAR(0));
     if (prog.keys[SDL_SCANCODE_PAGEDOWN])
         BrMatrix34PreTranslate(&prog.camera->t.t.mat, BR_SCALAR(0), BR_SCALAR(-8) * BR_SCALAR(dt), BR_SCALAR(0));
+
+    /* update bbox */
+    BrMatrix34Copy(&prog.camera_bbox->t.t.mat, &prog.camera->t.t.mat);
+
+    /* determine collision with any map block */
+    br_actor *block;
+    BR_FOR_SIMPLELIST(prog.level->children, block)
+    {
+        if (actor_overlapping(block, prog.camera_bbox))
+            printf("camera colliding!\n");
+    }
 
     /* do render */
     BrPixelmapFill(prog.colour, BR_COLOUR_RGB(66, 66, 66));
