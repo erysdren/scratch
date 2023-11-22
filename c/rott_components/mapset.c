@@ -395,6 +395,9 @@ mapset_t *mapset_load(const char *filename)
 			return NULL;
 	}
 
+	/* close file */
+	fclose(file);
+
 	/* return success */
 	return mapset;
 }
@@ -479,6 +482,9 @@ bool mapset_save(const char *filename, mapset_t *mapset)
 		fseek(file, (i * 64) + map_array_ofs + 16, SEEK_SET);
 		fwrite(&ofs_len_array[i * 6], 4, 6, file);
 	}
+
+	/* close file */
+	fclose(file);
 
 	/* success */
 	return true;
