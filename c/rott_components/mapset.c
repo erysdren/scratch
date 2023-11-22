@@ -273,7 +273,7 @@ int mapset_get_index_from_name(mapset_t *mapset, const char *name)
 const char *mapset_get_name_from_index(mapset_t *mapset, int index)
 {
 	/* sanity checks */
-	if (index < 0 || index >= MAPSET_NUM_MAPS)
+	if (mapset == NULL || index < 0 || index >= MAPSET_NUM_MAPS)
 		return NULL;
 	if (!mapset->maps[index].used)
 		return NULL;
