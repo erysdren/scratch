@@ -93,7 +93,7 @@ wad_t *wad_allocate(int num_lumps)
 	wad->num_lumps = num_lumps;
 
 	/* do calloc */
-	wad->lumps = calloc(wad->num_lumps, sizeof(lump_t));
+	wad->lumps = calloc(wad->num_lumps, sizeof(wad_lump_t));
 	if (wad->lumps == NULL)
 		return NULL;
 
@@ -137,7 +137,7 @@ wad_t *wad_open(const char *filename)
 
 	/* read lumps */
 	fseek(file, ofs_lumps, SEEK_SET);
-	fread(wad->lumps, sizeof(lump_t), wad->num_lumps, file);
+	fread(wad->lumps, sizeof(wad_lump_t), wad->num_lumps, file);
 
 	/* set values */
 	wad->file = file;

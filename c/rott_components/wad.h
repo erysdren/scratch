@@ -34,16 +34,16 @@ extern "C" {
 #include <stdbool.h>
 
 /* lump structure */
-typedef struct lump_t {
+typedef struct wad_lump_t {
 	uint32_t ofs;
 	uint32_t len;
 	char name[8];
-} lump_t;
+} wad_lump_t;
 
 /* wad structure */
 typedef struct wad_t {
 	uint32_t num_lumps;
-	lump_t *lumps;
+	wad_lump_t *lumps;
 	FILE *file;
 } wad_t;
 
