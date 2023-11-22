@@ -28,6 +28,7 @@ derivatives or components of.
 /c/unwal/*
 /c/upkg/*
 /cpp/h2inc-llvm/*
+/formats/*
 /python/tmj2map/*
 
 +-----------------------------------------------------------------------------+
