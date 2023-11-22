@@ -36,6 +36,14 @@
 # ray
 /c/ray/ray
 
+# rott_components
+/c/rott_components/rott_components
+/c/rott_components/*.rtl
+/c/rott_components/*.rtc
+/c/rott_components/*.rtlx
+/c/rott_components/*.rtcx
+/c/rott_components/*.wad
+
 # rott_tool
 /c/rott_tool/rott_tool
 /c/rott_tool/*.rtl
