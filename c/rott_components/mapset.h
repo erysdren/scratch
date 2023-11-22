@@ -12,6 +12,8 @@ extern "C" {
 /* mapset constants */
 #define MAP_WIDTH (128)
 #define MAP_HEIGHT (128)
+#define MAP_PLANE_SIZE (MAP_WIDTH * MAP_HEIGHT * sizeof(uint16_t))
+#define MAPSET_NUM_MAPS (100)
 
 /* only one map flag is used */
 enum {
@@ -20,35 +22,45 @@ enum {
 
 /* map structure */
 typedef struct map_t {
-	uint32_t crc;		/* identifying crc */
-	uint32_t flags;		/* map flags */
-	uint16_t *walls;	/* walls plane */
-	uint16_t *sprites;	/* sprites plane */
-	uint16_t *infos;	/* infos plane */
-	char name[24];		/* name string */
+	uint32_t used;			/* nonzero if map is used */
+	uint32_t crc;			/* identifying crc */
+	uint32_t tag;			/* tag for decompressing plane data */
+	uint32_t flags;			/* map flags */
+	uint32_t ofs_walls;		/* offset of walls plane */
+	uint32_t ofs_sprites;	/* offset of sprites plane */
+	uint32_t ofs_infos;		/* offset of infos plane */
+	uint32_t len_walls;		/* size of walls plane */
+	uint32_t len_sprites;	/* size of sprites plane */
+	uint32_t len_infos;		/* size of infos plane */
+	char name[24];			/* name string */
 } map_t;
 
 /* mapset structure */
 typedef struct mapset_t {
-	map_t *maps;		/* allocated buffer of maps, num_maps in length */
-	int num_maps;		/* number of maps read from the mapset file */
-	bool commbat;		/* true if this mapset is intended for comm-bat only */
+	map_t maps[MAPSET_NUM_MAPS];	/* static number of map headers */
+	bool commbat;					/* true if this is a comm-bat mapset */
+	bool expanded;					/* true if this is a RottEX mapset */
+	FILE *file;						/* file handle for reading map planes */
 } mapset_t;
 
 /* allocate mapset */
-mapset_t *mapset_allocate(int num_maps, bool commbat);
+mapset_t *mapset_allocate(void);
 
-/* free mapset */
-void *mapset_free(mapset_t *mapset);
+/* open mapset from filename */
+mapset_t *mapset_open(const char *filename);
 
-/* load mapset from filename */
-mapset_t *mapset_load(const char *filename);
+/* close mapset and free memory */
+void mapset_close(mapset_t *mapset);
 
-/* save mapset to disk */
-bool mapset_save(const char *filename, mapset_t *mapset);
+/* get mapset index from name */
+int mapset_get_index_from_name(mapset_t *mapset, const char *name);
 
-/* generate new identifier crc for map in mapset */
-bool mapset_generate_crc(mapset_t *mapset, int map);
+/* get name from mapset index */
+const char *mapset_get_name_from_index(mapset_t *mapset, int index);
+
+/* read and uncompress map planes into user-provided buffers */
+/* each user-provided buffer should be exactly MAP_PLANE_SIZE in size */
+bool mapset_read_map(mapset_t *mapset, int map, void *walls, void *sprites, void *infos);
 
 #ifdef __cplusplus
 }
