@@ -15,7 +15,7 @@ extern "C" {
 
 /* only one map flag is used */
 enum {
-	RTL_MAPFLAG_TOGGLE_PUSHWALLS = 1 << 0
+	MAP_TOGGLE_PUSHWALLS = 1 << 0
 };
 
 /* map structure */
