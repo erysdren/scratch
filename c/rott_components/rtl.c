@@ -127,6 +127,7 @@ static uint32_t rtl_get_map_array_offset(FILE *file)
 			fread(&info_header_ofs, 8, 1, file);
 			fread(&info_header_len, 8, 1, file);
 
+			/* RXL 1.1 provides "MAPSET", RXL 2.0 provides "MAPS" */
 			if (strcmp(info_header_magic, "MAPS") == 0 ||
 				strcmp(info_header_magic, "MAPSET") == 0)
 				return info_header_ofs;
