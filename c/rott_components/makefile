@@ -6,7 +6,7 @@ CFLAGS ?= -O3
 LDFLAGS ?=
 
 EXEC ?= rott_components
-OBJECTS = mapset.o main.o
+OBJECTS = mapset.o wad.o main.o
 
 all: clean $(EXEC)
 
