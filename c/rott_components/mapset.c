@@ -78,17 +78,6 @@ static bool mapset_is_commbat(FILE *file)
 		return true;
 }
 
-/* read format version and return it */
-static uint32_t mapset_get_version(FILE *file)
-{
-	uint32_t version;
-
-	fseek(file, 4, SEEK_SET);
-	fread(&version, 1, 4, file);
-
-	return version;
-}
-
 /* return offset of map array */
 static uint32_t mapset_get_map_array_ofs(FILE *file)
 {
