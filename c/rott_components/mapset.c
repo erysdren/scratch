@@ -9,7 +9,8 @@
 /* mapset constants */
 static uint32_t rtl_version = 0x0101;
 static uint32_t rxl_version = 0x0200;
-static uint32_t rle_tag = 0x4344;
+static uint32_t rle_tag_registered = 0x4344;
+static uint32_t rle_tag_shareware = 0x4d4b;
 static const char rtl_magic[4] = {'R', 'T', 'L', '\0'};
 static const char rtc_magic[4] = {'R', 'T', 'C', '\0'};
 static const char rxl_magic[4] = {'R', 'X', 'L', '\0'};
