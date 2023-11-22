@@ -98,6 +98,9 @@ static bool mapset_is_commbat(FILE *file)
 	/* comm-bat */
 	if (memcmp(read, rtc_magic, 4) == 0 || memcmp(read, rxc_magic, 4) == 0)
 		return true;
+
+	/* fail */
+	return false;
 }
 
 /* return offset of map array */
@@ -129,10 +132,8 @@ static uint32_t mapset_get_map_array_offset(FILE *file)
 				return info_header_ofs;
 		}
 	}
-	else
-	{
-		return 8;
-	}
+
+	return 8;
 }
 
 /* get number of used maps in mapset */
