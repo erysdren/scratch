@@ -282,7 +282,8 @@ const char *mapset_get_name_from_index(mapset_t *mapset, int index)
 	return mapset->maps[index].name;
 }
 
-/* read and uncompress map planes into provided buffers */
+/* read and uncompress map planes into user-provided buffers */
+/* each user-provided buffer should be exactly MAP_PLANE_SIZE in size */
 bool mapset_read_map(mapset_t *mapset, int map, void *walls, void *sprites, void *infos)
 {
 	/* sanity checks */
