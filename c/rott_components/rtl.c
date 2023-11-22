@@ -27,9 +27,9 @@ SOFTWARE.
 #include <string.h>
 #include <stdlib.h>
 
-#include "mapset.h"
+#include "rtl.h"
 
-/* mapset constants */
+/* rott format constants */
 static const uint32_t rtl_version = 0x0101;
 static const uint32_t rxl_version = 0x0200;
 static const uint32_t rle_tag_registered = 0x4344;
@@ -39,8 +39,8 @@ static const char rtc_magic[4] = {'R', 'T', 'C', '\0'};
 static const char rxl_magic[4] = {'R', 'X', 'L', '\0'};
 static const char rxc_magic[4] = {'R', 'X', 'C', '\0'};
 
-/* returns true if it's a valid rott mapset file */
-static bool mapset_is_valid(FILE *file)
+/* returns true is this file is a valid rtl */
+static bool rtl_is_valid(FILE *file)
 {
 	char magic[4];
 	uint32_t version;
@@ -66,8 +66,8 @@ static bool mapset_is_valid(FILE *file)
 	return false;
 }
 
-/* returns true if mapset is from rott: ludicrous edition */
-static bool mapset_is_ludicrous(FILE *file)
+/* returns true if this rtl file is from rott: ludicrous edition */
+static bool rtl_is_ludicrous(FILE *file)
 {
 	char magic[4];
 
@@ -83,8 +83,8 @@ static bool mapset_is_ludicrous(FILE *file)
 	return false;
 }
 
-/* returns true if mapset is intended for comm-bat */
-static bool mapset_is_commbat(FILE *file)
+/* returns true if this rtl file is intended for comm-bat */
+static bool rtl_is_commbat(FILE *file)
 {
 	char read[4];
 
@@ -103,8 +103,8 @@ static bool mapset_is_commbat(FILE *file)
 	return false;
 }
 
-/* return offset of map array */
-static uint32_t mapset_get_map_array_offset(FILE *file)
+/* return offset of map array in rtl file */
+static uint32_t rtl_get_map_array_offset(FILE *file)
 {
 	uint64_t ofs_info_headers;
 	uint64_t num_info_headers;
@@ -113,7 +113,7 @@ static uint32_t mapset_get_map_array_offset(FILE *file)
 	uint64_t info_header_len;
 	int i;
 
-	if (mapset_is_ludicrous(file))
+	if (rtl_is_ludicrous(file))
 	{
 		fseek(file, 8, SEEK_SET);
 		fread(&ofs_info_headers, 8, 1, file);
@@ -136,19 +136,19 @@ static uint32_t mapset_get_map_array_offset(FILE *file)
 	return 8;
 }
 
-/* get number of used maps in mapset */
-static int mapset_get_used_maps(FILE *file)
+/* get number of used maps in rtl file */
+static int rtl_get_used_maps(FILE *file)
 {
 	int i;
-	uint32_t map_array_ofs;
+	uint32_t map_array_offset;
 
-	map_array_ofs = mapset_get_map_array_offset(file);
+	map_array_offset = rtl_get_map_array_offset(file);
 
-	for (i = 0; i < MAPSET_NUM_MAPS; i++)
+	for (i = 0; i < RTL_NUM_MAPS; i++)
 	{
 		uint32_t used;
 
-		fseek(file, (i * 64) + map_array_ofs, SEEK_SET);
+		fseek(file, (i * 64) + map_array_offset, SEEK_SET);
 		fread(&used, 4, 1, file);
 
 		if (!used) break;
@@ -157,8 +157,8 @@ static int mapset_get_used_maps(FILE *file)
 	return i;
 }
 
-/* read plane from map */
-static void mapset_read_plane(FILE *file, int ofs, int len, uint16_t tag, uint16_t *buffer)
+/* read plane from rtl file map */
+static void rtl_read_plane(FILE *file, int ofs, int len, uint16_t tag, uint16_t *buffer)
 {
 	/* seek to plane offset */
 	fseek(file, ofs, SEEK_SET);
@@ -166,7 +166,7 @@ static void mapset_read_plane(FILE *file, int ofs, int len, uint16_t tag, uint16
 	/* read plane data */
 	int pos = 0;
 	int written = 0;
-	while (pos < len && written < MAP_PLANE_SIZE)
+	while (pos < len && written < RTL_MAP_PLANE_SIZE)
 	{
 		/* read test value */
 		uint16_t test;
@@ -201,25 +201,13 @@ static void mapset_read_plane(FILE *file, int ofs, int len, uint16_t tag, uint16
 	}
 }
 
-/* allocate mapset */
-mapset_t *mapset_allocate(void)
+/* open rtl from filename */
+/* returns NULL on error */
+rtl_t *rtl_open(const char *filename)
 {
-	mapset_t *mapset;
-
-	/* allocate structure */
-	mapset = calloc(1, sizeof(mapset_t));
-	if (mapset == NULL)
-		return NULL;
-
-	return mapset;
-}
-
-/* open mapset from filename */
-mapset_t *mapset_open(const char *filename)
-{
-	mapset_t *mapset;
+	rtl_t *rtl;
 	int num_maps;
-	uint32_t map_array_ofs;
+	uint32_t map_array_offset;
 	FILE *file;
 
 	/* sanity check */
@@ -231,62 +219,63 @@ mapset_t *mapset_open(const char *filename)
 	if (file == NULL)
 		return NULL;
 
-	/* check if it's a valid rott mapset file */
-	if (mapset_is_valid(file) == false)
+	/* check if it's a valid rtl file */
+	if (rtl_is_valid(file) == false)
 		return NULL;
 
 	/* get number of used maps */
-	num_maps = mapset_get_used_maps(file);
-	if (num_maps <= 0 || num_maps > MAPSET_NUM_MAPS)
+	num_maps = rtl_get_used_maps(file);
+	if (num_maps <= 0 || num_maps > RTL_NUM_MAPS)
 		return NULL;
 
-	/* allocate mapset */
-	mapset = mapset_allocate();
-	if (mapset == NULL)
+	/* allocate rtl format structure */
+	rtl = calloc(1, sizeof(rtl_t));
+	if (rtl == NULL)
 		return NULL;
 
 	/* read map data */
-	map_array_ofs = mapset_get_map_array_offset(file);
-	fseek(file, map_array_ofs, SEEK_SET);
-	fread(mapset->maps, sizeof(map_t), MAPSET_NUM_MAPS, file);
+	map_array_offset = rtl_get_map_array_offset(file);
+	fseek(file, map_array_offset, SEEK_SET);
+	fread(rtl->maps, sizeof(rtl_map_t), RTL_NUM_MAPS, file);
 
 	/* assign values */
-	mapset->commbat = mapset_is_commbat(file);
-	mapset->expanded = mapset_is_ludicrous(file);
-	mapset->file = file;
+	rtl->commbat = rtl_is_commbat(file);
+	rtl->ludicrous = rtl_is_ludicrous(file);
+	rtl->file = file;
 
 	/* return success */
-	return mapset;
+	return rtl;
 }
 
-/* close mapset and free memory */
-void mapset_close(mapset_t *mapset)
+/* close rtl and free memory */
+void rtl_close(rtl_t *rtl)
 {
-	if (mapset)
+	if (rtl)
 	{
-		if (mapset->file != NULL)
-			fclose(mapset->file);
+		if (rtl->file != NULL)
+			fclose(rtl->file);
 
-		free(mapset);
+		free(rtl);
 	}
 }
 
-/* get mapset index from name */
-int mapset_get_index_from_name(mapset_t *mapset, const char *name)
+/* get rtl index from name */
+/* returns -1 on error */
+int rtl_get_index_from_name(rtl_t *rtl, const char *name)
 {
 	int i;
 
 	/* sanity check */
-	if (mapset == NULL || name == NULL)
+	if (rtl == NULL || name == NULL)
 		return -1;
 
 	/* slow linear search */
-	for (i = 0; i < MAPSET_NUM_MAPS; i++)
+	for (i = 0; i < RTL_NUM_MAPS; i++)
 	{
-		if (!mapset->maps[i].used)
+		if (!rtl->maps[i].used)
 			continue;
 
-		if (strncmp(mapset->maps[i].name, name, 24) == 0)
+		if (strncmp(rtl->maps[i].name, name, 24) == 0)
 			return i;
 	}
 
@@ -294,50 +283,39 @@ int mapset_get_index_from_name(mapset_t *mapset, const char *name)
 	return -1;
 }
 
-/* get name from mapset index */
-const char *mapset_get_name_from_index(mapset_t *mapset, int index)
+/* get name from rtl index */
+/* returns NULL on error */
+const char *rtl_get_name_from_index(rtl_t *rtl, int index)
 {
 	/* sanity checks */
-	if (mapset == NULL || index < 0 || index >= MAPSET_NUM_MAPS)
+	if (rtl == NULL || index < 0 || index >= RTL_NUM_MAPS)
 		return NULL;
-	if (!mapset->maps[index].used)
+	if (!rtl->maps[index].used)
 		return NULL;
 
-	return mapset->maps[index].name;
+	return rtl->maps[index].name;
 }
 
 /* read and uncompress map planes into user-provided buffers */
-/* each user-provided buffer should be exactly MAP_PLANE_SIZE in size */
-bool mapset_read_map(mapset_t *mapset, int map, void *walls, void *sprites, void *infos)
+/* each user-provided buffer should be exactly RTL_MAP_PLANE_SIZE in size */
+bool rtl_read_map(rtl_t *rtl, int map, void *walls, void *sprites, void *infos)
 {
 	/* sanity checks */
-	if (mapset == NULL || (walls == NULL && sprites == NULL && infos == NULL))
+	if (rtl == NULL || (walls == NULL && sprites == NULL && infos == NULL))
 		return false;
-	if (mapset->file == NULL || map < 0 || map >= MAPSET_NUM_MAPS)
+	if (rtl->file == NULL || map < 0 || map >= RTL_NUM_MAPS)
 		return false;
-	if (!mapset->maps[map].used)
+	if (!rtl->maps[map].used)
 		return false;
 
 	if (walls != NULL)
-		mapset_read_plane(mapset->file,
-			mapset->maps[map].ofs_walls,
-			mapset->maps[map].len_walls,
-			mapset->maps[map].tag,
-			walls);
+		rtl_read_plane(rtl->file, rtl->maps[map].ofs_walls, rtl->maps[map].len_walls, rtl->maps[map].tag, walls);
 
 	if (sprites != NULL)
-		mapset_read_plane(mapset->file,
-			mapset->maps[map].ofs_sprites,
-			mapset->maps[map].len_sprites,
-			mapset->maps[map].tag,
-			sprites);
+		rtl_read_plane(rtl->file, rtl->maps[map].ofs_sprites, rtl->maps[map].len_sprites, rtl->maps[map].tag, sprites);
 
 	if (infos != NULL)
-		mapset_read_plane(mapset->file,
-			mapset->maps[map].ofs_infos,
-			mapset->maps[map].len_infos,
-			mapset->maps[map].tag,
-			infos);
+		rtl_read_plane(rtl->file, rtl->maps[map].ofs_infos, rtl->maps[map].len_infos, rtl->maps[map].tag, infos);
 
 	return true;
 }

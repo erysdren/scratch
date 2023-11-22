@@ -29,7 +29,7 @@ CFLAGS ?= -std=c99 -O3 -Wall
 LDFLAGS ?=
 
 EXEC ?= rott_components
-OBJECTS = mapset.o wad.o main.o
+OBJECTS = rtl.o wad.o main.o
 
 all: clean $(EXEC)
 

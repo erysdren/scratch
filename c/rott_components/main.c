@@ -27,28 +27,28 @@ SOFTWARE.
 #include <string.h>
 #include <stdlib.h>
 
-#include "mapset.h"
+#include "rtl.h"
 #include "wad.h"
 
 int main(int argc, char **argv)
 {
-	mapset_t *mapset;
+	rtl_t *rtl;
 	void *walls;
 	void *sprites;
 	void *infos;
 
-	mapset = mapset_open("darkwar.rtl");
-	if (mapset == NULL)
+	rtl = rtl_open("darkwar.rtl");
+	if (rtl == NULL)
 		return 1;
 
-	walls = calloc(1, MAP_PLANE_SIZE);
-	sprites = calloc(1, MAP_PLANE_SIZE);
-	infos = calloc(1, MAP_PLANE_SIZE);
+	walls = calloc(1, RTL_MAP_PLANE_SIZE);
+	sprites = calloc(1, RTL_MAP_PLANE_SIZE);
+	infos = calloc(1, RTL_MAP_PLANE_SIZE);
 
-	if (!mapset_read_map(mapset, 0, walls, sprites, infos))
+	if (!rtl_read_map(rtl, 0, walls, sprites, infos))
 		return 2;
 
-	mapset_close(mapset);
+	rtl_close(rtl);
 
 	free(walls);
 	free(sprites);
