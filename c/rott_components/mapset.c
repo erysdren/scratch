@@ -233,11 +233,15 @@ static void mapset_read_plane(FILE *file, int ofs, int len, uint16_t tag, uint16
 }
 
 /* read map from file */
-static void mapset_read_map(FILE *file, int i, map_t *map)
+static bool mapset_read_map(FILE *file, int i, map_t *map)
 {
 	uint32_t used, tag, ofs_walls, ofs_sprites, ofs_infos;
 	uint32_t len_walls, len_sprites, len_infos;
 	uint32_t map_array_ofs;
+
+	/* sanity checks */
+	if (file == NULL || map == NULL || i < 0 || i >= NUM_MAPS)
+		return false;
 
 	map_array_ofs = mapset_get_map_array_ofs(file);
 
@@ -264,12 +268,14 @@ static void mapset_read_map(FILE *file, int i, map_t *map)
 
 	/* check for memory allocation error */
 	if (map->walls == NULL || map->sprites == NULL || map->infos == NULL)
-		return;
+		return false;
 
 	/* read planes */
 	mapset_read_plane(file, ofs_walls, len_walls, tag, map->walls);
 	mapset_read_plane(file, ofs_sprites, len_sprites, tag, map->sprites);
 	mapset_read_plane(file, ofs_infos, len_infos, tag, map->infos);
+
+	return true;
 }
 
 /* crc generator */
@@ -288,20 +294,6 @@ static uint32_t mapset_make_hash(void *buf, int len)
 	return hash;
 }
 
-/* generate crc for all maps */
-bool mapset_generate_crc(mapset_t *mapset, int map)
-{
-	if (map < 0 || map >= mapset->num_maps)
-		return false;
-
-	/* generate initial hash and then OR it by subsequent hashes */
-	mapset->maps[map].crc = mapset_make_hash(mapset->maps[map].walls, PLANE_SIZE);
-	mapset->maps[map].crc ^= mapset_make_hash(mapset->maps[map].sprites, PLANE_SIZE);
-	mapset->maps[map].crc ^= mapset_make_hash(mapset->maps[map].infos, PLANE_SIZE);
-
-	return true;
-}
-
 /* allocate RTL/RTC in memory */
 mapset_t *mapset_allocate(int num_maps, bool commbat)
 {
@@ -314,7 +306,8 @@ mapset_t *mapset_allocate(int num_maps, bool commbat)
 
 	/* allocate structure */
 	mapset = calloc(1, sizeof(mapset_t));
-	if (mapset == NULL) return NULL;
+	if (mapset == NULL)
+		return NULL;
 
 	/* set values */
 	mapset->num_maps = num_maps;
@@ -322,7 +315,8 @@ mapset_t *mapset_allocate(int num_maps, bool commbat)
 
 	/* allocate maps */
 	mapset->maps = calloc(mapset->num_maps, sizeof(map_t));
-	if (mapset->maps == NULL) return NULL;
+	if (mapset->maps == NULL)
+		return NULL;
 
 	/* allocate data for each maps */
 	for (i = 0; i < mapset->num_maps; i++)
@@ -332,9 +326,7 @@ mapset_t *mapset_allocate(int num_maps, bool commbat)
 		mapset->maps[i].infos = calloc(1, PLANE_SIZE);
 
 		/* check for failed memory allocation */
-		if (mapset->maps[i].walls == NULL ||
-			mapset->maps[i].sprites == NULL ||
-			mapset->maps[i].infos == NULL)
+		if (mapset->maps[i].walls == NULL || mapset->maps[i].sprites == NULL || mapset->maps[i].infos == NULL)
 			return NULL;
 	}
 
@@ -375,6 +367,8 @@ void *mapset_free(mapset_t *mapset)
 mapset_t *mapset_load(const char *filename)
 {
 	mapset_t *mapset;
+	int num_maps;
+	bool commbat;
 	FILE *file;
 	int i;
 
@@ -382,35 +376,33 @@ mapset_t *mapset_load(const char *filename)
 	if (filename == NULL)
 		return NULL;
 
-	/* allocate structure */
-	mapset = calloc(1, sizeof(mapset_t));
-	if (mapset == NULL) return NULL;
-
 	/* open file */
 	file = fopen(filename, "rb");
-	if (file == NULL) return NULL;
+	if (file == NULL)
+		return NULL;
 
 	/* check if it's a valid rott mapset file */
-	if (mapset_is_valid(file) == false) return NULL;
-
-	/* check if it's intended for comm-bat */
-	mapset->commbat = mapset_is_commbat(file);
+	if (mapset_is_valid(file) == false)
+		return NULL;
 
 	/* get number of used maps */
-	mapset->num_maps = mapset_get_used_maps(file);
-	if (mapset->num_maps == 0) return NULL;
+	num_maps = mapset_get_used_maps(file);
+	if (num_maps <= 0 || num_maps > NUM_MAPS)
+		return NULL;
 
-	/* now allocate map structures */
-	mapset->maps = calloc(mapset->num_maps, sizeof(map_t));
-	if (mapset->maps == NULL) return NULL;
+	/* check if it's intended for comm-bat */
+	commbat = mapset_is_commbat(file);
+
+	/* now allocate map */
+	mapset = mapset_allocate(num_maps, commbat);
+	if (mapset == NULL)
+		return NULL;
 
 	/* read map data */
 	for (i = 0; i < mapset->num_maps; i++)
 	{
-		mapset_read_map(file, i, &mapset->maps[i]);
-
-		/* check for failed memory allocation */
-		if (mapset->maps[i].walls == NULL || mapset->maps[i].sprites == NULL || mapset->maps[i].infos == NULL)
+		/* read data for this map */
+		if (!mapset_read_map(file, i, &mapset->maps[i]))
 			return NULL;
 	}
 
@@ -431,7 +423,8 @@ bool mapset_save(const char *filename, mapset_t *mapset)
 
 	/* open file for writing */
 	file = fopen(filename, "wb");
-	if (file == NULL) return false;
+	if (file == NULL)
+		return false;
 
 	/* write magic */
 	if (mapset->commbat)
@@ -498,6 +491,20 @@ bool mapset_save(const char *filename, mapset_t *mapset)
 		fwrite(&ofs_len_array[i * 6], 4, 6, file);
 	}
 
-	/* return success */
+	/* success */
+	return true;
+}
+
+/* generate crc for all maps */
+bool mapset_generate_crc(mapset_t *mapset, int map)
+{
+	if (map < 0 || map >= mapset->num_maps)
+		return false;
+
+	/* generate initial hash and then OR it by subsequent hashes */
+	mapset->maps[map].crc = mapset_make_hash(mapset->maps[map].walls, PLANE_SIZE);
+	mapset->maps[map].crc ^= mapset_make_hash(mapset->maps[map].sprites, PLANE_SIZE);
+	mapset->maps[map].crc ^= mapset_make_hash(mapset->maps[map].infos, PLANE_SIZE);
+
 	return true;
 }
