@@ -27,34 +27,49 @@ SOFTWARE.
 #include <string.h>
 #include <stdlib.h>
 
-#include "rtl.h"
-#include "wad.h"
 #include "tileset.h"
-#include "tileset_darkwar.h"
 
-int main(int argc, char **argv)
+/* get tileset index from tile name */
+/* returns -1 on error */
+int tileset_get_index_from_name(tileset_t *tileset, const char *name)
 {
-	rtl_t *rtl;
-	void *walls;
-	void *sprites;
-	void *infos;
+	int i;
 
-	rtl = rtl_open("darkwar.rtl");
-	if (rtl == NULL)
-		return 1;
+	/* sanity checks */
+	if (tileset == NULL || name == NULL)
+		return -1;
 
-	walls = calloc(1, RTL_MAP_PLANE_SIZE);
-	sprites = calloc(1, RTL_MAP_PLANE_SIZE);
-	infos = calloc(1, RTL_MAP_PLANE_SIZE);
+	/* slow linear search */
+	for (i = 0; i < tileset->num_entries; i++)
+	{
+		if (tileset->entries[i].name != NULL)
+		{
+			if (strcmp(tileset->entries[i].name, name) == 0)
+				return tileset->entries[i].index;
+		}
+	}
 
-	if (!rtl_read_map(rtl, 0, walls, sprites, infos))
-		return 2;
+	/* fail */
+	return -1;
+}
 
-	rtl_close(rtl);
+/* get tile name from tileset index */
+/* returns NULL on error */
+const char *tileset_get_name_from_index(tileset_t *tileset, int index)
+{
+	int i;
 
-	free(walls);
-	free(sprites);
-	free(infos);
+	/* sanity checks */
+	if (tileset == NULL || index < 0)
+		return NULL;
 
-	return 0;
+	/* slow linear search */
+	for (i = 0; i < tileset->num_entries; i++)
+	{
+		if (index == tileset->entries[i].index)
+			return tileset->entries[i].name;
+	}
+
+	/* fail */
+	return NULL;
 }

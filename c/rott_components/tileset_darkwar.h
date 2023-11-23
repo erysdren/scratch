@@ -22,39 +22,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#pragma once
+#ifndef _TILESET_DARKWAR_H_
+#define _TILESET_DARKWAR_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include "rtl.h"
-#include "wad.h"
 #include "tileset.h"
-#include "tileset_darkwar.h"
 
-int main(int argc, char **argv)
-{
-	rtl_t *rtl;
-	void *walls;
-	void *sprites;
-	void *infos;
+extern const tileset_t tileset_darkwar_walls;
 
-	rtl = rtl_open("darkwar.rtl");
-	if (rtl == NULL)
-		return 1;
-
-	walls = calloc(1, RTL_MAP_PLANE_SIZE);
-	sprites = calloc(1, RTL_MAP_PLANE_SIZE);
-	infos = calloc(1, RTL_MAP_PLANE_SIZE);
-
-	if (!rtl_read_map(rtl, 0, walls, sprites, infos))
-		return 2;
-
-	rtl_close(rtl);
-
-	free(walls);
-	free(sprites);
-	free(infos);
-
-	return 0;
+#ifdef __cplusplus
 }
+#endif
+#endif /* _TILESET_DARKWAR_H_ */

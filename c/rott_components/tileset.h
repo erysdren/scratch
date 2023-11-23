@@ -22,39 +22,40 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#pragma once
+#ifndef _TILESET_H_
+#define _TILESET_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include "rtl.h"
-#include "wad.h"
-#include "tileset.h"
-#include "tileset_darkwar.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-int main(int argc, char **argv)
-{
-	rtl_t *rtl;
-	void *walls;
-	void *sprites;
-	void *infos;
+/* tileset entry */
+typedef struct tileset_entry_t {
+	const char *name;
+	int index;
+} tileset_entry_t;
 
-	rtl = rtl_open("darkwar.rtl");
-	if (rtl == NULL)
-		return 1;
+/* tileset */
+typedef struct tileset_t {
+	tileset_entry_t *entries;
+	int num_entries;
+} tileset_t;
 
-	walls = calloc(1, RTL_MAP_PLANE_SIZE);
-	sprites = calloc(1, RTL_MAP_PLANE_SIZE);
-	infos = calloc(1, RTL_MAP_PLANE_SIZE);
+/* helper macros */
+#define TILESET_ENTRY(i, n) [i] = {.index = i, .name = n}
 
-	if (!rtl_read_map(rtl, 0, walls, sprites, infos))
-		return 2;
+/* get tileset index from tile name */
+/* returns -1 on error */
+int tileset_get_index_from_name(tileset_t *tileset, const char *name);
 
-	rtl_close(rtl);
+/* get tile name from tileset index */
+/* returns NULL on error */
+const char *tileset_get_name_from_index(tileset_t *tileset, int index);
 
-	free(walls);
-	free(sprites);
-	free(infos);
-
-	return 0;
+#ifdef __cplusplus
 }
+#endif
+#endif /* _TILESET_H_ */
