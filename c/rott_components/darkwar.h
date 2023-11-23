@@ -31,7 +31,7 @@ extern "C" {
 
 #include "array.h"
 
-/* directions */
+/* actor movement directions */
 enum {
 	DIR_EAST,
 	DIR_NORTHEAST,
@@ -46,17 +46,17 @@ enum {
 
 /* actor flags */
 enum {
-	AF_NONE = 0,
-	AF_HARD = 1 << 0,
-	AF_AMBUSH = 1 << 1
+	FLAG_NONE = 0,
+	FLAG_HARD = 1 << 0,
+	FLAG_AMBUSH = 1 << 1
 };
 
-/* ai types */
+/* actor ai behaviours */
 enum {
-	AI_NONE,
 	AI_STAND,
 	AI_PATROL,
-	AI_SNEAKY
+	AI_SNEAKY,
+	AI_EMPLACEMENT
 };
 
 /* actor classes */
@@ -64,9 +64,19 @@ enum {
 	CLASS_LOWGUARD,
 	CLASS_HIGHGUARD,
 	CLASS_ROBOGUARD,
+	CLASS_BALLISTIKRAFT,
 	CLASS_STRIKEGUARD,
 	CLASS_PATROLGUN,
-	CLASS_OVERPATROL
+	CLASS_OVERPATROL,
+	CLASS_BLITZGUARD,
+	CLASS_TRIADENFORCER,
+	CLASS_DEATHMONK,
+	CLASS_DEATHFIREMONK,
+	CLASS_DARIAN,
+	CLASS_HEINRICH,
+	CLASS_NME,
+	CLASS_OSCUROMONK,
+	CLASS_OSCUROSNAKE
 };
 
 /* actor */
