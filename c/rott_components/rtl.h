@@ -63,6 +63,7 @@ typedef struct rtl_t {
 	rtl_map_t maps[RTL_NUM_MAPS];	/* static number of map headers */
 	bool commbat;					/* true if this is for comm-bat only */
 	bool ludicrous;					/* true if this is from ROTT: Ludicrous Edition */
+	bool shareware;					/* true if this for shareware only */
 	FILE *file;						/* file handle for reading map planes */
 } rtl_t;
 

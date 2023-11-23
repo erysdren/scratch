@@ -137,8 +137,8 @@ static uint32_t rtl_get_map_array_offset(FILE *file)
 	return 8;
 }
 
-/* get number of used maps in rtl file */
-static int rtl_get_used_maps(FILE *file)
+/* returns true is this rtl file is intended for shareware  */
+static bool rtl_is_shareware(FILE *file)
 {
 	int i;
 	uint32_t map_array_offset;
@@ -148,14 +148,47 @@ static int rtl_get_used_maps(FILE *file)
 	for (i = 0; i < RTL_NUM_MAPS; i++)
 	{
 		uint32_t used;
+		uint32_t crc;
+
+		fseek(file, (i * 64) + map_array_offset, SEEK_SET);
+		fread(&used, 4, 1, file);
+		fread(&crc, 4, 1, file);
+
+		if (used)
+		{
+			if (crc == rle_tag_registered)
+				return false;
+			if (crc == rle_tag_shareware)
+				return true;
+		}
+	}
+
+	/* fail */
+	return false;
+}
+
+/* get number of used maps in rtl file */
+static int rtl_get_used_maps(FILE *file)
+{
+	int i;
+	uint32_t map_array_offset;
+	int used_maps;
+
+	map_array_offset = rtl_get_map_array_offset(file);
+
+	used_maps = 0;
+	for (i = 0; i < RTL_NUM_MAPS; i++)
+	{
+		uint32_t used;
 
 		fseek(file, (i * 64) + map_array_offset, SEEK_SET);
 		fread(&used, 4, 1, file);
 
-		if (!used) break;
+		if (used)
+			used_maps++;
 	}
 
-	return i;
+	return used_maps;
 }
 
 /* read plane from rtl file map */
@@ -242,6 +275,7 @@ rtl_t *rtl_open(const char *filename)
 	/* assign values */
 	rtl->commbat = rtl_is_commbat(file);
 	rtl->ludicrous = rtl_is_ludicrous(file);
+	rtl->shareware = rtl_is_shareware(file);
 	rtl->file = file;
 
 	/* return success */
