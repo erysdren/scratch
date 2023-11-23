@@ -31,22 +31,24 @@ extern "C" {
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
-/* string array */
-typedef struct string_array_t {
-	const char **entries;
-	int num_entries;
-} string_array_t;
+/* array type */
+typedef struct array_t {
+	void *entries;		/* pointer to tightly packed array of entries */
+	size_t length;		/* number of entries in the array */
+	size_t size;		/* size in bytes of each entry in the array */
+	bool allocated;		/* true if the array and its entries are allocated */
+} array_t;
 
-#define STRING_AT_INDEX(i, n) [i] = n
+/* helper macros */
+#define VALUE_AT_INDEX(i, n) [i] = n
 
-/* get array index from string value */
-/* returns -1 on error */
-int string_array_get_index_from_value(string_array_t *array, const char *value);
+/* allocate array and entries on the heap */
+array_t *array_allocate(size_t length, size_t size);
 
-/* get string value from array index */
-/* returns NULL on error */
-const char *string_array_get_value_from_index(string_array_t *array, int index);
+/* free heap-allocated array */
+void array_free(array_t *array);
 
 #ifdef __cplusplus
 }

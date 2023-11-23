@@ -67,12 +67,6 @@ typedef struct actor_t {
 	unsigned int flags;
 } actor_t;
 
-/* actor array */
-typedef struct actor_array_t {
-	actor_t *entries;
-	int num_entries;
-} actor_array_t;
-
 #define ACTOR_AT_INDEX(_i, _classname, _ai, _dir, _flags) [_i] = {.classname = _classname, .ai = _ai, .dir = _dir, .flags = _flags}
 #define ACTOR_AT_INDEX_WITH_DIRS(_i, _classname, _ai, _flags) \
 	ACTOR_AT_INDEX(_i + 0, _classname, _ai, DIR_EAST, _flags), \
@@ -80,9 +74,9 @@ typedef struct actor_array_t {
 	ACTOR_AT_INDEX(_i + 2, _classname, _ai, DIR_WEST, _flags), \
 	ACTOR_AT_INDEX(_i + 3, _classname, _ai, DIR_SOUTH, _flags)
 
-extern const string_array_t darkwar_wall_tiles;
-extern const actor_array_t darkwar_sprite_tiles;
-extern const string_array_t darkwar_info_tiles;
+extern const array_t darkwar_wall_tiles;
+extern const array_t darkwar_sprite_tiles;
+extern const array_t darkwar_info_tiles;
 
 #ifdef __cplusplus
 }

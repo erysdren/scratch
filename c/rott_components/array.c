@@ -29,40 +29,32 @@ SOFTWARE.
 
 #include "array.h"
 
-/* get array index from string value */
-/* returns -1 on error */
-int string_array_get_index_from_value(string_array_t *array, const char *value)
+/* allocate array and entries on the heap */
+array_t *array_allocate(size_t length, size_t size)
 {
-	int i;
+	array_t *array;
 
-	/* sanity checks */
-	if (array == NULL || value == NULL)
-		return -1;
+	array = calloc(1, sizeof(array_t));
 
-	/* slow linear search */
-	for (i = 0; i < array->num_entries; i++)
-	{
-		if (array->entries[i] != NULL)
-		{
-			if (strcmp(array->entries[i], value) == 0)
-				return i;
-		}
-	}
+	array->length = length;
+	array->size = size;
+	array->allocated = true;
 
-	/* fail */
-	return -1;
+	array->entries = calloc(array->length, array->size);
+
+	return array;
 }
 
-/* get string value from array index */
-/* returns NULL on error */
-const char *string_array_get_value_from_index(string_array_t *array, int index)
+/* free heap-allocated array */
+void array_free(array_t *array)
 {
-	/* sanity checks */
 	if (array == NULL)
-		return NULL;
-	if (index < 0 || index >= array->num_entries)
-		return NULL;
+		return;
+	if (array->allocated == false)
+		return;
 
-	/* return value at index */
-	return array->entries[index];
+	if (array->entries != NULL)
+		free(array->entries);
+
+	free(array);
 }
