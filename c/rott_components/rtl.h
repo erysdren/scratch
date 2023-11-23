@@ -37,6 +37,7 @@ extern "C" {
 #define RTL_MAP_HEIGHT (128)
 #define RTL_MAP_PLANE_SIZE (RTL_MAP_WIDTH * RTL_MAP_HEIGHT * sizeof(uint16_t))
 #define RTL_NUM_MAPS (100)
+#define RTL_MAP_RESERVED_TILES (5)
 
 /* rtl map flags  */
 enum {

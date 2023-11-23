@@ -136,5 +136,99 @@ static const char *_darkwar_wall_tiles[] = {
 
 const string_array_t darkwar_wall_tiles = {
 	.entries = _darkwar_wall_tiles,
-	.num_entries = 90
+	.num_entries = sizeof(_darkwar_wall_tiles) / sizeof(const char *)
+};
+
+static actor_t _darkwar_sprite_tiles[] = {
+
+	/* LOW GUARD - STAND */
+	ACTOR_AT_INDEX_WITH_DIRS(108, "monster_lowguard", AI_STAND, AF_NONE),
+
+	/* LOW GUARD - PATROL */
+	ACTOR_AT_INDEX_WITH_DIRS(112, "monster_lowguard", AI_PATROL, AF_NONE),
+
+	/* LOW GUARD - STAND, AMBUSH */
+	ACTOR_AT_INDEX_WITH_DIRS(116, "monster_lowguard", AI_STAND, AF_AMBUSH),
+
+	/* LOW GUARD - SNEAKY */
+	ACTOR_AT_INDEX(120, "monster_lowguard", AI_SNEAKY, DIR_EAST, AF_NONE),
+
+	/* LOW GUARD - STAND, HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(126, "monster_lowguard", AI_STAND, AF_HARD),
+
+	/* LOW GUARD - PATROL, HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(130, "monster_lowguard", AI_PATROL, AF_HARD),
+
+	/* LOW GUARD - STAND, AMBUSH, HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(134, "monster_lowguard", AI_STAND, AF_HARD | AF_AMBUSH),
+
+	/* LOW GUARD - SNEAKY, HARD */
+	ACTOR_AT_INDEX(138, "monster_lowguard", AI_SNEAKY, DIR_EAST, AF_HARD),
+
+	/* HIGH GUARD - STAND */
+	ACTOR_AT_INDEX_WITH_DIRS(144, "monster_highguard", AI_STAND, AF_NONE),
+
+	/* HIGH GUARD - PATROL */
+	ACTOR_AT_INDEX_WITH_DIRS(148, "monster_highguard", AI_PATROL, AF_NONE),
+
+	/* HIGH GUARD - STAND, AMBUSH */
+	ACTOR_AT_INDEX_WITH_DIRS(152, "monster_highguard", AI_STAND, AF_AMBUSH),
+
+	/* ROBO GUARD - PATROL */
+	ACTOR_AT_INDEX_WITH_DIRS(158, "monster_roboguard", AI_PATROL, AF_NONE),
+
+	/* HIGH GUARD - STAND, HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(162, "monster_highguard", AI_STAND, AF_HARD),
+
+	/* HIGH GUARD - PATROL, HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(166, "monster_highguard", AI_PATROL, AF_HARD),
+
+	/* HIGH GUARD - STAND, AMBUSH, HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(170, "monster_highguard", AI_STAND, AF_HARD | AF_AMBUSH),
+
+	/* ROBO GUARD - PATROL, HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(176, "monster_roboguard", AI_PATROL, AF_HARD),
+
+	/* STRIKE GUARD - STAND */
+	ACTOR_AT_INDEX_WITH_DIRS(180, "monster_strikeguard", AI_STAND, AF_NONE),
+
+	/* STRIKE GUARD - PATROL */
+	ACTOR_AT_INDEX_WITH_DIRS(184, "monster_strikeguard", AI_PATROL, AF_AMBUSH),
+
+	/* STRIKE GUARD - STAND, AMBUSH */
+	ACTOR_AT_INDEX_WITH_DIRS(188, "monster_strikeguard", AI_STAND, AF_AMBUSH),
+
+	/* PATROL GUN */
+	ACTOR_AT_INDEX_WITH_DIRS(194, "monster_patrolgun", AI_NONE, AF_NONE),
+
+	/* STRIKE GUARD - STAND, HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(198, "monster_strikeguard", AI_STAND, AF_HARD),
+
+	/* STRIKE GUARD - STAND, AMBUSH, HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(206, "monster_strikeguard", AI_STAND, AF_HARD | AF_AMBUSH),
+
+	/* PATROL GUN - HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(212, "monster_patrolgun", AI_NONE, AF_HARD),
+
+	/* OVER PATROL - STAND */
+	ACTOR_AT_INDEX_WITH_DIRS(216, "monster_overpatrol", AI_STAND, AF_NONE),
+
+	/* OVER PATROL - STAND, AMBUSH */
+	ACTOR_AT_INDEX_WITH_DIRS(224, "monster_overpatrol", AI_STAND, AF_AMBUSH),
+
+	/* OVER PATROL - STAND, HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(234, "monster_overpatrol", AI_STAND, AF_HARD),
+
+	/* OVER PATROL - STAND, AMBUSH, HARD */
+	ACTOR_AT_INDEX_WITH_DIRS(242, "monster_overpatrol", AI_STAND, AF_HARD | AF_AMBUSH),
+};
+
+const actor_array_t darkwar_sprite_tiles = {
+	.entries = _darkwar_sprite_tiles,
+	.num_entries = sizeof(_darkwar_sprite_tiles) / sizeof(actor_t)
+};
+
+const string_array_t darkwar_info_tiles = {
+	.entries = NULL,
+	.num_entries = 0
 };

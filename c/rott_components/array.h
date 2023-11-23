@@ -38,7 +38,6 @@ typedef struct string_array_t {
 	int num_entries;
 } string_array_t;
 
-/* helper macros */
 #define STRING_AT_INDEX(i, n) [i] = n
 
 /* get array index from string value */

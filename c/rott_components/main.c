@@ -29,6 +29,7 @@ SOFTWARE.
 
 #include "rtl.h"
 #include "wad.h"
+#include "darkwar.h"
 
 int main(int argc, char **argv)
 {

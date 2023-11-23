@@ -31,7 +31,58 @@ extern "C" {
 
 #include "array.h"
 
+/* directions */
+enum {
+	DIR_EAST,
+	DIR_NORTHEAST,
+	DIR_NORTH,
+	DIR_NORTHWEST,
+	DIR_WEST,
+	DIR_SOUTHWEST,
+	DIR_SOUTH,
+	DIR_SOUTHEAST,
+	DIR_NONE
+};
+
+/* actor flags */
+enum {
+	AF_NONE = 0,
+	AF_HARD = 1 << 0,
+	AF_AMBUSH = 1 << 1
+};
+
+/* ai types */
+enum {
+	AI_NONE,
+	AI_STAND,
+	AI_PATROL,
+	AI_SNEAKY
+};
+
+/* actor */
+typedef struct actor_t {
+	const char *classname;
+	unsigned int ai;
+	unsigned int dir;
+	unsigned int flags;
+} actor_t;
+
+/* actor array */
+typedef struct actor_array_t {
+	actor_t *entries;
+	int num_entries;
+} actor_array_t;
+
+#define ACTOR_AT_INDEX(_i, _classname, _ai, _dir, _flags) [_i] = {.classname = _classname, .ai = _ai, .dir = _dir, .flags = _flags}
+#define ACTOR_AT_INDEX_WITH_DIRS(_i, _classname, _ai, _flags) \
+	ACTOR_AT_INDEX(_i + 0, _classname, _ai, DIR_EAST, _flags), \
+	ACTOR_AT_INDEX(_i + 1, _classname, _ai, DIR_NORTH, _flags), \
+	ACTOR_AT_INDEX(_i + 2, _classname, _ai, DIR_WEST, _flags), \
+	ACTOR_AT_INDEX(_i + 3, _classname, _ai, DIR_SOUTH, _flags)
+
 extern const string_array_t darkwar_wall_tiles;
+extern const actor_array_t darkwar_sprite_tiles;
+extern const string_array_t darkwar_info_tiles;
 
 #ifdef __cplusplus
 }
