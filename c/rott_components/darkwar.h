@@ -59,20 +59,30 @@ enum {
 	AI_SNEAKY
 };
 
+/* actor classes */
+enum {
+	CLASS_LOWGUARD,
+	CLASS_HIGHGUARD,
+	CLASS_ROBOGUARD,
+	CLASS_STRIKEGUARD,
+	CLASS_PATROLGUN,
+	CLASS_OVERPATROL
+};
+
 /* actor */
 typedef struct actor_t {
-	const char *classname;
-	unsigned int ai;
-	unsigned int dir;
-	unsigned int flags;
+	int class;
+	int ai;
+	int dir;
+	int flags;
 } actor_t;
 
-#define ACTOR_AT_INDEX(_i, _classname, _ai, _dir, _flags) [_i] = {.classname = _classname, .ai = _ai, .dir = _dir, .flags = _flags}
-#define ACTOR_AT_INDEX_WITH_DIRS(_i, _classname, _ai, _flags) \
-	ACTOR_AT_INDEX(_i + 0, _classname, _ai, DIR_EAST, _flags), \
-	ACTOR_AT_INDEX(_i + 1, _classname, _ai, DIR_NORTH, _flags), \
-	ACTOR_AT_INDEX(_i + 2, _classname, _ai, DIR_WEST, _flags), \
-	ACTOR_AT_INDEX(_i + 3, _classname, _ai, DIR_SOUTH, _flags)
+#define ACTOR_AT_INDEX(_i, _class, _ai, _dir, _flags) [_i] = {.class = _class, .ai = _ai, .dir = _dir, .flags = _flags}
+#define ACTOR_AT_INDEX_WITH_DIRS(_i, _class, _ai, _flags) \
+	ACTOR_AT_INDEX(_i + 0, _class, _ai, DIR_EAST, _flags), \
+	ACTOR_AT_INDEX(_i + 1, _class, _ai, DIR_NORTH, _flags), \
+	ACTOR_AT_INDEX(_i + 2, _class, _ai, DIR_WEST, _flags), \
+	ACTOR_AT_INDEX(_i + 3, _class, _ai, DIR_SOUTH, _flags)
 
 extern const array_t darkwar_wall_tiles;
 extern const array_t darkwar_sprite_tiles;
