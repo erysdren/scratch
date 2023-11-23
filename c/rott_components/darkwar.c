@@ -31,7 +31,7 @@ SOFTWARE.
 
 /*
  *
- * tileset entries for the walls of Rise of the Triad's DARKWAR.WAD
+ * wall tile array for Rise of the Triad: Dark War.
  *
  * these indexes do NOT correspond to WAD indexes, but rather to the tile index
  * found in the Walls plane of a given map.
@@ -141,6 +141,11 @@ const array_t darkwar_wall_tiles = {
 	.allocated = false
 };
 
+/*
+ *
+ * actor tile array for Rise of the Triad: Dark War.
+ *
+ */
 static actor_t _darkwar_sprite_tiles[] = {
 
 	/* LOW GUARD - STAND */
