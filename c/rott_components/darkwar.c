@@ -145,6 +145,9 @@ const array_t darkwar_wall_tiles = {
  *
  * actor tile array for Rise of the Triad: Dark War.
  *
+ * these values correspond to tile values read from the Sprites plane of a
+ * given map.
+ *
  */
 static actor_t _darkwar_sprite_tiles[] = {
 
