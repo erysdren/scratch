@@ -87,12 +87,13 @@ typedef struct actor_t {
 	int flags;
 } actor_t;
 
-#define ACTOR_AT_INDEX(_i, _class, _ai, _dir, _flags) [_i] = {.class = _class, .ai = _ai, .dir = _dir, .flags = _flags}
-#define ACTOR_AT_INDEX_WITH_DIRS(_i, _class, _ai, _flags) \
-	ACTOR_AT_INDEX(_i + 0, _class, _ai, DIR_EAST, _flags), \
-	ACTOR_AT_INDEX(_i + 1, _class, _ai, DIR_NORTH, _flags), \
-	ACTOR_AT_INDEX(_i + 2, _class, _ai, DIR_WEST, _flags), \
-	ACTOR_AT_INDEX(_i + 3, _class, _ai, DIR_SOUTH, _flags)
+#define ACTOR_AT_INDEX_WITH_DIR(_i, _class, _ai, _dir, _flags) [_i] = {.class = _class, .ai = _ai, .dir = _dir, .flags = _flags}
+#define ACTOR_AT_INDEX(_i, _class, _ai, _flags) ACTOR_AT_INDEX_WITH_DIR(_i, _class, _ai, DIR_EAST, _flags)
+#define ACTOR_AT_INDEX_DIRECTIONAL(_i, _class, _ai, _flags) \
+	ACTOR_AT_INDEX_WITH_DIR(_i + 0, _class, _ai, DIR_EAST, _flags), \
+	ACTOR_AT_INDEX_WITH_DIR(_i + 1, _class, _ai, DIR_NORTH, _flags), \
+	ACTOR_AT_INDEX_WITH_DIR(_i + 2, _class, _ai, DIR_WEST, _flags), \
+	ACTOR_AT_INDEX_WITH_DIR(_i + 3, _class, _ai, DIR_SOUTH, _flags)
 
 extern const array_t darkwar_wall_tiles;
 extern const array_t darkwar_sprite_tiles;
