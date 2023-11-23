@@ -23,8 +23,8 @@ SOFTWARE.
 */
 
 #pragma once
-#ifndef _TILESET_H_
-#define _TILESET_H_
+#ifndef _ARRAY_H_
+#define _ARRAY_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,30 +32,24 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-/* tileset entry */
-typedef struct tileset_entry_t {
-	const char *name;
-	int index;
-} tileset_entry_t;
-
-/* tileset */
-typedef struct tileset_t {
-	tileset_entry_t *entries;
+/* string array */
+typedef struct string_array_t {
+	const char **entries;
 	int num_entries;
-} tileset_t;
+} string_array_t;
 
 /* helper macros */
-#define TILESET_ENTRY(i, n) [i] = {.index = i, .name = n}
+#define STRING_AT_INDEX(i, n) [i] = n
 
-/* get tileset index from tile name */
+/* get array index from string value */
 /* returns -1 on error */
-int tileset_get_index_from_name(tileset_t *tileset, const char *name);
+int string_array_get_index_from_value(string_array_t *array, const char *value);
 
-/* get tile name from tileset index */
+/* get string value from array index */
 /* returns NULL on error */
-const char *tileset_get_name_from_index(tileset_t *tileset, int index);
+const char *string_array_get_value_from_index(string_array_t *array, int index);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* _TILESET_H_ */
+#endif /* _ARRAY_H_ */

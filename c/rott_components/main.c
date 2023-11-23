@@ -29,8 +29,6 @@ SOFTWARE.
 
 #include "rtl.h"
 #include "wad.h"
-#include "tileset.h"
-#include "tileset_darkwar.h"
 
 int main(int argc, char **argv)
 {

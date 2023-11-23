@@ -27,25 +27,25 @@ SOFTWARE.
 #include <string.h>
 #include <stdlib.h>
 
-#include "tileset.h"
+#include "array.h"
 
-/* get tileset index from tile name */
+/* get array index from string value */
 /* returns -1 on error */
-int tileset_get_index_from_name(tileset_t *tileset, const char *name)
+int string_array_get_index_from_value(string_array_t *array, const char *value)
 {
 	int i;
 
 	/* sanity checks */
-	if (tileset == NULL || name == NULL)
+	if (array == NULL || value == NULL)
 		return -1;
 
 	/* slow linear search */
-	for (i = 0; i < tileset->num_entries; i++)
+	for (i = 0; i < array->num_entries; i++)
 	{
-		if (tileset->entries[i].name != NULL)
+		if (array->entries[i] != NULL)
 		{
-			if (strcmp(tileset->entries[i].name, name) == 0)
-				return tileset->entries[i].index;
+			if (strcmp(array->entries[i], value) == 0)
+				return i;
 		}
 	}
 
@@ -53,23 +53,16 @@ int tileset_get_index_from_name(tileset_t *tileset, const char *name)
 	return -1;
 }
 
-/* get tile name from tileset index */
+/* get string value from array index */
 /* returns NULL on error */
-const char *tileset_get_name_from_index(tileset_t *tileset, int index)
+const char *string_array_get_value_from_index(string_array_t *array, int index)
 {
-	int i;
-
 	/* sanity checks */
-	if (tileset == NULL || index < 0)
+	if (array == NULL)
+		return NULL;
+	if (index < 0 || index >= array->num_entries)
 		return NULL;
 
-	/* slow linear search */
-	for (i = 0; i < tileset->num_entries; i++)
-	{
-		if (index == tileset->entries[i].index)
-			return tileset->entries[i].name;
-	}
-
-	/* fail */
-	return NULL;
+	/* return value at index */
+	return array->entries[index];
 }

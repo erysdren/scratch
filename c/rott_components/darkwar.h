@@ -23,17 +23,17 @@ SOFTWARE.
 */
 
 #pragma once
-#ifndef _TILESET_DARKWAR_H_
-#define _TILESET_DARKWAR_H_
+#ifndef _DARKWAR_H_
+#define _DARKWAR_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "tileset.h"
+#include "array.h"
 
-extern const tileset_t tileset_darkwar_walls;
+extern const string_array_t darkwar_wall_tiles;
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* _TILESET_DARKWAR_H_ */
+#endif /* _DARKWAR_H_ */
