@@ -36,15 +36,13 @@ extern "C" {
 typedef uint32_t hash_t;
 
 /* hashtable entry */
-typedef struct hashtable_entry_t
-{
+typedef struct hashtable_entry_t {
 	char *key;
 	void *value;
 } hashtable_entry_t;
 
 /* hashtable */
-typedef struct hashtable_t
-{
+typedef struct hashtable_t {
 	hashtable_entry_t *entries;
 	size_t num_entries;
 	size_t capacity;
