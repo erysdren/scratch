@@ -25,11 +25,11 @@
 CC ?= gcc
 RM ?= rm -f
 
-CFLAGS ?= -std=gnu99 -O3 -Wall
-LDFLAGS ?=
+override CFLAGS += -std=gnu99 -O3 -Wall
+override LDFLAGS +=
 
 EXEC ?= rott_components
-OBJECTS = rtl.o wad.o main.o array.o hash.o fix32.o darkwar.o
+OBJECTS = rtl.o wad.o main.o array.o hash.o fix32.o pixelmap.o darkwar.o
 
 all: clean $(EXEC)
 
