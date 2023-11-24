@@ -50,6 +50,14 @@
 /c/rott_tool/*.rtc
 /c/rott_tool/*.wad
 
+# rtlx2rtl
+/c/rtlx2rtl/rtlx2rtl
+/c/rtlx2rtl/*.rtl
+/c/rtlx2rtl/*.rtc
+/c/rtlx2rtl/*.rtlx
+/c/rtlx2rtl/*.rtcx
+/c/rtlx2rtl/*.wad
+
 # troika_texture_tool
 /c/troika_texture_tool/ttt
 /c/troika_texture_tool/*.tth
