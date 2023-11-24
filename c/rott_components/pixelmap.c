@@ -28,7 +28,6 @@ SOFTWARE.
 #include <assert.h>
 
 #include "math.h"
-#include "fix32.h"
 #include "pixelmap.h"
 
 /* allocate pixelmap */

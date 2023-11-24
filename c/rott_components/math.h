@@ -29,6 +29,9 @@ SOFTWARE.
 extern "C" {
 #endif
 
+#include <math.h>
+#include "fix32.h"
+
 /* integer math */
 #define isqr(a) ((a) * (a))
 #define imuldiv(a, b, c) (((a) * (b)) / c)
