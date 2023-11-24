@@ -22,46 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#pragma once
+#ifndef _RAY_H_
+#define _RAY_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include "rtl.h"
-#include "wad.h"
-#include "pixelmap.h"
-#include "ray.h"
-#include "darkwar.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-wad_t *wad;
-pixelmap_t *palette;
-pixelmap_t *color;
-int palette_lump;
+/* initialize raycaster */
+bool ray_init(int width, int height, int len_wall, void *walls);
 
-int main(int argc, char **argv)
-{
-	/* open darkwar.wad */
-	wad = wad_open("darkwar.wad");
+/* shutdown raycaster */
+void ray_quit(void);
 
-	/* allocate pixelmaps */
-	palette = pixelmap_allocate(16, 16, PM_TYPE_RGB_888, NULL);
-	color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
+/* render one frame of raycaster */
+void ray_render(pixelmap_t *dst);
 
-	/* read palette data */
-	palette_lump = wad_get_index_from_name(wad, "PAL");
-	wad_read_lump(wad, palette_lump, palette->pixels);
-
-	/* render map */
-	ray_render(color);
-
-	FILE *file = fopen("color.data", "wb");
-	fwrite(color->pixels, 320 * 200, 1, file);
-	fclose(file);
-
-	/* free data */
-	wad_close(wad);
-	pixelmap_free(palette);
-	pixelmap_free(color);
-
-	return 0;
+#ifdef __cplusplus
 }
+#endif
+#endif /* _PIXELMAP_H_ */
