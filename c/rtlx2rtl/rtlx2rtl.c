@@ -38,14 +38,14 @@ static const char rtc_magic[4] = {'R', 'T', 'C', '\0'};
 static const char rxl_magic[4] = {'R', 'X', 'L', '\0'};
 static const char rxc_magic[4] = {'R', 'X', 'C', '\0'};
 
-static bool strext(const char *s, const char *e)
+bool strext(const char *s, const char *e)
 {
 	if (strlen(e) > strlen(s)) return false;
 	return strcmp(s + strlen(s) - strlen(e), e) == 0 ? true : false;
 }
 
 #ifndef strdup
-static char *strdup(const char *s)
+char *strdup(const char *s)
 {
 	char *r;
 	r = calloc(1, strlen(s) + 1);
@@ -54,7 +54,7 @@ static char *strdup(const char *s)
 }
 #endif
 
-static char *get_output_filename(const char *s)
+char *get_output_filename(const char *s)
 {
 	char *ret = NULL;
 
@@ -71,7 +71,7 @@ static char *get_output_filename(const char *s)
 	return ret;
 }
 
-static void print_help(void)
+void print_help(void)
 {
 	printf("\nUsage: rtlx2rtl file.rtlx file.rtcx ...\n\n");
 	exit(0);
