@@ -106,8 +106,7 @@ void pixelmap_draw8(pixelmap_t *dst, pixelmap_t *src, int x, int y, int mode)
 }
 
 /* blit pixelmap from one to another */
-void pixelmap_blit8(pixelmap_t *dst, int x1, int y1, int x2, int y2, pixelmap_t *src, int u1, int v1, int u2, int v2,
-					int mode)
+void pixelmap_blit8(pixelmap_t *dst, int x1, int y1, int x2, int y2, pixelmap_t *src, int u1, int v1, int u2, int v2, int mode)
 {
 	int w, h, u, uu, vv;
 
