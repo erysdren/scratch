@@ -48,32 +48,30 @@ typedef uint16_t ufrac32_t;
 #define FIX32_MIN INT32_MIN
 #define UFIX32_MAX UINT32_MAX
 #define UFIX32_MIN UINT32_MIN
+#define FRAC32_MAX INT16_MAX
+#define FRAC32_MIN INT16_MIN
+#define UFRAC32_MAX UINT16_MAX
+#define UFRAC32_MIN UINT16_MIN
 
-/* representation of one */
+/* representations of one */
 #define FIX32_ONE (1 << 16)
 #define UFIX32_ONE (1 << 16)
+#define FRAC32_ONE (1 << 15)
+#define UFRAC32_ONE (1 << 16)
 
 /* masks */
 #define FIX32_MASK (0xFFFF)
 #define UFIX32_MASK (0xFFFF)
-
-/* fraction representation of one */
-#define FRAC32_ONE (1 << 15)
-#define UFRAC32_ONE (1 << 16)
-
-/* fraction masks */
 #define FRAC32_MASK (0xFFFF << 16)
 #define UFRAC32_MASK (0xFFFF << 16)
 
-/* 32-bit fixed static initialization macros */
+/* static initialization macros */
 #define FIX32(a) ((fix32_t)(FIX32_ONE * (a)))
 #define UFIX32(a) ((ufix32_t)(FIX32_ONE * (a)))
-
-/* 32-bit fraction static initialization macros */
 #define FRAC32(a) ((frac32_t)((FRAC32_ONE * (a)) >= FRAC32_ONE ? FRAC32_ONE - 1 : FRAC32_ONE * (a)))
 #define UFRAC32(a) ((ufrac32_t)((UFRAC32_ONE * (a)) >= UFRAC32_ONE ? UFRAC32_ONE - 1 : UFRAC32_ONE * (a)))
 
-/* 32-bit math macros */
+/* math macros */
 #define FIX32_MUL(a, b) (((int64_t)(a) * (b)) >> 16)
 #define FIX32_DIV(a, b) (((int64_t)(a) << 16) / (b))
 #define FIX32_INV(a) (FIX32_DIV(FIX32(1), (a)))
@@ -85,25 +83,25 @@ typedef uint16_t ufrac32_t;
 #define FIX32_COS(a) fix32_sintable[((a) + 512) & 2047]
 #define FIX32_DOT3(a1, a2, a3, b1, b2, b3) (((int64_t)(a1) * (b1) + (int64_t)(a2) * (b2) + (int64_t)(a3) * (b3)) >> 16)
 
-/* 32-bit fixed to int */
+/* fixed to int */
 #define FIX32_TO_INT(a) ((a) >> 16)
 
-/* 32-bit fixed to float */
+/* fixed to float */
 #define FIX32_TO_FLOAT(a) ((a) * (1.0f / (float)FIX32_ONE))
 
-/* 32-bit fixed to double */
+/* fixed to double */
 #define FIX32_TO_DOUBLE(a) ((a) * (1.0f / (double)FIX32_ONE))
 
-/* 32-bit fixed to 32-bit fraction */
+/* fixed to fraction */
 #define FIX32_TO_FRAC32(a) ((frac32_t)((a) / 2))
 
-/* 32-bit fraction to float */
+/* fraction to float */
 #define FRAC32_TO_FLOAT(a) ((a) * (1.0f / (float)FRAC32_ONE))
 
-/* 32-bit fraction to double */
+/* fraction to double */
 #define FRAC32_TO_DOUBLE(a) ((a) * (1.0f / (double)FRAC32_ONE))
 
-/* 32-bit fraction to 32-bit fixed */
+/* fraction to fixed */
 #define FRAC32_TO_FIX32(a) ((fix32_t)((a) * 2))
 
 /* tables */
