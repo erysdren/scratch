@@ -87,8 +87,15 @@ typedef struct actor_t {
 	int flags;
 } actor_t;
 
-#define ACTOR_AT_INDEX_WITH_DIR(_i, _class, _ai, _dir, _flags) [_i] = {.class = _class, .ai = _ai, .dir = _dir, .flags = _flags}
-#define ACTOR_AT_INDEX(_i, _class, _ai, _flags) ACTOR_AT_INDEX_WITH_DIR(_i, _class, _ai, DIR_EAST, _flags)
+/* define actor in array with all values */
+#define ACTOR_AT_INDEX_WITH_DIR(_i, _class, _ai, _dir, _flags) \
+	[_i] = {.class = _class, .ai = _ai, .dir = _dir, .flags = _flags}
+
+/* define actor in array, with dir automatically set to DIR_EAST */
+#define ACTOR_AT_INDEX(_i, _class, _ai, _flags) \
+	ACTOR_AT_INDEX_WITH_DIR(_i, _class, _ai, DIR_EAST, _flags)
+
+/* define actor in array and automatically create one for each direction */
 #define ACTOR_AT_INDEX_DIRECTIONAL(_i, _class, _ai, _flags) \
 	ACTOR_AT_INDEX_WITH_DIR(_i + 0, _class, _ai, DIR_EAST, _flags), \
 	ACTOR_AT_INDEX_WITH_DIR(_i + 1, _class, _ai, DIR_NORTH, _flags), \
