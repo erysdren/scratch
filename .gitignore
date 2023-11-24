@@ -19,6 +19,7 @@
 
 # brender
 /c/brender/tile
+/c/brender/bsp
 
 # cpu8086
 /c/cpu8086/cpu8086
