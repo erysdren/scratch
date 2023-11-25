@@ -78,6 +78,10 @@ br_error prog_render(void)
 	if (prog.keys[SDL_SCANCODE_PAGEDOWN])
 		BrMatrix34PreTranslate(&prog.camera->t.t.mat, BR_SCALAR(0), BR_SCALAR(-8) * BR_SCALAR(dt), BR_SCALAR(0));
 
+	/* exit on escape */
+	if (prog.keys[SDL_SCANCODE_ESCAPE])
+		return BRE_FAIL;
+
 	/* do render */
     BrRendererFrameBegin();
 	BrPixelmapFill(prog.colour, BR_COLOUR_RGB(66, 66, 66));
