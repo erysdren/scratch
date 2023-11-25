@@ -79,9 +79,11 @@ br_error prog_render(void)
 		BrMatrix34PreTranslate(&prog.camera->t.t.mat, BR_SCALAR(0), BR_SCALAR(-8) * BR_SCALAR(dt), BR_SCALAR(0));
 
 	/* do render */
+    BrRendererFrameBegin();
 	BrPixelmapFill(prog.colour, BR_COLOUR_RGB(66, 66, 66));
 	BrPixelmapFill(prog.depth, 0xFFFFFFFF);
 	BrZbSceneRender(prog.world, prog.camera, prog.colour, prog.depth);
+    BrRendererFrameEnd();
 
 	return BRE_OK;
 }

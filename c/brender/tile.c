@@ -178,9 +178,11 @@ br_error prog_render(void)
 	}
 
 	/* do render */
+    BrRendererFrameBegin();
 	BrPixelmapFill(prog.colour, BR_COLOUR_RGB(66, 66, 66));
 	BrPixelmapFill(prog.depth, 0xFFFFFFFF);
 	BrZbSceneRender(prog.world, prog.camera, prog.colour, prog.depth);
+    BrRendererFrameEnd();
 
 	return BRE_OK;
 }

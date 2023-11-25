@@ -194,15 +194,9 @@ br_error BrProgramLoop(void)
 				r = event_cbfn(&event);
 		}
 
-		/* begin render */
-		BrRendererFrameBegin();
-
 		/* do user hook */
 		if (render_cbfn)
 			r = render_cbfn();
-
-		/* end render */
-		BrRendererFrameEnd();
 
 		/* push to screen */
 		BrPixelmapDoubleBuffer(screen, colour);
