@@ -28,7 +28,7 @@ RM ?= rm -f
 override CFLAGS += -std=gnu99 -O3 -Wall
 override LDFLAGS +=
 
-EXEC ?= rott_components
+EXEC ?= rott
 OBJECTS = rtl.o wad.o main.o array.o hash.o fix32.o pixelmap.o ray.o darkwar.o
 
 all: clean $(EXEC)
