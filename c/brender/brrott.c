@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 	BrProgramEventHook(prog_event);
 
 	/* initialize program */
-	BrProgramInit("bsp", 1280, 720);
+	BrProgramInit("brrott", 1280, 720);
 
 	/* do main loop */
 	BrProgramLoop();

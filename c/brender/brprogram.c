@@ -219,6 +219,7 @@ void BrProgramQuit(void)
 	if (depth) BrPixelmapFree(depth);
 	if (colour) BrPixelmapFree(colour);
 	if (screen) BrPixelmapFree(screen);
+	if (world) BrActorFree(world);
 
 	/* end BRender */
 	BrEnd();

@@ -4,12 +4,12 @@ RM ?= rm -f
 PKGCONFIG ?= pkg-config
 
 TILE_EXEC ?= tile
-BSP_EXEC ?= bsp
-EXECS = $(TILE_EXEC) $(BSP_EXEC)
+BRROTT_EXEC ?= brrott
+EXECS = $(TILE_EXEC) $(BRROTT_EXEC)
 
 TILE_OBJECTS = tile.o brprogram.o
-BSP_OBJECTS = bsp.o brprogram.o
-OBJECTS = $(TILE_OBJECTS) $(BSP_OBJECTS)
+BRROTT_OBJECTS = brrott.o brprogram.o
+OBJECTS = $(TILE_OBJECTS) $(BRROTT_OBJECTS)
 
 override CFLAGS += $(shell $(PKGCONFIG) sdl2 brender --cflags)
 override LDFLAGS += -lm $(shell $(PKGCONFIG) sdl2 brender --libs)
@@ -22,7 +22,7 @@ clean:
 $(TILE_EXEC): $(TILE_OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-$(BSP_EXEC): $(BSP_OBJECTS)
+$(BRROTT_EXEC): $(BRROTT_OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
