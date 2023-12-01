@@ -81,7 +81,6 @@ typedef uint16_t ufrac32_t;
 #define FIX32_ROUND(a) (((a)&FIX32_MASK) < FIX32(0.5f) ? FIX32_FLOOR(a) : FIX32_CEIL(a))
 #define FIX32_SIN(a) fix32_sintable[(a)&2047]
 #define FIX32_COS(a) fix32_sintable[((a) + 512) & 2047]
-#define FIX32_DOT3(a1, a2, a3, b1, b2, b3) (((int64_t)(a1) * (b1) + (int64_t)(a2) * (b2) + (int64_t)(a3) * (b3)) >> 16)
 
 /* fixed to int */
 #define FIX32_TO_INT(a) ((a) >> 16)

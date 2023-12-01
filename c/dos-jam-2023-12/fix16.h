@@ -79,7 +79,6 @@ typedef uint8_t ufrac16_t;
 #define FIX16_CEIL(a) ((((a)&FRAC16_MASK) == 0) ? (a) : FIX16_FLOOR((a) + FIX16_ONE))
 #define FIX16_FRAC(a) ((a)&FRAC16_MASK)
 #define FIX16_ROUND(a) (((a)&FRAC16_MASK) > FIX16(0.5f) ? FIX16_FLOOR(a) : FIX16_CEIL(a))
-#define FIX16_DOT3(a1, a2, a3, b1, b2, b3) (((int32_t)(a1) * (b1) + (int32_t)(a2) * (b2) + (int32_t)(a3) * (b3)) >> 8)
 
 /* fixed to int */
 #define FIX16_TO_INT(a) ((a) >> 8)

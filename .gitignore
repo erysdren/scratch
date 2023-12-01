@@ -16,6 +16,8 @@
 *.exe
 *.EXE
 *.img
+*.swp
+*.SWP
 
 # brender
 /c/brender/tile

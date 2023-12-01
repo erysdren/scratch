@@ -47,12 +47,12 @@ int main(int argc, char **argv)
 		error("couldn't init video mode");
 
 	/* allocate pixelmaps */
-	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, DOS_GRAPHICS_MEMORY);
+	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, (void *)DOS_GRAPHICS_MEMORY);
 	gamestate.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
 	gamestate.depth = pixelmap_allocate(320, 200, PM_TYPE_DEPTH_16, NULL);
 
 	/* main loop */
-	while (1)
+	while (!kbhit())
 	{
 		pixelmap_clear8(gamestate.color, 15);
 		pixelmap_copy(gamestate.screen, gamestate.color);
