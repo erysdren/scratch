@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# imports
+import sys
+import struct
+import os
+import json
+
+if __name__ == "__main__":
+	if len(sys.argv) < 2:
+		print("usage: lvlgen map1.tmj map2.tmj map3.tmj ...")
+		exit(0)
+
+	# loop over all inputs
+	for i in range(1, len(sys.argv)):
+
+		# get filenames
+		infilename = sys.argv[i]
+		outfilename = os.path.splitext(infilename)[0] + ".lvl"
+
+		# open files
+		infile = open(infilename, "r")
+		injson = json.load(infile)
+		outfile = open(outfilename, "wb")
+
+		# write header
+		outfile.write(bytes("LVL\0".encode("ascii"))) # magic
+		outfile.write(struct.pack("<i", injson["width"])) # width
+		outfile.write(struct.pack("<i", injson["height"])) # height
+
+		# sanity check
+		if len(injson["layers"]) != 3:
+			print("incorrect number of layers in TMJ, should be 3")
+			continue
+
+		# write planes
+		for layer in injson["layers"]:
+			for i in range(len(layer["data"])):
+				outfile.write(struct.pack("<H", layer["data"][i]))
+
+		# close files
+		infile.close()
+		outfile.close()
