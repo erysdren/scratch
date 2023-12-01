@@ -12,6 +12,9 @@ all: clean $(EXEC)
 clean:
 	$(RM) $(OBJECTS) $(EXEC)
 
+run: $(EXEC)
+	dosbox-x -conf dosbox-x.conf
+
 $(EXEC): $(OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
