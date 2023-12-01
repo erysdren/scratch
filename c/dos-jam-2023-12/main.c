@@ -35,18 +35,13 @@ SOFTWARE.
 #include "console.h"
 #include "keyboard.h"
 #include "level.h"
-
-#define RCL_PIXEL_FUNCTION pixel_at
-#define RCL_USE_COS_LUT 2
-#define RCL_COMPUTE_FLOOR_DEPTH 0
-#define RCL_COMPUTE_CEILING_DEPTH 0
-#define RCL_TEXTURE_VERTICAL_STRETCH 0
-#define RCL_USE_DIST_APPROX 1
-#define RCL_UNIT(x) (int32_t)((x) * RCL_UNITS_PER_SQUARE)
-#include "raycastlib.h"
+#include "cvar.h"
+#include "cmd.h"
 
 /* global gamestate */
 gamestate_t gamestate;
+
+cvar_t stringcvar = CVAR_STRING("stringcvar", "hello world!");
 
 bool load_palette(const char *filename)
 {
@@ -76,49 +71,10 @@ bool load_palette(const char *filename)
 	return true;
 }
 
-void pixel_at(RCL_PixelInfo *pixel)
-{
-	if (pixel->isWall)
-		pixelmap_pixel8(gamestate.color, pixel->position.x, pixel->position.y) = 31;
-	else if (pixel->isFloor)
-		pixelmap_pixel8(gamestate.color, pixel->position.x, pixel->position.y) = 15;
-	else if (pixel->isHorizon)
-		pixelmap_pixel8(gamestate.color, pixel->position.x, pixel->position.y) = 0;
-}
-
-RCL_Unit texture_at(int16_t x, int16_t y)
-{
-	if (x >= 0 && x < gamestate.level->width && y >= 0 && y < gamestate.level->height)
-		return gamestate.level->planes[1][y * gamestate.level->width + x];
-
-	return 0;
-}
-
-RCL_Unit floor_at(int16_t x, int16_t y)
-{
-	if (x >= 0 && x < gamestate.level->width && y >= 0 && y < gamestate.level->height)
-	{
-		if (gamestate.level->planes[1][y * gamestate.level->width + x])
-			return RCL_UNIT(1);
-	}
-
-	return 0;
-}
-
-RCL_Unit ceiling_at(int16_t x, int16_t y)
-{
-	if (x >= 0 && x < gamestate.level->width && y >= 0 && y < gamestate.level->height)
-		return RCL_UNIT(1);
-
-	return 0;
-}
-
 /* main */
 int main(int argc, char **argv)
 {
 	int key;
-	RCL_RayConstraints ray;
-	RCL_Camera camera;
 
 	/* zero gamestate */
 	memset(&gamestate, 0, sizeof(gamestate_t));
@@ -143,18 +99,11 @@ int main(int argc, char **argv)
 	/* init console */
 	console_init();
 
+	/* register cvar */
+	cvar_register(&stringcvar);
+
 	/* prepare raycaster */
-	RCL_initCamera(&camera);
-	RCL_initRayConstraints(&ray);
 	gamestate.level = level_load("casino.lvl");
-	ray.maxHits = 32;
-	ray.maxSteps = 32;
-	camera.direction = 0;
-	camera.position.x = RCL_UNIT(10.5);
-	camera.position.y = RCL_UNIT(16.5);
-	camera.height = RCL_UNIT(0.5);
-	camera.resolution.x = gamestate.color->width;
-	camera.resolution.y = gamestate.color->height;
 
 	/* main loop */
 	while (true)
@@ -163,29 +112,17 @@ int main(int argc, char **argv)
 		if (gamestate.keys[SC_ESCAPE])
 			break;
 
-		if (gamestate.keys[SC_A])
-			camera.direction -= 1;
-		else if (gamestate.keys[SC_D])
-			camera.direction += 1;
-
-		RCL_Vector2D direction = RCL_angleToDirection(camera.direction);
-
-		direction.x /= 10;
-		direction.y /= 10;
-
-		if (gamestate.keys[SC_W])
+		/* handle console */
+		while ((key = kb_getkey()) >= 0)
 		{
-			camera.position.x += direction.x;
-			camera.position.y += direction.y;
-		}
-		else if (gamestate.keys[SC_S])
-		{
-			camera.position.x -= direction.x;
-			camera.position.y -= direction.y;
+			console_input(key);
 		}
 
-		/* render */
-		RCL_renderSimple(camera, floor_at, texture_at, NULL, ray);
+		/* clear screen */
+		pixelmap_clear8(gamestate.color, 0);
+
+		/* render console */
+		console_render(gamestate.color);
 
 		/* copy to screen */
 		pixelmap_copy(gamestate.screen, gamestate.color);

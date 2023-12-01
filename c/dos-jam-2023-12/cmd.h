@@ -23,21 +23,36 @@ SOFTWARE.
 */
 
 #pragma once
-#ifndef _CONSOLE_H_
-#define _CONSOLE_H_
+#ifndef _CMD_H_
+#define _CMD_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void console_init(void);
-void console_quit(void);
-void console_push_up(char *src);
-void console_printf(const char *s, ...);
-void console_render(pixelmap_t *dst);
-void console_input(int c);
-void console_eval(char *s);
+/* console command structure */
+typedef struct cmd_t
+{
+	/* name for searching */
+	const char *name;
+
+	/* function to call */
+	int (*func)(int, char**);
+
+	/* next in chain */
+	struct cmd_t *next;
+
+} cmd_t;
+
+/* cmd creation macro */
+#define CMD(n, f) (cmd_t){ .name = n, .func = f, .next = NULL }
+
+/* retrieve cmd from chain */
+cmd_t *cmd_retrieve(const char *name);
+
+/* add cmd to chain */
+void cmd_register(cmd_t *cmd);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* _CONSOLE_H_ */
+#endif /* _CMD_H_ */

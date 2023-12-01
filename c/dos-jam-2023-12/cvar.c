@@ -22,22 +22,51 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
-#ifndef _CONSOLE_H_
-#define _CONSOLE_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <ctype.h>
 
-void console_init(void);
-void console_quit(void);
-void console_push_up(char *src);
-void console_printf(const char *s, ...);
-void console_render(pixelmap_t *dst);
-void console_input(int c);
-void console_eval(char *s);
+#include "cvar.h"
 
-#ifdef __cplusplus
+/* global cvar chain */
+static cvar_t *cvar_list = NULL;
+
+/* retrieve cvar from chain */
+cvar_t *cvar_retrieve(const char *name)
+{
+	cvar_t *cvar = cvar_list;
+
+	while (cvar != NULL)
+	{
+		if (strcasecmp(name, cvar->name) == 0)
+			return cvar;
+
+		/* move down chain */
+		cvar = cvar->next;
+	}
+
+	return NULL;
 }
-#endif
-#endif /* _CONSOLE_H_ */
+
+/* add cvar to chain */
+void cvar_register(cvar_t *cvar)
+{
+	/* don't add it if there's already one in the chain with the same name */
+	if (cvar_retrieve(cvar->name) != NULL)
+		return;
+
+	if (cvar_list == NULL)
+	{
+		/* start chain */
+		cvar_list = cvar;
+	}
+	else
+	{
+		/* add to chain */
+		cvar->next = cvar_list;
+		cvar_list = cvar;
+	}
+}

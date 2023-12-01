@@ -8,7 +8,7 @@ CFLAGS += -Ofast -ffast-math -funroll-loops -fomit-frame-pointer
 
 EXEC ?= ray.exe
 OBJECTS = fix32.o hash.o pixelmap.o ray.o dos.o main.o utils.o math.o \
-	console.o keyboard.o level.o
+	console.o keyboard.o level.o cvar.o cmd.o
 
 all: clean $(EXEC)
 

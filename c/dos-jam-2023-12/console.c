@@ -31,6 +31,8 @@ SOFTWARE.
 
 #include "pixelmap.h"
 #include "console.h"
+#include "cmd.h"
+#include "cvar.h"
 
 static struct {
 	pixelmap_t *font8x8;
@@ -39,6 +41,41 @@ static struct {
 	int line_len;
 	int cursor;
 } console;
+
+static char **tokenize(char *s, int *num_args)
+{
+	static char *argv[32];
+	int argc = 0;
+	char *ptr, *end;
+
+	ptr = s;
+	for(;;)
+	{
+		while(*ptr && isspace(*ptr))
+			ptr++;
+
+		if(!*ptr)
+			break;
+
+		end = ptr + 1;
+
+		while(*end && !isspace(*end))
+			end++;
+
+		if (argc < 32 - 1)
+			argv[argc++] = ptr;
+
+		if (!*end)
+			break;
+
+		*end = 0;
+		ptr = end + 1;
+	}
+
+	argv[argc] = 0;
+	*num_args = argc;
+	return argv;
+}
 
 void console_init(void)
 {
@@ -141,15 +178,72 @@ void console_render(pixelmap_t *dst)
 
 void console_eval(char *s)
 {
-	if (strcmp(s, "quit") == 0)
+	int argc;
+	char **argv;
+	cmd_t *cmd;
+	cvar_t *cvar;
+
+	argv = tokenize(s, &argc);
+
+	if (!argv || !argc)
+		return;
+
+	/* check for cmd */
+	if ((cmd = cmd_retrieve(argv[0])) != NULL)
 	{
-		exit(0);
+		cmd->func(argc, argv);
+		return;
+	}
+
+	/* check cvar */
+	if ((cvar = cvar_retrieve(argv[0])) != NULL)
+	{
+		/* user probably wants to set it */
+		if (argv[1])
+		{
+			/* set value */
+		}
+		else
+		{
+			/* print value */
+			switch (cvar->type)
+			{
+				case CVAR_TYPE_BOOL:
+					if (cvar->value.b)
+						console_printf("true");
+					else
+						console_printf("false");
+					break;
+
+				case CVAR_TYPE_INT:
+					console_printf("%d", cvar->value.i);
+					break;
+
+				case CVAR_TYPE_UINT:
+					console_printf("%u", cvar->value.u);
+					break;
+
+				case CVAR_TYPE_FIXED:
+					console_printf("%0.4f", FIX32_TO_FLOAT(cvar->value.x));
+					break;
+
+				case CVAR_TYPE_FLOAT:
+					console_printf("%0.4f", cvar->value.f);
+					break;
+
+				case CVAR_TYPE_STRING:
+					console_printf("%s", cvar->value.s);
+					break;
+			}
+		}
+
+		return;
 	}
 }
 
 void console_input(int c)
 {
-	switch(c)
+	switch (c)
 	{
 		/* newlines */
 		case '\n':
@@ -161,6 +255,21 @@ void console_input(int c)
 			console_eval(console.line);
 			break;
 
+		/* backspace */
+		case '\b':
+			if (console.line_len)
+			{
+				if (console.cursor == console.line_len)
+				{
+					console.line[console.line_len] = '\0';
+					pixelmap_pixel8(console.screen, console.line_len - 1, 24) = '\0';
+					console.line_len--;
+					console.cursor--;
+				}
+			}
+			break;
+
+		/* printable */
 		default:
 			if (c < 256 && isprint(c) && console.line_len < 39)
 			{
