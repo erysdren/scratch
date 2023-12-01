@@ -6,7 +6,7 @@ RM ?= rm -f
 
 EXEC ?= ray.exe
 OBJECTS = fix32.o hash.o pixelmap.o ray.o dos.o main.o utils.o math.o \
-	console.o
+	console.o keyboard.o
 
 all: clean $(EXEC)
 

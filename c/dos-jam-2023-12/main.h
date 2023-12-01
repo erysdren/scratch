@@ -30,6 +30,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include "dos.h"
 
 #include "pixelmap.h"
 
@@ -40,6 +41,10 @@ typedef struct gamestate_t {
 	pixelmap_t *color;
 	pixelmap_t *depth;
 	uint8_t palette[256][3];
+	_go32_dpmi_seginfo kbhandler_old;
+	_go32_dpmi_seginfo kbhandler_new;
+	char keys[256];
+	char key_last;
 } gamestate_t;
 
 /* global gamestate */

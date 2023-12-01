@@ -23,20 +23,17 @@ SOFTWARE.
 */
 
 #pragma once
-#ifndef _CONSOLE_H_
-#define _CONSOLE_H_
+#ifndef _KEYBOARD_H_
+#define _KEYBOARD_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void console_init(void);
-void console_quit(void);
-void console_push_up(char *src);
-void console_printf(const char *s, ...);
-void console_render(pixelmap_t *dst);
-void console_input(int c);
+void kb_init(void);
+void kb_quit(void);
+int kb_getkey(void);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* _CONSOLE_H_ */
+#endif /* _KEYBOARD_H_ */

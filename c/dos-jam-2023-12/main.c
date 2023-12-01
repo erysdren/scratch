@@ -33,6 +33,7 @@ SOFTWARE.
 #include "dos.h"
 #include "utils.h"
 #include "console.h"
+#include "keyboard.h"
 
 /* global gamestate */
 gamestate_t gamestate;
@@ -68,8 +69,13 @@ bool load_palette(const char *filename)
 /* main */
 int main(int argc, char **argv)
 {
+	int key;
+
 	/* zero gamestate */
 	memset(&gamestate, 0, sizeof(gamestate_t));
+
+	/* init kbhandler */
+	kb_init();
 
 	/* set video mode */
 	gamestate.video_mode_old = dos_get_mode();
@@ -94,11 +100,19 @@ int main(int argc, char **argv)
 	console_push_up("excessive\nnewline\ntest\n2023");
 
 	/* main loop */
-	while (!kbhit())
+	while (true)
 	{
 		pixelmap_clear8(gamestate.color, 0);
 		console_render(gamestate.color);
 		pixelmap_copy(gamestate.screen, gamestate.color);
+
+		if (gamestate.keys[SC_ESCAPE])
+			break;
+
+		while ((key = kb_getkey()) >= 0)
+		{
+			console_input(key);
+		}
 	}
 
 	/* quit console */
@@ -111,6 +125,9 @@ int main(int argc, char **argv)
 
 	/* reset video mode */
 	dos_set_mode(gamestate.video_mode_old);
+
+	/* quit kbhandler */
+	kb_quit();
 
 	return 0;
 }

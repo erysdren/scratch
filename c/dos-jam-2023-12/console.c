@@ -27,6 +27,7 @@ SOFTWARE.
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #include "pixelmap.h"
 #include "console.h"
@@ -34,6 +35,9 @@ SOFTWARE.
 static struct {
 	pixelmap_t *font8x8;
 	pixelmap_t *screen;
+	char line[40];
+	int line_len;
+	int cursor;
 } console;
 
 void console_init(void)
@@ -62,9 +66,6 @@ void console_push_up(char *src)
 	int len;
 	int i;
 
-	/* get len */
-	len = strlen(src) > console.screen->width ? console.screen->width : strlen(src);
-
 	/* bump text up */
 	for (i = 1; i < console.screen->height - 1; i++)
 	{
@@ -78,6 +79,13 @@ void console_push_up(char *src)
 
 	/* clear cur line */
 	memset(cur, 0, console.screen->stride);
+
+	/* sanity check */
+	if (!src)
+		return;
+
+	/* get len */
+	len = strlen(src) > console.screen->width ? console.screen->width : strlen(src);
 
 	/* copy in new text (and handle newline) */
 	for (p = src; *p; p++)
@@ -128,5 +136,40 @@ void console_render(pixelmap_t *dst)
 
 			pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, console.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
 		}
+	}
+}
+
+void console_eval(char *s)
+{
+	if (strcmp(s, "quit") == 0)
+	{
+		exit(0);
+	}
+}
+
+void console_input(int c)
+{
+	switch(c)
+	{
+		/* newlines */
+		case '\n':
+		case '\r':
+			console.line[console.line_len] = '\0';
+			console.line_len = console.cursor = 0;
+			console_push_up(console.line);
+			memset(&pixelmap_pixel8(console.screen, 0, 24), 0, console.screen->stride);
+			console_eval(console.line);
+			break;
+
+		default:
+			if (c < 256 && isprint(c) && console.line_len < 39)
+			{
+				if (console.cursor == console.line_len)
+				{
+					console.line[console.line_len++] = c;
+					pixelmap_pixel8(console.screen, console.line_len - 1, 24) = c;
+					console.cursor++;
+				}
+			}
 	}
 }
