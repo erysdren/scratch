@@ -91,7 +91,7 @@ void pixelmap_liquid8(pixelmap_t *dst, pixelmap_t *src, uint64_t tick);
 void pixelmap_blend8(pixelmap_t *dst, pixelmap_t *src1, pixelmap_t *src2, pixelmap_t *clut);
 void pixelmap_line8(pixelmap_t *dst, int x1, int y1, int x2, int y2, uint8_t color);
 void pixelmap_rect8(pixelmap_t *dst, int x, int y, int w, int h, uint8_t color);
-#define pixelmap_pixel8(p, x, y) (p)->pixels[(y) * (p)->width + (x)]
+#define pixelmap_pixel8(p, x, y) (p)->scanlines.b[y][x]
 
 #ifdef __cplusplus
 }

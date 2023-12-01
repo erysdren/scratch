@@ -5,7 +5,8 @@ AS = i586-pc-msdosdjgpp-as
 RM ?= rm -f
 
 EXEC ?= ray.exe
-OBJECTS = fix32.o hash.o pixelmap.o ray.o dos.o main.o utils.o math.o
+OBJECTS = fix32.o hash.o pixelmap.o ray.o dos.o main.o utils.o math.o \
+	console.o
 
 all: clean $(EXEC)
 

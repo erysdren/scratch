@@ -31,6 +31,7 @@ SOFTWARE.
 #include "pixelmap.h"
 #include "dos.h"
 #include "utils.h"
+#include "console.h"
 
 /* global gamestate */
 gamestate_t gamestate;
@@ -51,12 +52,23 @@ int main(int argc, char **argv)
 	gamestate.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
 	gamestate.depth = pixelmap_allocate(320, 200, PM_TYPE_DEPTH_16, NULL);
 
+	/* init console */
+	console_init();
+
+	console_push_up("hello world 1!");
+	console_push_up("oh no dear");
+	console_push_up("ffffffffffffffffffff");
+
 	/* main loop */
 	while (!kbhit())
 	{
-		pixelmap_clear8(gamestate.color, 15);
+		pixelmap_clear8(gamestate.color, 0);
+		console_render(gamestate.color);
 		pixelmap_copy(gamestate.screen, gamestate.color);
 	}
+
+	/* quit console */
+	console_quit();
 
 	/* free pixelmaps */
 	pixelmap_free(gamestate.screen);
