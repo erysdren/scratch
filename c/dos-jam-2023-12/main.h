@@ -33,14 +33,22 @@ extern "C" {
 #include "dos.h"
 
 #include "pixelmap.h"
+#include "level.h"
 
 typedef struct gamestate_t {
-	int video_mode_old;
-	int video_mode;
+
+	/* game */
+	level_t *level;
+
+	/* video */
 	pixelmap_t *screen;
 	pixelmap_t *color;
 	pixelmap_t *depth;
 	uint8_t palette[256][3];
+
+	/* dos */
+	int video_mode_old;
+	int video_mode;
 	_go32_dpmi_seginfo kbhandler_old;
 	_go32_dpmi_seginfo kbhandler_new;
 	char keys[256];

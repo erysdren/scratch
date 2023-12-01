@@ -4,9 +4,11 @@ LD = i586-pc-msdosdjgpp-ld
 AS = i586-pc-msdosdjgpp-as
 RM ?= rm -f
 
+CFLAGS += -Ofast -ffast-math -funroll-loops -fomit-frame-pointer
+
 EXEC ?= ray.exe
 OBJECTS = fix32.o hash.o pixelmap.o ray.o dos.o main.o utils.o math.o \
-	console.o keyboard.o
+	console.o keyboard.o level.o
 
 all: clean $(EXEC)
 

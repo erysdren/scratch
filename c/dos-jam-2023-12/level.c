@@ -35,7 +35,7 @@ const char lvl_magic[4] = "LVL\0";
 level_t *level_load(const char *filename)
 {
 	FILE *file;
-	pixelmap_t *level;
+	level_t *level;
 	char magic[4];
 	int32_t width, height;
 
@@ -110,11 +110,11 @@ void level_free(level_t *level)
 	if (level)
 	{
 		if (level->planes[0])
-			free(level->planes[0])
+			free(level->planes[0]);
 		if (level->planes[1])
-			free(level->planes[1])
+			free(level->planes[1]);
 		if (level->planes[2])
-			free(level->planes[2])
+			free(level->planes[2]);
 
 		free(level);
 	}
