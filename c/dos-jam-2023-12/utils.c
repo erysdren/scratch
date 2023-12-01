@@ -26,45 +26,24 @@ SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "main.h"
-#include "pixelmap.h"
 #include "dos.h"
 #include "utils.h"
 
-/* global gamestate */
-gamestate_t gamestate;
-
-/* main */
-int main(int argc, char **argv)
+void error(const char *s, ...)
 {
-	/* zero gamestate */
-	memset(&gamestate, 0, sizeof(gamestate_t));
+	static char errbuf[256];
+	va_list args;
 
-	/* set video mode */
-	gamestate.video_mode_old = dos_get_mode();
-	if ((gamestate.video_mode = dos_set_mode(DOS_MODE_13)) != DOS_MODE_13)
-		error("couldn't init video mode");
+	va_start(args, s);
+	vsnprintf(errbuf, 256, s, args);
+	va_end(args);
 
-	/* allocate pixelmaps */
-	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, DOS_GRAPHICS_MEMORY);
-	gamestate.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
-	gamestate.depth = pixelmap_allocate(320, 200, PM_TYPE_DEPTH_16, NULL);
-
-	/* main loop */
-	while (1)
-	{
-		pixelmap_clear8(gamestate.color, 15);
-		pixelmap_copy(gamestate.screen, gamestate.color);
-	}
-
-	/* free pixelmaps */
-	pixelmap_free(gamestate.screen);
-	pixelmap_free(gamestate.color);
-	pixelmap_free(gamestate.depth);
-
-	/* reset video mode */
 	dos_set_mode(gamestate.video_mode_old);
 
-	return 0;
+	printf("Error: %s\n", errbuf);
+
+	exit(0);
 }

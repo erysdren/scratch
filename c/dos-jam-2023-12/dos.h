@@ -140,7 +140,7 @@ typedef struct
 } vesa_mode_info_t;
 
 /* mode-agnostic functions */
-void dos_set_mode(uint16_t mode);
+int dos_set_mode(uint16_t mode);
 int dos_get_mode();
 void dos_clear_screen();
 

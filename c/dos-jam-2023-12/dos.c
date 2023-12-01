@@ -29,11 +29,13 @@ SOFTWARE.
  */
 
 /* set mode of vga adapter */
-void dos_set_mode(uint16_t mode)
+int dos_set_mode(uint16_t mode)
 {
 	union REGS r;
 	r.w.ax = mode;
 	int386(0x10, &r, &r);
+
+	return dos_get_mode();
 }
 
 /* get mode of vga adapter */

@@ -1,4 +1,4 @@
-/*
+/*/*
 MIT License
 
 Copyright (c) 2023 erysdren (it/she/they)
@@ -22,49 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#pragma once
+#ifndef _MAIN_H_
+#define _MAIN_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include "main.h"
 #include "pixelmap.h"
-#include "dos.h"
-#include "utils.h"
+
+typedef struct gamestate_t {
+	int video_mode_old;
+	int video_mode;
+	pixelmap_t *screen;
+	pixelmap_t *color;
+	pixelmap_t *depth;
+} gamestate_t;
 
 /* global gamestate */
-gamestate_t gamestate;
+extern gamestate_t gamestate;
 
-/* main */
-int main(int argc, char **argv)
-{
-	/* zero gamestate */
-	memset(&gamestate, 0, sizeof(gamestate_t));
-
-	/* set video mode */
-	gamestate.video_mode_old = dos_get_mode();
-	if ((gamestate.video_mode = dos_set_mode(DOS_MODE_13)) != DOS_MODE_13)
-		error("couldn't init video mode");
-
-	/* allocate pixelmaps */
-	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, DOS_GRAPHICS_MEMORY);
-	gamestate.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
-	gamestate.depth = pixelmap_allocate(320, 200, PM_TYPE_DEPTH_16, NULL);
-
-	/* main loop */
-	while (1)
-	{
-		pixelmap_clear8(gamestate.color, 15);
-		pixelmap_copy(gamestate.screen, gamestate.color);
-	}
-
-	/* free pixelmaps */
-	pixelmap_free(gamestate.screen);
-	pixelmap_free(gamestate.color);
-	pixelmap_free(gamestate.depth);
-
-	/* reset video mode */
-	dos_set_mode(gamestate.video_mode_old);
-
-	return 0;
+#ifdef __cplusplus
 }
+#endif
+#endif /* _MAIN_H_ */
