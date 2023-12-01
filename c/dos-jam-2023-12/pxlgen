@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# imports
+import sys
+import struct
+import os
+from PIL import Image
+
+if __name__ == "__main__":
+	if len(sys.argv) < 2:
+		print("usage: pxlgen image1.png image2.bmp image3.jpg ...")
+		exit(0)
+
+	# loop over all inputs
+	for i in range(1, len(sys.argv)):
+
+		# get filenames
+		infilename = sys.argv[i]
+		outfilename = os.path.splitext(infilename)[0] + ".pxl"
+
+		# open files
+		infile = Image.open(infilename)
+		outfile = open(outfilename, "wb")
+
+		# sanity check
+		if infile.mode != "P":
+			print("{0} is not 8bpp, try again".format(infilename))
+			continue
+
+		# write header
+		outfile.write(bytes("PXL\0".encode("ascii"))) # magic
+		outfile.write(struct.pack("<i", 0)) # type
+		outfile.write(struct.pack("<i", infile.size[0])) # width
+		outfile.write(struct.pack("<i", infile.size[1])) # height
+		outfile.write(struct.pack("<i", infile.size[0])) # stride
+
+		# write pixels
+		pixels = infile.load()
+		for y in range(infile.size[1]):
+			for x in range(infile.size[0]):
+				pixel = pixels[x, y]
+				outfile.write(struct.pack("<B", pixel))
+
+		# close files
+		infile.close()
+		outfile.close()

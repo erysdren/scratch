@@ -31,8 +31,6 @@ SOFTWARE.
 #include "pixelmap.h"
 #include "console.h"
 
-#include "font8x8.h"
-
 static struct {
 	pixelmap_t *font8x8;
 	pixelmap_t *screen;
@@ -47,7 +45,7 @@ void console_init(void)
 	console.screen = pixelmap_allocate(40, 25, PM_TYPE_INDEX_8, NULL);
 
 	/* allocate font */
-	console.font8x8 = pixelmap_allocate(2048, 8, PM_TYPE_INDEX_8, font8x8_data);
+	console.font8x8 = pixelmap_load("font8x8.pxl");
 }
 
 void console_quit(void)
@@ -58,8 +56,9 @@ void console_quit(void)
 
 void console_push_up(char *src)
 {
-	void *cur;
-	void *prev;
+	char *cur;
+	char *prev;
+	char *p;
 	int len;
 	int i;
 
@@ -77,9 +76,22 @@ void console_push_up(char *src)
 		memcpy(prev, cur, console.screen->stride);
 	}
 
-	/* copy in new text */
+	/* clear cur line */
 	memset(cur, 0, console.screen->stride);
-	memcpy(cur, src, len);
+
+	/* copy in new text (and handle newline) */
+	for (p = src; *p; p++)
+	{
+		/* handle newline */
+		if (*p == '\n')
+		{
+			console_push_up(p + 1);
+			return;
+		}
+
+		/* copy char */
+		*cur++ = *p;
+	}
 }
 
 void console_printf(const char *s, ...)

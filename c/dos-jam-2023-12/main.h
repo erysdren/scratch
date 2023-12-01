@@ -29,6 +29,8 @@ SOFTWARE.
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 #include "pixelmap.h"
 
 typedef struct gamestate_t {
@@ -37,6 +39,7 @@ typedef struct gamestate_t {
 	pixelmap_t *screen;
 	pixelmap_t *color;
 	pixelmap_t *depth;
+	uint8_t palette[256][3];
 } gamestate_t;
 
 /* global gamestate */

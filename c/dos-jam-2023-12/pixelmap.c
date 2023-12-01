@@ -29,6 +29,67 @@ SOFTWARE.
 
 #include "math.h"
 #include "pixelmap.h"
+#include "console.h"
+
+const char pxl_magic[4] = "PXL\0";
+
+pixelmap_t *pixelmap_load(const char *filename)
+{
+	FILE *file;
+	pixelmap_t *pixelmap;
+	char magic[4];
+	int32_t type, width, height, stride;
+
+	/* open file */
+	file = fopen(filename, "rb");
+	if (!file)
+		return NULL;
+
+	/* read magic */
+	fread(magic, 1, 4, file);
+	if (memcmp(magic, pxl_magic, 4) != 0)
+		return NULL;
+
+	/* read header */
+	fread(&type, 4, 1, file);
+	fread(&width, 4, 1, file);
+	fread(&height, 4, 1, file);
+	fread(&stride, 4, 1, file);
+
+	/* create pixelmap */
+	pixelmap = pixelmap_allocate(width, height, type, NULL);
+
+	/* read pixels */
+	fread(pixelmap->pixels, stride, height, file);
+
+	/* close file */
+	fclose(file);
+
+	return pixelmap;
+}
+
+void pixelmap_save(pixelmap_t *pixelmap, const char *filename)
+{
+	FILE *file;
+
+	/* open file */
+	file = fopen(filename, "wb");
+	if (!file)
+		return;
+
+	/* write header */
+	fwrite(pxl_magic, 1, 4, file);
+	fwrite(&pixelmap->type, 4, 1, file);
+	fwrite(&pixelmap->width, 4, 1, file);
+	fwrite(&pixelmap->height, 4, 1, file);
+	fwrite(&pixelmap->stride, 4, 1, file);
+
+	/* write pixels */
+	fwrite(pixelmap->pixels, pixelmap->stride, pixelmap->height, file);
+
+	/* close file */
+	fclose(file);
+}
 
 /* allocate pixelmap */
 pixelmap_t *pixelmap_allocate(int width, int height, int type, void *buffer)
@@ -181,7 +242,7 @@ void pixelmap_blit8(pixelmap_t *dst, int x1, int y1, int x2, int y2, pixelmap_t 
 
 				for (w = x2 - x1, u = u1; w--; u += uu, O++)
 				{
-					if ((pen = I[FIX32_TO_INT(u)]) != 255)
+					if ((pen = I[FIX32_TO_INT(u)]))
 						*O = pen;
 				}
 			}

@@ -69,6 +69,10 @@ typedef struct pixelmap_t {
 	scanlines_t scanlines; /* pre-calculated scanline pointers */
 } pixelmap_t;
 
+/* disk i/o */
+pixelmap_t *pixelmap_load(const char *filename);
+void pixelmap_save(pixelmap_t *pixelmap, const char *filename);
+
 /* creation and destruction */
 pixelmap_t *pixelmap_allocate(int width, int height, int type, void *buffer);
 void pixelmap_free(pixelmap_t *pixelmap);

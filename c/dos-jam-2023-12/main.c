@@ -26,6 +26,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "main.h"
 #include "pixelmap.h"
@@ -35,6 +36,34 @@ SOFTWARE.
 
 /* global gamestate */
 gamestate_t gamestate;
+
+bool load_palette(const char *filename)
+{
+	FILE *file;
+	int i;
+
+	/* open file */
+	file = fopen(filename, "rb");
+	if (!file)
+		return false;
+
+	/* read palette */
+	fread(gamestate.palette, 768, 1, file);
+
+	/* close file */
+	fclose(file);
+
+	/* set palette */
+	for (i = 0; i < 256; i++)
+	{
+		uint8_t r = gamestate.palette[i][0];
+		uint8_t g = gamestate.palette[i][1];
+		uint8_t b = gamestate.palette[i][2];
+		dos_set_palette_color(i, r, g, b);
+	}
+
+	return true;
+}
 
 /* main */
 int main(int argc, char **argv)
@@ -47,6 +76,10 @@ int main(int argc, char **argv)
 	if ((gamestate.video_mode = dos_set_mode(DOS_MODE_13)) != DOS_MODE_13)
 		error("couldn't init video mode");
 
+	/* load palette */
+	if (!load_palette("palette.dat"))
+		error("couldn't load palette.dat");
+
 	/* allocate pixelmaps */
 	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, (void *)DOS_GRAPHICS_MEMORY);
 	gamestate.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
@@ -58,6 +91,7 @@ int main(int argc, char **argv)
 	console_push_up("hello world 1!");
 	console_push_up("oh no dear");
 	console_push_up("ffffffffffffffffffff");
+	console_push_up("excessive\nnewline\ntest\n2023");
 
 	/* main loop */
 	while (!kbhit())
