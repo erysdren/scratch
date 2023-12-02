@@ -239,6 +239,8 @@ void console_eval(char *s)
 
 		return;
 	}
+
+	console_printf("no valid command or cvar entered");
 }
 
 void console_input(int c)

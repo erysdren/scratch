@@ -24,6 +24,8 @@ SOFTWARE.
 
 #include "dos.h"
 
+#include <stdio.h>
+
 /*
  * mode-agnostic functions
  */
@@ -80,6 +82,36 @@ void dos_set_palette_color(uint8_t i, uint8_t r, uint8_t g, uint8_t b)
 	outp(0x3c9, (r * 63) / 255);
 	outp(0x3c9, (g * 63) / 255);
 	outp(0x3c9, (b * 63) / 255);
+}
+
+/* set the palette from a file */
+int dos_set_palette_from_file(const char *filename)
+{
+	static uint8_t palette[256][3];
+	FILE *file;
+	int i;
+
+	/* open file */
+	file = fopen(filename, "rb");
+	if (!file)
+		return 0;
+
+	/* read palette */
+	fread(palette, 768, 1, file);
+
+	/* close file */
+	fclose(file);
+
+	/* set palette */
+	for (i = 0; i < 256; i++)
+	{
+		uint8_t r = palette[i][0];
+		uint8_t g = palette[i][1];
+		uint8_t b = palette[i][2];
+		dos_set_palette_color(i, r, g, b);
+	}
+
+	return 1;
 }
 
 /*

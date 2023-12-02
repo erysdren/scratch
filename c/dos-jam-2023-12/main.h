@@ -44,7 +44,6 @@ typedef struct gamestate_t {
 	pixelmap_t *screen;
 	pixelmap_t *color;
 	pixelmap_t *depth;
-	uint8_t palette[256][3];
 
 	/* dos */
 	int video_mode_old;

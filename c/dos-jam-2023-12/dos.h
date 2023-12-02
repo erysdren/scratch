@@ -240,6 +240,7 @@ void dos_clear_screen();
 void dos_graphics_clear_screen();
 void dos_graphics_putb(uint8_t *s, size_t n);
 void dos_set_palette_color(uint8_t i, uint8_t r, uint8_t g, uint8_t b);
+int dos_set_palette_from_file(const char *filename);
 
 /* vesa functions */
 int dos_vesa_get_info(vesa_info_t *vesa_info);

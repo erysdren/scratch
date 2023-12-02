@@ -41,36 +41,6 @@ SOFTWARE.
 /* global gamestate */
 gamestate_t gamestate;
 
-cvar_t stringcvar = CVAR_STRING("stringcvar", "hello world!");
-
-bool load_palette(const char *filename)
-{
-	FILE *file;
-	int i;
-
-	/* open file */
-	file = fopen(filename, "rb");
-	if (!file)
-		return false;
-
-	/* read palette */
-	fread(gamestate.palette, 768, 1, file);
-
-	/* close file */
-	fclose(file);
-
-	/* set palette */
-	for (i = 0; i < 256; i++)
-	{
-		uint8_t r = gamestate.palette[i][0];
-		uint8_t g = gamestate.palette[i][1];
-		uint8_t b = gamestate.palette[i][2];
-		dos_set_palette_color(i, r, g, b);
-	}
-
-	return true;
-}
-
 /* main */
 int main(int argc, char **argv)
 {
@@ -88,7 +58,7 @@ int main(int argc, char **argv)
 		error("couldn't init video mode");
 
 	/* load palette */
-	if (!load_palette("palette.dat"))
+	if (!dos_set_palette_from_file("palette.dat"))
 		error("couldn't load palette.dat");
 
 	/* allocate pixelmaps */
@@ -98,9 +68,6 @@ int main(int argc, char **argv)
 
 	/* init console */
 	console_init();
-
-	/* register cvar */
-	cvar_register(&stringcvar);
 
 	/* prepare raycaster */
 	gamestate.level = level_load("casino.lvl");
