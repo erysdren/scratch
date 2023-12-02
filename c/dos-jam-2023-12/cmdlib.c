@@ -22,28 +22,40 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
-#ifndef _RAY_H_
-#define _RAY_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "main.h"
+#include "utils.h"
+#include "cvar.h"
+#include "cmd.h"
+#include "cmdlib.h"
 
-#include <stdint.h>
-#include <stdbool.h>
-
-#include "level.h"
-
-/* initialize raycaster */
-bool ray_init(level_t *level);
-
-/* shutdown raycaster */
-void ray_quit(void);
-
-/* render one frame of raycaster */
-void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle, int ceiling);
-
-#ifdef __cplusplus
+int _cmd_restart(int argc, char **argv)
+{
+	engine_quit();
+	engine_init();
+	return 0;
 }
-#endif
-#endif /* _PIXELMAP_H_ */
+
+int _cmd_quit(int argc, char **argv)
+{
+	engine_quit();
+	exit(0);
+	return 0;
+}
+
+cmd_t _cmdlib[] = {
+	CMD("restart", _cmd_restart),
+	CMD("quit", _cmd_quit)
+};
+
+void cmdlib_init(void)
+{
+	for (int i = 0; i < ASIZE(_cmdlib); i++)
+	{
+		cmd_register(&_cmdlib[i]);
+	}
+}
+
+void cmdlib_quit(void)
+{
+
+}

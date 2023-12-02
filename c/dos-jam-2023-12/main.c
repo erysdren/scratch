@@ -40,39 +40,34 @@ SOFTWARE.
 #include "wad.h"
 #include "timer.h"
 #include "ray.h"
+#include "cmdlib.h"
 
 /* global gamestate */
 gamestate_t gamestate;
 
-/* main */
-int main(int argc, char **argv)
+/* init everything */
+void engine_init(void)
 {
-	int key;
-	int lump;
-	FILE *file;
-	vec2_t origin;
-	fix32_t angle;
-	vec2_t direction;
-	uint64_t tick;
+	FILE *palette;
 
-	/* zero gamestate */
+	/* zero gamestate struct */
 	memset(&gamestate, 0, sizeof(gamestate_t));
 
-	/* init handlers */
+	/* init dos handlers */
 	kb_init();
 	timer_init();
 
 	/* set video mode */
 	gamestate.video_mode_old = dos_get_mode();
 	if ((gamestate.video_mode = dos_set_mode(DOS_MODE_13)) != DOS_MODE_13)
-		error("couldn't init video mode");
+		error("couldn't set video mode");
 
 	/* read palette */
-	file = fopen("palette.dat", "rb");
-	if (!file)
+	palette = fopen("palette.dat", "rb");
+	if (!palette)
 		error("couldn't find palette.dat");
-	fread(gamestate.palette, 3, 256, file);
-	fclose(file);
+	fread(gamestate.palette, 3, 256, palette);
+	fclose(palette);
 
 	/* set palette */
 	dos_set_palette(gamestate.palette);
@@ -81,6 +76,12 @@ int main(int argc, char **argv)
 	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, (void *)DOS_GRAPHICS_MEMORY);
 	gamestate.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
 	gamestate.depth = pixelmap_allocate(320, 200, PM_TYPE_DEPTH_16, NULL);
+	if (!gamestate.screen || !gamestate.color || !gamestate.depth)
+		error("couldn't allocate pixelmaps");
+
+	/* init console */
+	console_init();
+	cmdlib_init();
 
 	/* init level */
 	gamestate.level = level_load("casino.lvl");
@@ -89,11 +90,46 @@ int main(int argc, char **argv)
 
 	/* init raycaster */
 	ray_init(gamestate.level);
+}
+
+/* quit everything */
+void engine_quit(void)
+{
+	/* first thing we do on quit is reset dos interrupts */
+	kb_quit();
+	timer_quit();
+
+	/* and reset video mode */
+	dos_set_mode(gamestate.video_mode_old);
+
+	/* quit raycaster */
+	ray_quit();
+
+	/* quit console */
+	console_quit();
+
+	/* free memory */
+	pixelmap_free(gamestate.screen);
+	pixelmap_free(gamestate.color);
+	pixelmap_free(gamestate.depth);
+	level_free(gamestate.level);
+}
+
+/* main */
+int main(int argc, char **argv)
+{
+	vec2_t origin;
+	fix32_t angle;
+	vec2_t direction;
+	uint64_t tick;
+	int key;
+
+	/* init everything */
+	engine_init();
+
+	/* setup player */
 	origin.x = FIX32(10.5);
 	origin.y = FIX32(16.5);
-
-	/* init console */
-	console_init();
 
 	/* main loop */
 	for (tick = gamestate.ticks;;)
@@ -107,17 +143,17 @@ int main(int argc, char **argv)
 		{
 			/* process player look */
 			if (gamestate.keys[SC_LEFT])
-				angle += FIX32(0.01);
+				angle += FIX32(0.0001);
 			if (gamestate.keys[SC_RIGHT])
-				angle -= FIX32(0.01);
+				angle -= FIX32(0.0001);
 			if (angle < FIX32(0))
-				angle += FIX32(360);
-			if (angle > FIX32(359))
-				angle -= FIX32(360);
+				angle += FIX32(2);
+			if (angle > FIX32(2))
+				angle -= FIX32(2);
 
 			/* get look direction */
-			direction.x = FIX32_SIN(FIX32_DEG2RAD(angle));
-			direction.y = FIX32_COS(FIX32_DEG2RAD(angle));
+			direction.x = FIX32_SIN(angle);
+			direction.y = FIX32_COS(angle);
 
 			direction.x = FIX32_DIV(direction.x, FIX32(64));
 			direction.y = FIX32_DIV(direction.y, FIX32(64));
@@ -149,30 +185,14 @@ int main(int argc, char **argv)
 		pixelmap_clear8(gamestate.color, 0);
 
 		/* render ray */
-		ray_render(gamestate.color, &origin, angle);
+		ray_render(gamestate.color, &origin, angle, 2);
 
 		/* copy to screen */
 		pixelmap_copy(gamestate.screen, gamestate.color);
 	}
 
-	/* quit console */
-	console_quit();
-
-	/* quit raycaster */
-	ray_quit();
-
-	/* free memory */
-	pixelmap_free(gamestate.screen);
-	pixelmap_free(gamestate.color);
-	pixelmap_free(gamestate.depth);
-	level_free(gamestate.level);
-
-	/* reset video mode */
-	dos_set_mode(gamestate.video_mode_old);
-
-	/* quit handlers */
-	kb_quit();
-	timer_quit();
+	/* shutdown everything */
+	engine_quit();
 
 	return 0;
 }

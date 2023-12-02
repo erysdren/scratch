@@ -66,15 +66,15 @@ void ray_quit(void)
 }
 
 /* run one frame of raycaster */
-void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle)
+void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle, int ceiling)
 {
 	/* current pixel position */
 	int x, y;
 	fix32_t sn, cs;
 
 	/* lookup sin and cos of player's view */
-	sn = FIX32_SIN(FIX32_DEG2RAD(angle));
-	cs = FIX32_COS(FIX32_DEG2RAD(angle));
+	sn = FIX32_SIN(angle);
+	cs = FIX32_COS(angle);
 
 	/* ray sweep loop */
 	for (x = 0; x < dst->width; x++)
@@ -169,8 +169,12 @@ void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle)
 		/* height of line to draw on screen */
 		line_height = FIX32_TO_INT(FIX32_DIV(FIX32(dst->height), dist));
 
+		/* start and end points */
 		line_start = -line_height / 2 + dst->height / 2;
 		line_end = line_height / 2 + dst->height / 2;
+
+		/* add ceiling */
+		line_start -= line_height * (ceiling - 1);
 
 		/* clamp to vertical area */
 		line_start = clamp(line_start, 0, dst->height);

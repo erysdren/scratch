@@ -29,6 +29,9 @@ SOFTWARE.
 extern "C" {
 #endif
 
+#define ASIZE(x) (sizeof(x)/sizeof(x[0]))
+
+char **tokenize(char *s, int *num_args);
 void error(const char *s, ...);
 
 #ifdef __cplusplus

@@ -65,6 +65,9 @@ typedef struct gamestate_t {
 /* global gamestate */
 extern gamestate_t gamestate;
 
+void engine_quit(void);
+void engine_init(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -23,27 +23,16 @@ SOFTWARE.
 */
 
 #pragma once
-#ifndef _RAY_H_
-#define _RAY_H_
+#ifndef _CMDLIB_H_
+#define _CMDLIB_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <stdbool.h>
-
-#include "level.h"
-
-/* initialize raycaster */
-bool ray_init(level_t *level);
-
-/* shutdown raycaster */
-void ray_quit(void);
-
-/* render one frame of raycaster */
-void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle, int ceiling);
+void cmdlib_init(void);
+void cmdlib_quit(void);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* _PIXELMAP_H_ */
+#endif /* _CMDLIB_H_ */

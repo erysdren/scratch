@@ -27,6 +27,7 @@ SOFTWARE.
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #include "main.h"
 #include "dos.h"
@@ -45,5 +46,42 @@ void error(const char *s, ...)
 
 	printf("Error: %s\n", errbuf);
 
+	/* shutdown engine and exit */
+	engine_quit();
 	exit(0);
+}
+
+char **tokenize(char *s, int *num_args)
+{
+	static char *argv[32];
+	int argc = 0;
+	char *ptr, *end;
+
+	ptr = s;
+	for(;;)
+	{
+		while(*ptr && isspace(*ptr))
+			ptr++;
+
+		if(!*ptr)
+			break;
+
+		end = ptr + 1;
+
+		while(*end && !isspace(*end))
+			end++;
+
+		if (argc < 32 - 1)
+			argv[argc++] = ptr;
+
+		if (!*end)
+			break;
+
+		*end = 0;
+		ptr = end + 1;
+	}
+
+	argv[argc] = 0;
+	*num_args = argc;
+	return argv;
 }
