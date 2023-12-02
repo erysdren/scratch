@@ -43,7 +43,6 @@ SOFTWARE.
 #include "cmdlib.h"
 #include "cvarlib.h"
 #include "adlib.h"
-#include "imf.h"
 
 /* global gamestate */
 gamestate_t gamestate;
@@ -60,7 +59,7 @@ void engine_init(void)
 
 	/* init dos handlers */
 	kb_init();
-	timer_init(IMF_PLAYBACK_RATE);
+	timer_init(120);
 
 	/* set video mode */
 	gamestate.video_mode_old = dos_get_mode();
@@ -80,8 +79,7 @@ void engine_init(void)
 	/* allocate pixelmaps */
 	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, (void *)DOS_GRAPHICS_MEMORY);
 	gamestate.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
-	gamestate.depth = pixelmap_allocate(320, 200, PM_TYPE_DEPTH_16, NULL);
-	if (!gamestate.screen || !gamestate.color || !gamestate.depth)
+	if (!gamestate.screen || !gamestate.color)
 		error("couldn't allocate pixelmaps");
 
 	/* init console */
@@ -90,11 +88,10 @@ void engine_init(void)
 	cvarlib_init();
 
 	/* detect adlib card */
-	if (adlib_detect())
-	{
+	if ((gamestate.adlib = adlib_detect()) == true)
 		console_printf("adlib card detected");
-		imf_init("test.imf");
-	}
+	else
+		console_printf("adlib card support disabled");
 
 	/* init level */
 	gamestate.level = level_load("casino.lvl");
@@ -118,9 +115,6 @@ void engine_quit(void)
 	/* quit raycaster */
 	ray_quit();
 
-	/* quit imf player */
-	imf_quit();
-
 	/* quit console */
 	console_quit();
 	cmdlib_quit();
@@ -129,7 +123,6 @@ void engine_quit(void)
 	/* free memory */
 	pixelmap_free(gamestate.screen);
 	pixelmap_free(gamestate.color);
-	pixelmap_free(gamestate.depth);
 	level_free(gamestate.level);
 }
 
@@ -155,8 +148,6 @@ int main(int argc, char **argv)
 		/* process misc inputs */
 		if (gamestate.keys[SC_ESCAPE])
 			break;
-
-		imf_play();
 
 #if CONSOLE
 		/* handle console input */

@@ -29,6 +29,7 @@ SOFTWARE.
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "dos.h"
@@ -48,8 +49,10 @@ typedef struct gamestate_t {
 	/* video */
 	pixelmap_t *screen;
 	pixelmap_t *color;
-	pixelmap_t *depth;
 	uint8_t palette[256][3];
+
+	/* audio */
+	bool adlib;
 
 	/* dos */
 	int video_mode_old;
