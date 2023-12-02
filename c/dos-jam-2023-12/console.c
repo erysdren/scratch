@@ -238,7 +238,7 @@ void console_eval(char *s)
 					break;
 
 				case CVAR_TYPE_STRING:
-					console_printf("%s", cvar->value.s);
+					console_printf("\"%s\"", cvar->value.s);
 					break;
 			}
 		}
