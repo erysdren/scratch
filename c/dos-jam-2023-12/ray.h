@@ -33,6 +33,7 @@ extern "C" {
 #include <stdbool.h>
 
 #include "level.h"
+#include "actor.h"
 
 /* initialize raycaster */
 bool ray_init(level_t *level);
@@ -41,7 +42,7 @@ bool ray_init(level_t *level);
 void ray_quit(void);
 
 /* render one frame of raycaster */
-void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle, int ceiling);
+void ray_render(pixelmap_t *dst, actor_t *camera, int ceiling);
 
 #ifdef __cplusplus
 }

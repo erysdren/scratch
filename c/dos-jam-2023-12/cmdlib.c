@@ -28,6 +28,8 @@ SOFTWARE.
 #include "cmd.h"
 #include "cmdlib.h"
 #include "console.h"
+#include "level.h"
+#include "ray.h"
 
 int _cmd_restart(int argc, char **argv)
 {
@@ -162,6 +164,33 @@ int _cmd_help(int argc, char **argv)
 	}
 }
 
+int _cmd_map(int argc, char **argv)
+{
+	if (argc < 2)
+	{
+		console_printf("must specify map filename");
+		return 1;
+	}
+
+	/* free old level */
+	level_free(gamestate.level);
+
+	/* load new level */
+	if ((gamestate.level = level_load(argv[1])) == NULL)
+	{
+		console_printf("map %s not found", argv[1]);
+		return 1;
+	}
+
+	console_printf("successfully loaded %s", argv[1]);
+
+	/* restart raycaster */
+	ray_quit();
+	ray_init(gamestate.level);
+
+	return 0;
+}
+
 cmd_t _cmdlib[] = {
 	CMD("restart", "restart engine", _cmd_restart),
 	CMD("quit", "return to dos", _cmd_quit),
@@ -170,7 +199,8 @@ cmd_t _cmdlib[] = {
 	CMD("clear", "clear console screen", _cmd_clear),
 	CMD("cls", "clear console screen", _cmd_clear),
 	CMD("find", "find cvar or cmd by name", _cmd_find),
-	CMD("help", "print help text", _cmd_help)
+	CMD("help", "print help text", _cmd_help),
+	CMD("map", "load map from file", _cmd_map)
 };
 
 void cmdlib_init(void)

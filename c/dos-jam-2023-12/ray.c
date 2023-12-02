@@ -29,6 +29,7 @@ SOFTWARE.
 #include "fix32.h"
 #include "pixelmap.h"
 #include "ray.h"
+#include "actor.h"
 
 /* basic map */
 #define NUM_PLANES 2
@@ -66,15 +67,15 @@ void ray_quit(void)
 }
 
 /* run one frame of raycaster */
-void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle, int ceiling)
+void ray_render(pixelmap_t *dst, actor_t *camera, int ceiling)
 {
 	/* current pixel position */
 	int x, y;
 	fix32_t sn, cs;
 
 	/* lookup sin and cos of player's view */
-	sn = FIX32_SIN(angle);
-	cs = FIX32_COS(angle);
+	sn = FIX32_SIN(camera->yaw);
+	cs = FIX32_COS(camera->yaw);
 
 	/* ray sweep loop */
 	for (x = 0; x < dst->width; x++)
@@ -86,8 +87,8 @@ void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle, int ceiling)
 		int line_height, line_start, line_end;
 
 		/* get map position */
-		map_pos.x = FIX32_TO_INT(origin->x);
-		map_pos.y = FIX32_TO_INT(origin->y);
+		map_pos.x = FIX32_TO_INT(camera->origin.x);
+		map_pos.y = FIX32_TO_INT(camera->origin.y);
 
 		/* calculate ray direction */
 		raydir.x = FIX32_MUL(FIX32_DIV(FIX32(2.0f), FIX32(dst->width)), FIX32(x)) - FIX32(1.0f);
@@ -107,24 +108,24 @@ void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle, int ceiling)
 		if (raydir.x < 0)
 		{
 			step.x = -1;
-			side_dist.x = FIX32_MUL((origin->x - FIX32(map_pos.x)), delta_dist.x);
+			side_dist.x = FIX32_MUL((camera->origin.x - FIX32(map_pos.x)), delta_dist.x);
 		}
 		else
 		{
 			step.x = 1;
-			side_dist.x = FIX32_MUL((FIX32(map_pos.x) + FIX32(1) - origin->x), delta_dist.x);
+			side_dist.x = FIX32_MUL((FIX32(map_pos.x) + FIX32(1) - camera->origin.x), delta_dist.x);
 		}
 
 		/* calculate y step and side_dist */
 		if (raydir.y < 0)
 		{
 			step.y = -1;
-			side_dist.y = FIX32_MUL((origin->y - FIX32(map_pos.y)), delta_dist.y);
+			side_dist.y = FIX32_MUL((camera->origin.y - FIX32(map_pos.y)), delta_dist.y);
 		}
 		else
 		{
 			step.y = 1;
-			side_dist.y = FIX32_MUL((FIX32(map_pos.y) + FIX32(1.0f) - origin->y), delta_dist.y);
+			side_dist.y = FIX32_MUL((FIX32(map_pos.y) + FIX32(1.0f) - camera->origin.y), delta_dist.y);
 		}
 
 		/* perform dda */

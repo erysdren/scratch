@@ -43,6 +43,7 @@ SOFTWARE.
 #include "cmdlib.h"
 #include "cvarlib.h"
 #include "adlib.h"
+#include "actor.h"
 
 /* global gamestate */
 gamestate_t gamestate;
@@ -92,14 +93,6 @@ void engine_init(void)
 		console_printf("adlib card detected");
 	else
 		console_printf("adlib card support disabled");
-
-	/* init level */
-	gamestate.level = level_load("casino.lvl");
-	if (!gamestate.level)
-		error("couldn't load casino.lvl");
-
-	/* init raycaster */
-	ray_init(gamestate.level);
 }
 
 /* quit everything */
@@ -129,9 +122,6 @@ void engine_quit(void)
 /* main */
 int main(int argc, char **argv)
 {
-	vec2_t origin;
-	fix32_t angle;
-	vec2_t direction;
 	uint64_t tick;
 	int key;
 
@@ -139,8 +129,8 @@ int main(int argc, char **argv)
 	engine_init();
 
 	/* setup player */
-	origin.x = FIX32(10.5);
-	origin.y = FIX32(16.5);
+	gamestate.player.origin.x = FIX32(10.5);
+	gamestate.player.origin.y = FIX32(16.5);
 
 	/* main loop */
 	for (tick = gamestate.ticks;;)
@@ -159,41 +149,41 @@ int main(int argc, char **argv)
 		{
 			/* process player look */
 			if (gamestate.keys[SC_LEFT])
-				angle += FIX32(0.0001);
+				gamestate.player.yaw += FIX32(0.0001);
 			if (gamestate.keys[SC_RIGHT])
-				angle -= FIX32(0.0001);
-			if (angle < FIX32(0))
-				angle += FIX32(2);
-			if (angle > FIX32(2))
-				angle -= FIX32(2);
+				gamestate.player.yaw -= FIX32(0.0001);
+			if (gamestate.player.yaw < FIX32(0))
+				gamestate.player.yaw += FIX32(2);
+			if (gamestate.player.yaw > FIX32(2))
+				gamestate.player.yaw -= FIX32(2);
 
 			/* get look direction */
-			direction.x = FIX32_SIN(angle);
-			direction.y = FIX32_COS(angle);
+			gamestate.player.dir.x = FIX32_SIN(gamestate.player.yaw);
+			gamestate.player.dir.y = FIX32_COS(gamestate.player.yaw);
 
-			direction.x = FIX32_DIV(direction.x, FIX32(64));
-			direction.y = FIX32_DIV(direction.y, FIX32(64));
+			gamestate.player.dir.x = FIX32_DIV(gamestate.player.dir.x, FIX32(64));
+			gamestate.player.dir.y = FIX32_DIV(gamestate.player.dir.y, FIX32(64));
 
 			/* process player inputs */
 			if (gamestate.keys[SC_W])
 			{
-				origin.x += direction.x;
-				origin.y += direction.y;
+				gamestate.player.origin.x += gamestate.player.dir.x;
+				gamestate.player.origin.y += gamestate.player.dir.y;
 			}
 			if (gamestate.keys[SC_S])
 			{
-				origin.x -= direction.x;
-				origin.y -= direction.y;
+				gamestate.player.origin.x -= gamestate.player.dir.x;
+				gamestate.player.origin.y -= gamestate.player.dir.y;
 			}
 			if (gamestate.keys[SC_A])
 			{
-				origin.x += direction.y;
-				origin.y -= direction.x;
+				gamestate.player.origin.x += gamestate.player.dir.y;
+				gamestate.player.origin.y -= gamestate.player.dir.x;
 			}
 			if (gamestate.keys[SC_D])
 			{
-				origin.x -= direction.y;
-				origin.y += direction.x;
+				gamestate.player.origin.x -= gamestate.player.dir.y;
+				gamestate.player.origin.y += gamestate.player.dir.x;
 			}
 		}
 #endif
@@ -206,7 +196,7 @@ int main(int argc, char **argv)
 		console_render(gamestate.color);
 #else
 		/* render ray */
-		ray_render(gamestate.color, &origin, angle, 2);
+		ray_render(gamestate.color, &gamestate.player, 2);
 #endif
 
 		/* copy to screen */
