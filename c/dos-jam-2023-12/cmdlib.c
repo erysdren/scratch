@@ -27,6 +27,7 @@ SOFTWARE.
 #include "cvar.h"
 #include "cmd.h"
 #include "cmdlib.h"
+#include "console.h"
 
 int _cmd_restart(int argc, char **argv)
 {
@@ -42,10 +43,68 @@ int _cmd_quit(int argc, char **argv)
 	return 0;
 }
 
+int _cmd_typeof(int argc, char **argv)
+{
+	cvar_t *cvar;
+	cmd_t *cmd;
+
+	if (argc < 2)
+	{
+		console_printf("must specify cvar or command");
+		return 1;
+	}
+
+	if ((cmd = cmd_retrieve(argv[1])) != NULL)
+	{
+		console_printf("command, int");
+		return 0;
+	}
+
+	if ((cvar = cvar_retrieve(argv[1])) != NULL)
+	{
+		switch (cvar->type)
+		{
+			case CVAR_TYPE_BOOL:
+				console_printf("cvar, bool");
+				break;
+
+			case CVAR_TYPE_INT:
+				console_printf("cvar, int");
+				break;
+
+			case CVAR_TYPE_UINT:
+				console_printf("cvar, uint");
+				break;
+
+			case CVAR_TYPE_FIXED:
+				console_printf("cvar, fixed");
+				break;
+
+			case CVAR_TYPE_FLOAT:
+				console_printf("cvar, float");
+				break;
+
+			case CVAR_TYPE_STRING:
+				console_printf("cvar, string");
+				break;
+
+			default:
+				console_printf("cvar, unknown");
+				break;
+		}
+
+		return 0;
+	}
+
+	console_printf("couldn't find cvar or command specified");
+	return 1;
+}
+
 cmd_t _cmdlib[] = {
 	CMD("restart", _cmd_restart),
 	CMD("quit", _cmd_quit),
-	CMD("exit", _cmd_quit)
+	CMD("exit", _cmd_quit),
+	CMD("typeof", _cmd_typeof)
 };
 
 void cmdlib_init(void)
