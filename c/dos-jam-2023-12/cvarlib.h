@@ -22,41 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "main.h"
-#include "utils.h"
-#include "cvar.h"
-#include "cmd.h"
-#include "cmdlib.h"
+#pragma once
+#ifndef _CVARLIB_H_
+#define _CVARLIB_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-int _cmd_restart(int argc, char **argv)
-{
-	engine_quit();
-	engine_init();
-	return 0;
+void cvarlib_init(void);
+void cvarlib_quit(void);
+
+#ifdef __cplusplus
 }
-
-int _cmd_quit(int argc, char **argv)
-{
-	engine_quit();
-	exit(0);
-	return 0;
-}
-
-cmd_t _cmdlib[] = {
-	CMD("restart", _cmd_restart),
-	CMD("quit", _cmd_quit),
-	CMD("exit", _cmd_quit)
-};
-
-void cmdlib_init(void)
-{
-	for (int i = 0; i < ASIZE(_cmdlib); i++)
-	{
-		cmd_register(&_cmdlib[i]);
-	}
-}
-
-void cmdlib_quit(void)
-{
-
-}
+#endif
+#endif /* _CVARLIB_H_ */

@@ -38,16 +38,14 @@ void error(const char *s, ...)
 	static char errbuf[256];
 	va_list args;
 
+	engine_quit();
+
 	va_start(args, s);
 	vsnprintf(errbuf, 256, s, args);
 	va_end(args);
 
-	dos_set_mode(gamestate.video_mode_old);
-
 	printf("Error: %s\n", errbuf);
 
-	/* shutdown engine and exit */
-	engine_quit();
 	exit(0);
 }
 

@@ -26,37 +26,21 @@ SOFTWARE.
 #include "utils.h"
 #include "cvar.h"
 #include "cmd.h"
-#include "cmdlib.h"
+#include "cvarlib.h"
 
-int _cmd_restart(int argc, char **argv)
-{
-	engine_quit();
-	engine_init();
-	return 0;
-}
-
-int _cmd_quit(int argc, char **argv)
-{
-	engine_quit();
-	exit(0);
-	return 0;
-}
-
-cmd_t _cmdlib[] = {
-	CMD("restart", _cmd_restart),
-	CMD("quit", _cmd_quit),
-	CMD("exit", _cmd_quit)
+cvar_t _cvarlib[] = {
+	CVAR_STRING("meow", "meow!!")
 };
 
-void cmdlib_init(void)
+void cvarlib_init(void)
 {
-	for (int i = 0; i < ASIZE(_cmdlib); i++)
+	for (int i = 0; i < ASIZE(_cvarlib); i++)
 	{
-		cmd_register(&_cmdlib[i]);
+		cvar_register(&_cvarlib[i]);
 	}
 }
 
-void cmdlib_quit(void)
+void cvarlib_quit(void)
 {
 
 }

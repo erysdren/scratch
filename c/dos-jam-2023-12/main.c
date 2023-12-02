@@ -41,6 +41,7 @@ SOFTWARE.
 #include "timer.h"
 #include "ray.h"
 #include "cmdlib.h"
+#include "cvarlib.h"
 
 /* global gamestate */
 gamestate_t gamestate;
@@ -82,6 +83,7 @@ void engine_init(void)
 	/* init console */
 	console_init();
 	cmdlib_init();
+	cvarlib_init();
 
 	/* init level */
 	gamestate.level = level_load("casino.lvl");
@@ -107,6 +109,8 @@ void engine_quit(void)
 
 	/* quit console */
 	console_quit();
+	cmdlib_quit();
+	cvarlib_quit();
 
 	/* free memory */
 	pixelmap_free(gamestate.screen);
@@ -138,6 +142,11 @@ int main(int argc, char **argv)
 		if (gamestate.keys[SC_ESCAPE])
 			break;
 
+
+#if 1
+		while ((key = kb_getkey()) >= 0)
+			console_input(key);
+#else
 		/* poll on timer */
 		for (; tick < gamestate.ticks; tick++)
 		{
@@ -180,12 +189,16 @@ int main(int argc, char **argv)
 				origin.y += direction.x;
 			}
 		}
+#endif
 
 		/* clear screen */
 		pixelmap_clear8(gamestate.color, 0);
 
+		/* render console */
+		console_render(gamestate.color);
+
 		/* render ray */
-		ray_render(gamestate.color, &origin, angle, 2);
+		/* ray_render(gamestate.color, &origin, angle, 2); */
 
 		/* copy to screen */
 		pixelmap_copy(gamestate.screen, gamestate.color);
