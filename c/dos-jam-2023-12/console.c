@@ -34,10 +34,12 @@ SOFTWARE.
 #include "cmd.h"
 #include "cvar.h"
 
+#define CON_WIDTH 40
+#define CON_HEIGHT 25
 static struct {
 	pixelmap_t *font8x8;
 	pixelmap_t *screen;
-	char line[40];
+	char line[CON_WIDTH];
 	int line_len;
 	int cursor;
 } console;
@@ -83,7 +85,7 @@ void console_init(void)
 	memset(&console, 0, sizeof(console));
 
 	/* allocate screen */
-	console.screen = pixelmap_allocate(40, 25, PM_TYPE_INDEX_8, NULL);
+	console.screen = pixelmap_allocate(CON_WIDTH, CON_HEIGHT, PM_TYPE_INDEX_8, NULL);
 
 	/* allocate font */
 	console.font8x8 = pixelmap_load("font8x8.pxl");
@@ -253,7 +255,7 @@ void console_input(int c)
 			console.line[console.line_len] = '\0';
 			console.line_len = console.cursor = 0;
 			console_push_up(console.line);
-			memset(&pixelmap_pixel8(console.screen, 0, 24), 0, console.screen->stride);
+			memset(&pixelmap_pixel8(console.screen, 0, CON_HEIGHT - 1), 0, console.screen->stride);
 			console_eval(console.line);
 			break;
 
@@ -264,7 +266,7 @@ void console_input(int c)
 				if (console.cursor == console.line_len)
 				{
 					console.line[console.line_len] = '\0';
-					pixelmap_pixel8(console.screen, console.line_len - 1, 24) = '\0';
+					pixelmap_pixel8(console.screen, console.line_len - 1, CON_HEIGHT - 1) = '\0';
 					console.line_len--;
 					console.cursor--;
 				}
@@ -273,12 +275,12 @@ void console_input(int c)
 
 		/* printable */
 		default:
-			if (c < 256 && isprint(c) && console.line_len < 39)
+			if (c < 256 && isprint(c) && console.line_len < CON_WIDTH - 1)
 			{
 				if (console.cursor == console.line_len)
 				{
 					console.line[console.line_len++] = c;
-					pixelmap_pixel8(console.screen, console.line_len - 1, 24) = c;
+					pixelmap_pixel8(console.screen, console.line_len - 1, CON_HEIGHT - 1) = c;
 					console.cursor++;
 				}
 			}
