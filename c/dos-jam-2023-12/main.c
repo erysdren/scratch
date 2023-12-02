@@ -39,6 +39,7 @@ SOFTWARE.
 #include "cmd.h"
 #include "wad.h"
 #include "timer.h"
+#include "ray.h"
 
 /* global gamestate */
 gamestate_t gamestate;
@@ -49,6 +50,9 @@ int main(int argc, char **argv)
 	int key;
 	int lump;
 	FILE *file;
+	vec2_t origin;
+	int angle;
+	vec2_t direction;
 
 	/* zero gamestate */
 	memset(&gamestate, 0, sizeof(gamestate_t));
@@ -77,31 +81,55 @@ int main(int argc, char **argv)
 	gamestate.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
 	gamestate.depth = pixelmap_allocate(320, 200, PM_TYPE_DEPTH_16, NULL);
 
+	/* init level */
+	gamestate.level = level_load("casino.lvl");
+	if (!gamestate.level)
+		error("couldn't load casino.lvl");
+
+	/* init raycaster */
+	ray_init(gamestate.level);
+	origin.x = FIX32(10.5);
+	origin.y = FIX32(16.5);
+
 	/* init console */
 	console_init();
 
 	/* main loop */
 	while (true)
 	{
-		/* process inputs */
+		/* process misc inputs */
 		if (gamestate.keys[SC_ESCAPE])
 			break;
 
-		/* handle console inputs */
-		/*
-		while ((key = kb_getkey()) >= 0)
+		/* get look direction */
+		direction.x = FIX32_COS(FIX32_DEG2RAD(FIX32(angle)));
+		direction.y = FIX32_MUL(FIX32(-1), FIX32_SIN(FIX32_DEG2RAD(FIX32(angle))));
+
+		direction.x = FIX32_DIV(direction.x, FIX32(64));
+		direction.y = FIX32_DIV(direction.y, FIX32(64));
+
+		/* process player inputs */
+		if (gamestate.keys[SC_W])
 		{
-			console_input(key);
+			origin.x += direction.x;
+			origin.y += direction.y;
 		}
-		*/
+		else if (gamestate.keys[SC_S])
+		{
+			origin.x -= direction.x;
+			origin.y -= direction.y;
+		}
+
+		if (gamestate.keys[SC_A])
+			angle += 1;
+		else if (gamestate.keys[SC_D])
+			angle -= 1;
 
 		/* clear screen */
 		pixelmap_clear8(gamestate.color, 0);
 
-		/* render console */
-		/*
-		console_render(gamestate.color);
-		*/
+		/* render ray */
+		ray_render(gamestate.color, &origin, angle);
 
 		/* copy to screen */
 		pixelmap_copy(gamestate.screen, gamestate.color);
@@ -110,10 +138,14 @@ int main(int argc, char **argv)
 	/* quit console */
 	console_quit();
 
-	/* free pixelmaps */
+	/* quit raycaster */
+	ray_quit();
+
+	/* free memory */
 	pixelmap_free(gamestate.screen);
 	pixelmap_free(gamestate.color);
 	pixelmap_free(gamestate.depth);
+	level_free(gamestate.level);
 
 	/* reset video mode */
 	dos_set_mode(gamestate.video_mode_old);

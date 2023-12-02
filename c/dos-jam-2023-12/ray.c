@@ -42,21 +42,19 @@ static struct {
 	int width;
 	int height;
 	uint16_t *walls;
-	vec2_t player_origin;
-	fix32_t player_angle;
 } ray;
 
 /* initialize raycaster */
-bool ray_init(int width, int height, uint16_t *walls)
+bool ray_init(level_t *level)
 {
-	if (!width || !height || !walls)
+	if (!level)
 		return false;
 
 	memset(&ray, 0, sizeof(ray));
 
-	ray.width = width;
-	ray.height = height;
-	ray.walls = walls;
+	ray.width = level->width;
+	ray.height = level->height;
+	ray.walls = level->planes[1];
 
 	return true;
 }
@@ -68,36 +66,30 @@ void ray_quit(void)
 }
 
 /* run one frame of raycaster */
-void ray_render(pixelmap_t *dst)
+void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle)
 {
-	/* some constants for mode 02h */
-	int draw_w = dst->width;
-	int draw_h = dst->height;
-
 	/* current pixel position */
 	int x, y;
 
-	ray.player_origin.x = FIX32(12);
-	ray.player_origin.y = FIX32(12);
-
 	/* lookup sin and cos of player's view */
-	fix32_t sn = FIX32_SIN(ray.player_angle);
-	fix32_t cs = FIX32_COS(ray.player_angle);
+	fix32_t sn = FIX32_SIN(angle);
+	fix32_t cs = FIX32_COS(angle);
 
 	/* ray sweep loop */
-	for (x = 0; x < draw_w; x++)
+	for (x = 0; x < dst->width; x++)
 	{
 		vec2i_t map_pos, step;
 		vec2_t side_dist, delta_dist, temp, raydir;
 		bool hit = false, side = false, oob = false;
 		fix32_t dist;
+		int line_height, line_start, line_end;
 
 		/* get map position */
-		map_pos.x = FIX32_TO_INT(ray.player_origin.x);
-		map_pos.y = FIX32_TO_INT(ray.player_origin.y);
+		map_pos.x = FIX32_TO_INT(origin->x);
+		map_pos.y = FIX32_TO_INT(origin->y);
 
 		/* calculate ray direction */
-		raydir.x = FIX32_MUL(FIX32_DIV(FIX32(2.0f), FIX32(draw_w)), FIX32(x)) - FIX32(1.0f);
+		raydir.x = FIX32_MUL(FIX32_DIV(FIX32(2.0f), FIX32(dst->width)), FIX32(x)) - FIX32(1.0f);
 		raydir.y = FIX32(1.0f);
 
 		/* rotate around 0,0 by player_angle */
@@ -114,24 +106,24 @@ void ray_render(pixelmap_t *dst)
 		if (raydir.x < 0)
 		{
 			step.x = -1;
-			side_dist.x = FIX32_MUL((ray.player_origin.x - FIX32(map_pos.x)), delta_dist.x);
+			side_dist.x = FIX32_MUL((origin->x - FIX32(map_pos.x)), delta_dist.x);
 		}
 		else
 		{
 			step.x = 1;
-			side_dist.x = FIX32_MUL((FIX32(map_pos.x) + FIX32(1) - ray.player_origin.x), delta_dist.x);
+			side_dist.x = FIX32_MUL((FIX32(map_pos.x) + FIX32(1) - origin->x), delta_dist.x);
 		}
 
 		/* calculate y step and side_dist */
 		if (raydir.y < 0)
 		{
 			step.y = -1;
-			side_dist.y = FIX32_MUL((ray.player_origin.y - FIX32(map_pos.y)), delta_dist.y);
+			side_dist.y = FIX32_MUL((origin->y - FIX32(map_pos.y)), delta_dist.y);
 		}
 		else
 		{
 			step.y = 1;
-			side_dist.y = FIX32_MUL((FIX32(map_pos.y) + FIX32(1.0f) - ray.player_origin.y), delta_dist.y);
+			side_dist.y = FIX32_MUL((FIX32(map_pos.y) + FIX32(1.0f) - origin->y), delta_dist.y);
 		}
 
 		/* perform dda */
@@ -174,19 +166,19 @@ void ray_render(pixelmap_t *dst)
 			continue;
 
 		/* height of line to draw on screen */
-		int line_height = FIX32_TO_INT(FIX32_DIV(FIX32(draw_h), dist));
+		line_height = FIX32_TO_INT(FIX32_DIV(FIX32(dst->height), dist));
 
-		int line_start = -line_height / 2 + draw_h / 2;
-		int line_end = line_height / 2 + draw_h / 2;
+		line_start = -line_height / 2 + dst->height / 2;
+		line_end = line_height / 2 + dst->height / 2;
 
 		/* clamp to vertical area */
-		line_start = clamp(line_start, 0, draw_h);
-		line_end = clamp(line_end, 0, draw_h);
+		line_start = clamp(line_start, 0, dst->height);
+		line_end = clamp(line_end, 0, dst->height);
 
 		/* draw */
 		for (y = line_start; y < line_end; y++)
 		{
-			pixelmap_pixel8(dst, x, y) = ray.walls[map_pos.y * ray.width + map_pos.x];
+			pixelmap_pixel8(dst, x, y) = 15;
 		}
 	}
 }

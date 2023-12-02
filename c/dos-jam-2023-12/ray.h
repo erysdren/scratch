@@ -32,14 +32,16 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "level.h"
+
 /* initialize raycaster */
-bool ray_init(int width, int height, uint16_t *walls);
+bool ray_init(level_t *level);
 
 /* shutdown raycaster */
 void ray_quit(void);
 
 /* render one frame of raycaster */
-void ray_render(pixelmap_t *dst);
+void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle);
 
 #ifdef __cplusplus
 }
