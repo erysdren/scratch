@@ -46,6 +46,8 @@ SOFTWARE.
 /* global gamestate */
 gamestate_t gamestate;
 
+#define CONSOLE 1
+
 /* init everything */
 void engine_init(void)
 {
@@ -142,8 +144,8 @@ int main(int argc, char **argv)
 		if (gamestate.keys[SC_ESCAPE])
 			break;
 
-
-#if 1
+#if CONSOLE
+		/* handle console input */
 		while ((key = kb_getkey()) >= 0)
 			console_input(key);
 #else
@@ -194,11 +196,13 @@ int main(int argc, char **argv)
 		/* clear screen */
 		pixelmap_clear8(gamestate.color, 0);
 
+#if CONSOLE
 		/* render console */
 		console_render(gamestate.color);
-
+#else
 		/* render ray */
-		/* ray_render(gamestate.color, &origin, angle, 2); */
+		ray_render(gamestate.color, &origin, angle, 2);
+#endif
 
 		/* copy to screen */
 		pixelmap_copy(gamestate.screen, gamestate.color);
