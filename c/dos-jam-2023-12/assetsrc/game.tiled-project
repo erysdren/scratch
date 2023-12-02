@@ -1,0 +1,47 @@
+{
+    "automappingRulesFile": "",
+    "commands": [
+    ],
+    "compatibilityVersion": 1100,
+    "extensionsPath": "extensions",
+    "folders": [
+        "."
+    ],
+    "properties": [
+    ],
+    "propertyTypes": [
+        {
+            "color": "#ff80ff80",
+            "drawFill": true,
+            "id": 3,
+            "members": [
+            ],
+            "name": "info_player_start",
+            "type": "class",
+            "useAs": [
+                "property",
+                "object",
+                "project"
+            ]
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 1,
+            "members": [
+                {
+                    "name": "ceiling_height",
+                    "type": "int",
+                    "value": 1
+                }
+            ],
+            "name": "worldspawn",
+            "type": "class",
+            "useAs": [
+                "property",
+                "map",
+                "project"
+            ]
+        }
+    ]
+}

@@ -6,9 +6,9 @@ RM ?= rm -f
 
 CFLAGS += -Ofast -ffast-math -funroll-loops -fomit-frame-pointer
 
-EXEC ?= ray.exe
+EXEC ?= build/ray.exe
 OBJECTS = fix32.o hash.o pixelmap.o ray.o dos.o main.o utils.o math.o \
-	console.o keyboard.o level.o cvar.o cmd.o
+	console.o keyboard.o level.o cvar.o cmd.o wad.o
 
 all: clean $(EXEC)
 
@@ -16,7 +16,7 @@ clean:
 	$(RM) $(OBJECTS) $(EXEC)
 
 run: $(EXEC)
-	dosbox-x -conf dosbox-x.conf
+	dosbox-x -conf build/dosbox-x.conf
 
 $(EXEC): $(OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)

@@ -37,6 +37,7 @@ SOFTWARE.
 #include "level.h"
 #include "cvar.h"
 #include "cmd.h"
+#include "wad.h"
 
 /* global gamestate */
 gamestate_t gamestate;
@@ -45,6 +46,7 @@ gamestate_t gamestate;
 int main(int argc, char **argv)
 {
 	int key;
+	int lump;
 
 	/* zero gamestate */
 	memset(&gamestate, 0, sizeof(gamestate_t));
@@ -57,9 +59,14 @@ int main(int argc, char **argv)
 	if ((gamestate.video_mode = dos_set_mode(DOS_MODE_13)) != DOS_MODE_13)
 		error("couldn't init video mode");
 
-	/* load palette */
-	if (!dos_set_palette_from_file("palette.dat"))
-		error("couldn't load palette.dat");
+	/* load game assets */
+	if ((gamestate.wad = wad_open("game.wad")) == NULL)
+		error("couldn't find game.wad");
+
+	/* set palette */
+	lump = wad_get_index_from_name(gamestate.wad, "PALETTE");
+	wad_read_lump(gamestate.wad, lump, gamestate.palette);
+	dos_set_palette(gamestate.palette);
 
 	/* allocate pixelmaps */
 	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, (void *)DOS_GRAPHICS_MEMORY);
@@ -68,9 +75,6 @@ int main(int argc, char **argv)
 
 	/* init console */
 	console_init();
-
-	/* prepare raycaster */
-	gamestate.level = level_load("casino.lvl");
 
 	/* main loop */
 	while (true)
@@ -102,7 +106,7 @@ int main(int argc, char **argv)
 	pixelmap_free(gamestate.screen);
 	pixelmap_free(gamestate.color);
 	pixelmap_free(gamestate.depth);
-	level_free(gamestate.level);
+	wad_close(gamestate.wad);
 
 	/* reset video mode */
 	dos_set_mode(gamestate.video_mode_old);

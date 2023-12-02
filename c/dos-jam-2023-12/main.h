@@ -30,20 +30,23 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include "dos.h"
 
+#include "dos.h"
 #include "pixelmap.h"
 #include "level.h"
+#include "wad.h"
 
 typedef struct gamestate_t {
 
 	/* game */
 	level_t *level;
+	wad_t *wad;
 
 	/* video */
 	pixelmap_t *screen;
 	pixelmap_t *color;
 	pixelmap_t *depth;
+	uint8_t palette[256][3];
 
 	/* dos */
 	int video_mode_old;

@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# imports
+import sys
+import struct
+import os
+
+if __name__ == "__main__":
+	if len(sys.argv) < 2:
+		print("usage: wadgen name.wad file0 file1 file2 fil3 ...")
+		exit(0)
+
+	# open wad
+	wad = open(sys.argv[1], "wb")
+
+	# write header
+	wad.write(bytes("IWAD".encode("ascii")))
+	wad.write(struct.pack("<I", 0))
+	wad.write(struct.pack("<I", 0))
+
+	ofs_array = []
+	len_array = []
+	name_array = []
+
+	lumps_ofs = 0
+	lumps_len = 0
+
+	# loop over all inputs and write data
+	for i in range(2, len(sys.argv)):
+
+		# open file
+		filename = sys.argv[i]
+		file = open(filename, "rb")
+
+		# get writable name
+		name = os.path.basename(filename).upper()
+		name = os.path.splitext(name)[0]
+
+		# read file contents
+		filebuffer = file.read()
+
+		# get values
+		ofs_array.append(wad.tell())
+		len_array.append(len(filebuffer))
+		name_array.append(bytes(name.encode("ascii")))
+
+		# write data
+		wad.write(bytes(filebuffer))
+
+		# close file
+		file.close()
+
+		print("wrote {0} to {1}".format(name, sys.argv[1]))
+
+	# get lump array ofs
+	lumps_ofs = wad.tell()
+	lumps_len = len(ofs_array)
+
+	# write lump array
+	for i in range(len(sys.argv) - 2):
+		wad.write(struct.pack("<I", ofs_array[i]))
+		wad.write(struct.pack("<I", len_array[i]))
+		wad.write(name_array[i])
+
+	# write header again
+	wad.seek(4)
+	wad.write(struct.pack("<I", lumps_len))
+	wad.write(struct.pack("<I", lumps_ofs))
