@@ -35,6 +35,9 @@ typedef struct cmd_t
 	/* name for searching */
 	const char *name;
 
+	/* help text */
+	const char *help;
+
 	/* function to call */
 	int (*func)(int, char**);
 
@@ -44,7 +47,7 @@ typedef struct cmd_t
 } cmd_t;
 
 /* cmd creation macro */
-#define CMD(n, f) (cmd_t){ .name = n, .func = f, .next = NULL }
+#define CMD(n, h, f) (cmd_t){ .name = n, .help = h, .func = f, .next = NULL }
 
 extern cmd_t *cmd_list;
 

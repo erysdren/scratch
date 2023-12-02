@@ -35,6 +35,7 @@ SOFTWARE.
 #include "cvar.h"
 #include "utils.h"
 
+#define CON_PRINTF_STDIO 0
 #define CON_NUMLINES 64
 #define CON_LINESIZE 64
 #define CON_BUFSIZE 4096
@@ -72,6 +73,34 @@ void console_quit(void)
 static void console_push_line(char *ptr)
 {
 	con.lines[con.num_lines++] = ptr;
+
+	/* copy second half to first half if we're about to overflow */
+	if (con.num_lines >= CON_NUMLINES - 1)
+	{
+		void *first;
+		void *second;
+		int len;
+
+		/* pointer to first half */
+		first = con.lines;
+
+		/* pointer to second half */
+		second = &con.lines[(CON_NUMLINES / 2) - 1];
+
+		/* copy and set size */
+		len = sizeof(char *) * (CON_NUMLINES / 2);
+
+		/* copy second half to first half */
+		memcpy(first, second, len);
+
+		/* zero out second half (minus one for input line) */
+		second = &con.lines[CON_NUMLINES / 2];
+		len = sizeof(char *) * ((CON_NUMLINES / 2) - 1);
+		memset(second, 0, len);
+
+		/* set num_lines */
+		con.num_lines = CON_NUMLINES / 2;
+	}
 }
 
 void console_push(char *src, char prefix)
@@ -117,8 +146,10 @@ void console_printf(const char *s, ...)
 	vsnprintf(line, CON_LINESIZE, s, args);
 	va_end(args);
 
+#if CON_PRINTF_STDIO
 	/* print to stdout */
 	printf("%s\n", line);
+#endif
 
 	/* push up console buffer with the text */
 	console_push(line, 0);

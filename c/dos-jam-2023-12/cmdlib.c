@@ -146,22 +146,38 @@ int _cmd_find(int argc, char **argv)
 	return 0;
 }
 
+int _cmd_help(int argc, char **argv)
+{
+	cmd_t *cmd;
+
+	/* iterate over cmds */
+	cmd = cmd_list;
+	while (cmd)
+	{
+		/* print name */
+		console_printf("%s: %s", cmd->name, cmd->help);
+
+		/* next */
+		cmd = cmd->next;
+	}
+}
+
 cmd_t _cmdlib[] = {
-	CMD("restart", _cmd_restart),
-	CMD("quit", _cmd_quit),
-	CMD("exit", _cmd_quit),
-	CMD("typeof", _cmd_typeof),
-	CMD("clear", _cmd_clear),
-	CMD("cls", _cmd_clear),
-	CMD("find", _cmd_find)
+	CMD("restart", "restart engine", _cmd_restart),
+	CMD("quit", "return to dos", _cmd_quit),
+	CMD("exit", "return to dos", _cmd_quit),
+	CMD("typeof", "print type of cvar", _cmd_typeof),
+	CMD("clear", "clear console screen", _cmd_clear),
+	CMD("cls", "clear console screen", _cmd_clear),
+	CMD("find", "find cvar or cmd by name", _cmd_find),
+	CMD("help", "print help text", _cmd_help)
 };
 
 void cmdlib_init(void)
 {
-	for (int i = 0; i < ASIZE(_cmdlib); i++)
-	{
+	int i;
+	for (i = 0; i < ASIZE(_cmdlib); i++)
 		cmd_register(&_cmdlib[i]);
-	}
 }
 
 void cmdlib_quit(void)
