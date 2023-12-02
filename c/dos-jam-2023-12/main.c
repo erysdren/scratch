@@ -42,6 +42,8 @@ SOFTWARE.
 #include "ray.h"
 #include "cmdlib.h"
 #include "cvarlib.h"
+#include "adlib.h"
+#include "imf.h"
 
 /* global gamestate */
 gamestate_t gamestate;
@@ -58,7 +60,7 @@ void engine_init(void)
 
 	/* init dos handlers */
 	kb_init();
-	timer_init();
+	timer_init(IMF_PLAYBACK_RATE);
 
 	/* set video mode */
 	gamestate.video_mode_old = dos_get_mode();
@@ -87,6 +89,13 @@ void engine_init(void)
 	cmdlib_init();
 	cvarlib_init();
 
+	/* detect adlib card */
+	if (adlib_detect())
+	{
+		console_printf("adlib card detected");
+		imf_init("test.imf");
+	}
+
 	/* init level */
 	gamestate.level = level_load("casino.lvl");
 	if (!gamestate.level)
@@ -108,6 +117,9 @@ void engine_quit(void)
 
 	/* quit raycaster */
 	ray_quit();
+
+	/* quit imf player */
+	imf_quit();
 
 	/* quit console */
 	console_quit();
@@ -143,6 +155,8 @@ int main(int argc, char **argv)
 		/* process misc inputs */
 		if (gamestate.keys[SC_ESCAPE])
 			break;
+
+		imf_play();
 
 #if CONSOLE
 		/* handle console input */

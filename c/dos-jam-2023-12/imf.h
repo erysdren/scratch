@@ -22,37 +22,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "dos.h"
-#include "main.h"
-#include "timer.h"
+#pragma once
+#ifndef _IMF_H_
+#define _IMF_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void timerhandler(void)
-{
-	gamestate.ticks++;
-	outp(0x20, 0x20);
+#include <stdint.h>
+
+#define IMF_PLAYBACK_RATE (560)
+
+void imf_init(const char *filename);
+void imf_play(void);
+void imf_quit(void);
+
+#ifdef __cplusplus
 }
-
-void timer_init(int rate)
-{
-	const int speed = DOS_CLOCK_SPEED / rate;
-
-	_go32_dpmi_get_protected_mode_interrupt_vector(8, &gamestate.timerhandler_old);
-	gamestate.timerhandler_new.pm_offset = (int)timerhandler;
-	gamestate.timerhandler_new.pm_selector = _go32_my_cs();
-	_go32_dpmi_allocate_iret_wrapper(&gamestate.timerhandler_new);
-	_go32_dpmi_set_protected_mode_interrupt_vector(8, &gamestate.timerhandler_new);
-
-	outp(0x43, 0x34);
-	outp(0x40, speed);
-	outp(0x40, speed >> 8);
-}
-
-void timer_quit(void)
-{
-	_go32_dpmi_set_protected_mode_interrupt_vector(8, &gamestate.timerhandler_old);
-	_go32_dpmi_free_iret_wrapper(&gamestate.timerhandler_new);
-
-	outp(0x43, 0x34);
-	outp(0x40, 0x00);
-	outp(0x40, 0x00);
-}
+#endif
+#endif /* _ADLIB_H_ */

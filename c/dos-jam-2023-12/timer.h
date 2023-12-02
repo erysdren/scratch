@@ -29,7 +29,7 @@ SOFTWARE.
 extern "C" {
 #endif
 
-void timer_init(void);
+void timer_init(int rate);
 void timer_quit(void);
 
 #ifdef __cplusplus
