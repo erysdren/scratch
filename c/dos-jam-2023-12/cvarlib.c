@@ -42,5 +42,5 @@ void cvarlib_init(void)
 
 void cvarlib_quit(void)
 {
-
+	cvar_list = NULL;
 }

@@ -100,11 +100,60 @@ int _cmd_typeof(int argc, char **argv)
 	return 1;
 }
 
+int _cmd_clear(int argc, char **argv)
+{
+	console_clear();
+	return 0;
+}
+
+int _cmd_find(int argc, char **argv)
+{
+	int i;
+	cmd_t *cmd;
+	cvar_t *cvar;
+	char *ptr;
+
+	if (argc < 2)
+	{
+		console_printf("must specify search string");
+		return 1;
+	}
+
+	/* iterate over cmds */
+	cmd = cmd_list;
+	while (cmd)
+	{
+		/* do text search */
+		if ((ptr = strstr(cmd->name, argv[1])) != NULL)
+			console_printf("cmd: %s", cmd->name);
+
+		/* next */
+		cmd = cmd->next;
+	}
+
+	/* iterate over cvars */
+	cvar = cvar_list;
+	while (cvar)
+	{
+		/* do text search */
+		if ((ptr = strstr(cvar->name, argv[1])) != NULL)
+			console_printf("cvar: %s", cvar->name);
+
+		/* next */
+		cvar = cvar->next;
+	}
+
+	return 0;
+}
+
 cmd_t _cmdlib[] = {
 	CMD("restart", _cmd_restart),
 	CMD("quit", _cmd_quit),
 	CMD("exit", _cmd_quit),
-	CMD("typeof", _cmd_typeof)
+	CMD("typeof", _cmd_typeof),
+	CMD("clear", _cmd_clear),
+	CMD("cls", _cmd_clear),
+	CMD("find", _cmd_find)
 };
 
 void cmdlib_init(void)
@@ -117,5 +166,5 @@ void cmdlib_init(void)
 
 void cmdlib_quit(void)
 {
-
+	cmd_list = NULL;
 }

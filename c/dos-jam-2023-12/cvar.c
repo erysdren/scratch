@@ -32,7 +32,7 @@ SOFTWARE.
 #include "cvar.h"
 
 /* global cvar chain */
-static cvar_t *cvar_list = NULL;
+cvar_t *cvar_list = NULL;
 
 /* retrieve cvar from chain */
 cvar_t *cvar_retrieve(const char *name)

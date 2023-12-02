@@ -75,6 +75,8 @@ typedef struct cvar_t
 #define CVAR_FLOAT(n, v) (cvar_t){ .name = n, .type = CVAR_TYPE_FLOAT, .value.f = v, .next = NULL }
 #define CVAR_STRING(n, v) (cvar_t){ .name = n, .type = CVAR_TYPE_STRING, .value.s = v, .next = NULL }
 
+extern cvar_t *cvar_list;
+
 /* retrieve cvar from chain */
 cvar_t *cvar_retrieve(const char *name);
 

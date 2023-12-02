@@ -46,6 +46,8 @@ typedef struct cmd_t
 /* cmd creation macro */
 #define CMD(n, f) (cmd_t){ .name = n, .func = f, .next = NULL }
 
+extern cmd_t *cmd_list;
+
 /* retrieve cmd from chain */
 cmd_t *cmd_retrieve(const char *name);
 

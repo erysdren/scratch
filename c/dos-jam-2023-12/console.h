@@ -36,6 +36,7 @@ void console_printf(const char *s, ...);
 void console_render(pixelmap_t *dst);
 void console_input(int c);
 void console_eval(char *s);
+void console_clear(void);
 
 #ifdef __cplusplus
 }

@@ -297,3 +297,10 @@ void console_input(int c)
 			}
 	}
 }
+
+void console_clear(void)
+{
+	memset(con.textbuf, 0, CON_BUFSIZE);
+	con.textbuf_ptr = con.textbuf;
+	memset(con.lines, 0, CON_NUMLINES * sizeof(char *));
+}

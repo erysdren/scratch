@@ -32,7 +32,7 @@ SOFTWARE.
 #include "cmd.h"
 
 /* global cmd chain */
-static cmd_t *cmd_list = NULL;
+cmd_t *cmd_list = NULL;
 
 /* retrieve cmd from chain */
 cmd_t *cmd_retrieve(const char *name)
