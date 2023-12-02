@@ -59,15 +59,6 @@ int main(int argc, char **argv)
 	if ((gamestate.video_mode = dos_set_mode(DOS_MODE_13)) != DOS_MODE_13)
 		error("couldn't init video mode");
 
-	/* load game assets */
-	if ((gamestate.wad = wad_open("game.wad")) == NULL)
-		error("couldn't find game.wad");
-
-	/* set palette */
-	lump = wad_get_index_from_name(gamestate.wad, "PALETTE");
-	wad_read_lump(gamestate.wad, lump, gamestate.palette);
-	dos_set_palette(gamestate.palette);
-
 	/* allocate pixelmaps */
 	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, (void *)DOS_GRAPHICS_MEMORY);
 	gamestate.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
@@ -106,7 +97,6 @@ int main(int argc, char **argv)
 	pixelmap_free(gamestate.screen);
 	pixelmap_free(gamestate.color);
 	pixelmap_free(gamestate.depth);
-	wad_close(gamestate.wad);
 
 	/* reset video mode */
 	dos_set_mode(gamestate.video_mode_old);

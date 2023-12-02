@@ -31,7 +31,7 @@ extern "C" {
 
 void console_init(void);
 void console_quit(void);
-void console_push_up(char *src);
+void console_push(char *src, char prefix);
 void console_printf(const char *s, ...);
 void console_render(pixelmap_t *dst);
 void console_input(int c);

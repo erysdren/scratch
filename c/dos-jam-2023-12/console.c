@@ -34,15 +34,20 @@ SOFTWARE.
 #include "cmd.h"
 #include "cvar.h"
 
-#define CON_WIDTH 40
-#define CON_HEIGHT 25
+#define CON_NUMLINES 64
+#define CON_LINESIZE 64
+#define CON_BUFSIZE 4096
+
 static struct {
 	pixelmap_t *font8x8;
-	pixelmap_t *screen;
-	char line[CON_WIDTH];
-	int line_len;
-	int cursor;
-} console;
+	char textbuf[CON_BUFSIZE];
+	char *textbuf_ptr;
+	char *lines[CON_NUMLINES];
+	int num_lines;
+	char input[CON_LINESIZE];
+	int input_len;
+	int input_cursor;
+} con;
 
 static char **tokenize(char *s, int *num_args)
 {
@@ -82,99 +87,132 @@ static char **tokenize(char *s, int *num_args)
 void console_init(void)
 {
 	/* zero structure */
-	memset(&console, 0, sizeof(console));
+	memset(&con, 0, sizeof(con));
 
-	/* allocate screen */
-	console.screen = pixelmap_allocate(CON_WIDTH, CON_HEIGHT, PM_TYPE_INDEX_8, NULL);
+	/* set text buffer pointer */
+	con.textbuf_ptr = con.textbuf;
 
 	/* allocate font */
-	console.font8x8 = pixelmap_load("font8x8.pxl");
+	con.font8x8 = pixelmap_load("font8x8.pxl");
 }
 
 void console_quit(void)
 {
-	pixelmap_free(console.font8x8);
-	pixelmap_free(console.screen);
+	pixelmap_free(con.font8x8);
 }
 
-void console_push_up(char *src)
+static void console_push_line(char *ptr)
 {
-	char *cur;
-	char *prev;
-	char *p;
-	int len;
+	con.lines[con.num_lines++] = ptr;
+}
+
+void console_push(char *src, char prefix)
+{
 	int i;
+	int len_src = strlen(src);
 
-	/* bump text up */
-	for (i = 1; i < console.screen->height - 1; i++)
+	/* bounds checks */
+	if (con.textbuf_ptr + len_src + 1 > con.textbuf + CON_BUFSIZE)
+		con.textbuf_ptr = con.textbuf;
+
+	/* add string to text buffer */
+	if (prefix)
+		sprintf(con.textbuf_ptr, "%c %s", prefix, src);
+	else
+		sprintf(con.textbuf_ptr, "%s", src);
+
+	/* add pointer to lines buffer */
+	console_push_line(con.textbuf_ptr);
+
+	/* advance text buffer pointer */
+	if (prefix) len_src += 2;
+	con.textbuf_ptr += len_src + 1;
+
+	/* check for newlines and push line again */
+	for (i = 0; i < len_src; i++)
 	{
-		/* get pointers */
-		cur = &pixelmap_pixel8(console.screen, 0, i);
-		prev = &pixelmap_pixel8(console.screen, 0, i - 1);
-
-		/* clear prev line and copy cur line */
-		memcpy(prev, cur, console.screen->stride);
-	}
-
-	/* clear cur line */
-	memset(cur, 0, console.screen->stride);
-
-	/* sanity check */
-	if (!src)
-		return;
-
-	/* get len */
-	len = strlen(src) > console.screen->width ? console.screen->width : strlen(src);
-
-	/* copy in new text (and handle newline) */
-	for (p = src; *p; p++)
-	{
-		/* handle newline */
-		if (*p == '\n')
+		if (con.textbuf_ptr[i] == '\n')
 		{
-			console_push_up(p + 1);
-			return;
+			con.textbuf_ptr[i] = '\0';
+			console_push_line(&con.textbuf_ptr[i + 1]);
 		}
-
-		/* copy char */
-		*cur++ = *p;
 	}
 }
 
 void console_printf(const char *s, ...)
 {
-	static char text[64];
+	static char line[CON_LINESIZE];
 	va_list args;
 
 	/* do vargs */
 	va_start(args, s);
-	vsnprintf(text, 64, s, args);
+	vsnprintf(line, CON_LINESIZE, s, args);
 	va_end(args);
 
 	/* print to stdout */
-	printf("%s\n", text);
+	printf("%s\n", line);
 
 	/* push up console buffer with the text */
-	console_push_up(text);
+	console_push(line, 0);
 }
 
 void console_render(pixelmap_t *dst)
 {
-	int x, y;
-	int xx, yy;
-	int c;
+	int x, y, xx, yy, i, c;
 
-	for (y = 0; y < console.screen->height; y++)
+	/* start y position */
+	y = (dst->height / 8) - 1;
+
+	/* draw textbuf */
+	for (i = con.num_lines; i >= 0; i--)
 	{
-		for (x = 0; x < console.screen->width; x++)
+		/* handle nothing on this line */
+		if (con.lines[i] == NULL)
 		{
+			y -= 1;
+			continue;
+		}
+		if (con.lines[i][0] == '\0')
+		{
+			y -= 1;
+			continue;
+		}
+
+		/* gone offscreen */
+		if (y < 0)
+			break;
+
+		/* plot loop */
+		for (x = 0; x < strlen(con.lines[i]); x++)
+		{
+			/* get dest pos */
 			xx = x << 3;
 			yy = y << 3;
 
-			c = pixelmap_pixel8(console.screen, x, y) << 3;
+			/* get char */
+			c = con.lines[i][x] << 3;
 
-			pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, console.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
+			/* blit */
+			pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, con.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
 		}
+
+		/* move y down */
+		y -= 1;
+	}
+
+	/* draw input line */
+	y = (dst->height / 8) - 1;
+	for (x = 0; x < strlen(con.input); x++)
+	{
+		/* get dest pos */
+		xx = x << 3;
+		yy = y << 3;
+
+		/* get char */
+		c = con.input[x] << 3;
+
+		/* blit */
+		pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, con.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
 	}
 }
 
@@ -252,36 +290,41 @@ void console_input(int c)
 		/* newlines */
 		case '\n':
 		case '\r':
-			console.line[console.line_len] = '\0';
-			console.line_len = console.cursor = 0;
-			console_push_up(console.line);
-			memset(&pixelmap_pixel8(console.screen, 0, CON_HEIGHT - 1), 0, console.screen->stride);
-			console_eval(console.line);
+			con.input[con.input_len] = '\0';
+			con.input_len = con.input_cursor = 0;
+			console_push(con.input, '>');
+			console_eval(con.input);
+			memset(con.input, 0, CON_LINESIZE);
 			break;
 
 		/* backspace */
 		case '\b':
-			if (console.line_len)
+			if (con.input_len)
 			{
-				if (console.cursor == console.line_len)
+				if (con.input_cursor == con.input_len)
 				{
-					console.line[console.line_len] = '\0';
-					pixelmap_pixel8(console.screen, console.line_len - 1, CON_HEIGHT - 1) = '\0';
-					console.line_len--;
-					console.cursor--;
+					/* push cursor back */
+					con.input_len--;
+					con.input_cursor--;
+
+					/* remove character */
+					con.input[con.input_len] = '\0';
 				}
 			}
 			break;
 
 		/* printable */
 		default:
-			if (c < 256 && isprint(c) && console.line_len < CON_WIDTH - 1)
+			if (c < 256 && isprint(c) && con.input_len < CON_LINESIZE - 1)
 			{
-				if (console.cursor == console.line_len)
+				if (con.input_cursor == con.input_len)
 				{
-					console.line[console.line_len++] = c;
-					pixelmap_pixel8(console.screen, console.line_len - 1, CON_HEIGHT - 1) = c;
-					console.cursor++;
+					/* add character */
+					con.input[con.input_len] = c;
+
+					/* push cursor forward */
+					con.input_len++;
+					con.input_cursor++;
 				}
 			}
 	}
