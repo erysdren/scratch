@@ -60,6 +60,8 @@ void console_init(void)
 
 	/* allocate font */
 	con.font8x8 = pixelmap_load("font8x8.pxl");
+	if (!con.font8x8)
+		error("couldn't load font8x8.pxl");
 }
 
 void console_quit(void)
