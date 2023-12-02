@@ -41,24 +41,21 @@ SOFTWARE.
 static struct {
 	int width;
 	int height;
-	int len_wall;
-	void *walls;
-	fix32_t player_origin_x;
-	fix32_t player_origin_y;
-	int player_angle;
+	uint16_t *walls;
+	vec2_t player_origin;
+	fix32_t player_angle;
 } ray;
 
 /* initialize raycaster */
-bool ray_init(int width, int height, int len_wall, void *walls)
+bool ray_init(int width, int height, uint16_t *walls)
 {
-	if (!width || !height || !len_wall || !walls)
+	if (!width || !height || !walls)
 		return false;
 
 	memset(&ray, 0, sizeof(ray));
 
 	ray.width = width;
 	ray.height = height;
-	ray.len_wall = len_wall;
 	ray.walls = walls;
 
 	return true;
@@ -80,8 +77,8 @@ void ray_render(pixelmap_t *dst)
 	/* current pixel position */
 	int x, y;
 
-	ray.player_origin_x = FIX32(12);
-	ray.player_origin_y = FIX32(12);
+	ray.player_origin.x = FIX32(12);
+	ray.player_origin.y = FIX32(12);
 
 	/* lookup sin and cos of player's view */
 	fix32_t sn = FIX32_SIN(ray.player_angle);
@@ -90,77 +87,75 @@ void ray_render(pixelmap_t *dst)
 	/* ray sweep loop */
 	for (x = 0; x < draw_w; x++)
 	{
-		int step_x, step_y;
-		fix32_t side_dist_x, side_dist_y;
+		vec2i_t map_pos, step;
+		vec2_t side_dist, delta_dist, temp, raydir;
 		bool hit = false, side = false, oob = false;
 		fix32_t dist;
 
 		/* get map position */
-		int16_t map_pos_x = FIX32_TO_INT(ray.player_origin_x);
-		int16_t map_pos_y = FIX32_TO_INT(ray.player_origin_y);
+		map_pos.x = FIX32_TO_INT(ray.player_origin.x);
+		map_pos.y = FIX32_TO_INT(ray.player_origin.y);
 
 		/* calculate ray direction */
-		fix32_t raydir_x = FIX32_MUL(FIX32_DIV(FIX32(2.0f), FIX32(draw_w)), FIX32(x)) - FIX32(1.0f);
-		fix32_t raydir_y = FIX32(1.0f);
+		raydir.x = FIX32_MUL(FIX32_DIV(FIX32(2.0f), FIX32(draw_w)), FIX32(x)) - FIX32(1.0f);
+		raydir.y = FIX32(1.0f);
 
 		/* rotate around 0,0 by player_angle */
-		fix32_t temp_x = raydir_x;
-		fix32_t temp_y = raydir_y;
-		raydir_x = FIX32_MUL(-temp_x, cs) - FIX32_MUL(-temp_y, sn);
-		raydir_y = FIX32_MUL(temp_x, sn) + FIX32_MUL(temp_y, cs);
+		temp.x = raydir.x;
+		temp.y = raydir.y;
+		raydir.x = FIX32_MUL(-temp.x, cs) - FIX32_MUL(-temp.y, sn);
+		raydir.y = FIX32_MUL(temp.x, sn) + FIX32_MUL(temp.y, cs);
 
 		/* prevent divide by zero */
-		fix32_t delta_dist_x = (raydir_x == 0) ? FIX32_MAX : abs(FIX32_DIV(FIX32(1.0f), raydir_x));
-		fix32_t delta_dist_y = (raydir_y == 0) ? FIX32_MAX : abs(FIX32_DIV(FIX32(1.0f), raydir_y));
+		delta_dist.x = (raydir.x == 0) ? FIX32_MAX : abs(FIX32_DIV(FIX32(1.0f), raydir.x));
+		delta_dist.y = (raydir.y == 0) ? FIX32_MAX : abs(FIX32_DIV(FIX32(1.0f), raydir.y));
 
 		/* calculate x step and side_dist */
-		if (raydir_x < 0)
+		if (raydir.x < 0)
 		{
-			step_x = -1;
-			side_dist_x = FIX32_MUL((ray.player_origin_x - FIX32(map_pos_x)), delta_dist_x);
+			step.x = -1;
+			side_dist.x = FIX32_MUL((ray.player_origin.x - FIX32(map_pos.x)), delta_dist.x);
 		}
 		else
 		{
-			step_x = 1;
-			side_dist_x = FIX32_MUL((FIX32(map_pos_x) + FIX32(1) - ray.player_origin_x), delta_dist_x);
+			step.x = 1;
+			side_dist.x = FIX32_MUL((FIX32(map_pos.x) + FIX32(1) - ray.player_origin.x), delta_dist.x);
 		}
 
 		/* calculate y step and side_dist */
-		if (raydir_y < 0)
+		if (raydir.y < 0)
 		{
-			step_y = -1;
-			side_dist_y = FIX32_MUL((ray.player_origin_y - FIX32(map_pos_y)), delta_dist_y);
+			step.y = -1;
+			side_dist.y = FIX32_MUL((ray.player_origin.y - FIX32(map_pos.y)), delta_dist.y);
 		}
 		else
 		{
-			step_y = 1;
-			side_dist_y = FIX32_MUL((FIX32(map_pos_y) + FIX32(1.0f) - ray.player_origin_y), delta_dist_y);
+			step.y = 1;
+			side_dist.y = FIX32_MUL((FIX32(map_pos.y) + FIX32(1.0f) - ray.player_origin.y), delta_dist.y);
 		}
 
 		/* perform dda */
 		while (hit == false && oob == false)
 		{
-			if (side_dist_x < side_dist_y)
+			if (side_dist.x < side_dist.y)
 			{
-				side_dist_x += delta_dist_x;
-				map_pos_x += step_x;
+				side_dist.x += delta_dist.x;
+				map_pos.x += step.x;
 				side = false;
 			}
 			else
 			{
-				side_dist_y += delta_dist_y;
-				map_pos_y += step_y;
+				side_dist.y += delta_dist.y;
+				map_pos.y += step.y;
 				side = true;
 			}
 
 			/* check if the ray hit a wall */
-			/*
-			if (map[map_pos_y][map_pos_x] > 0)
+			if (ray.walls[map_pos.y * ray.width + map_pos.x] > 0)
 				hit = true;
-			*/
 
 			/* check if ray has gone out of bounds */
-			if (map_pos_y >= MAP_HEIGHT || map_pos_y < 0 || map_pos_x >= MAP_WIDTH || map_pos_x < 0)
+			if (map_pos.y >= MAP_HEIGHT || map_pos.y < 0 || map_pos.x >= MAP_WIDTH || map_pos.x < 0)
 				oob = true;
 		}
 
@@ -170,9 +165,9 @@ void ray_render(pixelmap_t *dst)
 
 		/* check if we've hit a side or not */
 		if (side == false)
-			dist = (side_dist_x - delta_dist_x);
+			dist = (side_dist.x - delta_dist.x);
 		else
-			dist = (side_dist_y - delta_dist_y);
+			dist = (side_dist.y - delta_dist.y);
 
 		/* prevent divide by zero */
 		if (dist <= FIX32(0))
@@ -189,11 +184,9 @@ void ray_render(pixelmap_t *dst)
 		line_end = clamp(line_end, 0, draw_h);
 
 		/* draw */
-		/*
 		for (y = line_start; y < line_end; y++)
 		{
-			pixelmap_pixel8(dst, x, y) = map[map_pos_y][map_pos_x];
+			pixelmap_pixel8(dst, x, y) = ray.walls[map_pos.y * ray.width + map_pos.x];
 		}
-		*/
 	}
 }

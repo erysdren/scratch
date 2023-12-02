@@ -1,4 +1,4 @@
-/*/*
+/*
 MIT License
 
 Copyright (c) 2023 erysdren (it/she/they)
@@ -22,50 +22,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
-#ifndef _MAIN_H_
-#define _MAIN_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdint.h>
-
 #include "dos.h"
-#include "pixelmap.h"
-#include "level.h"
-#include "wad.h"
+#include "main.h"
+#include "timer.h"
 
-typedef struct gamestate_t {
+#define DESIRED_SPEED 120
 
-	/* game */
-	level_t *level;
-	wad_t *wad;
-
-	/* engine */
-	uint64_t ticks;
-
-	/* video */
-	pixelmap_t *screen;
-	pixelmap_t *color;
-	pixelmap_t *depth;
-	uint8_t palette[256][3];
-
-	/* dos */
-	int video_mode_old;
-	int video_mode;
-	_go32_dpmi_seginfo kbhandler_old;
-	_go32_dpmi_seginfo kbhandler_new;
-	_go32_dpmi_seginfo timerhandler_old;
-	_go32_dpmi_seginfo timerhandler_new;
-	char keys[256];
-	char key_last;
-} gamestate_t;
-
-/* global gamestate */
-extern gamestate_t gamestate;
-
-#ifdef __cplusplus
+void timerhandler(void)
+{
+	gamestate.ticks++;
+	outp(0x20, 0x20);
 }
-#endif
-#endif /* _MAIN_H_ */
+
+void timer_init(void)
+{
+	const int speed = DOS_CLOCK_SPEED / DESIRED_SPEED;
+
+	_go32_dpmi_get_protected_mode_interrupt_vector(8, &gamestate.timerhandler_old);
+	gamestate.timerhandler_new.pm_offset = (int)timerhandler;
+	gamestate.timerhandler_new.pm_selector = _go32_my_cs();
+	_go32_dpmi_allocate_iret_wrapper(&gamestate.timerhandler_new);
+	_go32_dpmi_set_protected_mode_interrupt_vector(8, &gamestate.timerhandler_new);
+
+	outp(0x43, 0x34);
+	outp(0x40, speed);
+	outp(0x40, speed >> 8);
+}
+
+void timer_quit(void)
+{
+	_go32_dpmi_set_protected_mode_interrupt_vector(8, &gamestate.timerhandler_old);
+	_go32_dpmi_free_iret_wrapper(&gamestate.timerhandler_new);
+
+	outp(0x43, 0x34);
+	outp(0x40, 0x00);
+	outp(0x40, 0x00);
+}

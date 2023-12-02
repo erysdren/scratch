@@ -33,7 +33,7 @@ extern "C" {
 #include <stdbool.h>
 
 /* initialize raycaster */
-bool ray_init(int width, int height, int len_wall, void *walls);
+bool ray_init(int width, int height, uint16_t *walls);
 
 /* shutdown raycaster */
 void ray_quit(void);

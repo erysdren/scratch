@@ -87,8 +87,6 @@ void kbhandler(void)
 
 void kb_init(void)
 {
-	__djgpp_nearptr_enable();
-
 	buf_ridx = buf_widx = 0;
 
 	_go32_dpmi_get_protected_mode_interrupt_vector(9, &gamestate.kbhandler_old);
@@ -96,8 +94,6 @@ void kb_init(void)
 	gamestate.kbhandler_new.pm_selector = _go32_my_cs();
 	_go32_dpmi_allocate_iret_wrapper(&gamestate.kbhandler_new);
 	_go32_dpmi_set_protected_mode_interrupt_vector(9, &gamestate.kbhandler_new);
-
-	__djgpp_nearptr_disable();
 }
 
 void kb_quit(void)

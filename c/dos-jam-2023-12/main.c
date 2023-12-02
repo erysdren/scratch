@@ -38,6 +38,7 @@ SOFTWARE.
 #include "cvar.h"
 #include "cmd.h"
 #include "wad.h"
+#include "timer.h"
 
 /* global gamestate */
 gamestate_t gamestate;
@@ -47,17 +48,29 @@ int main(int argc, char **argv)
 {
 	int key;
 	int lump;
+	FILE *file;
 
 	/* zero gamestate */
 	memset(&gamestate, 0, sizeof(gamestate_t));
 
-	/* init kbhandler */
+	/* init handlers */
 	kb_init();
+	timer_init();
 
 	/* set video mode */
 	gamestate.video_mode_old = dos_get_mode();
 	if ((gamestate.video_mode = dos_set_mode(DOS_MODE_13)) != DOS_MODE_13)
 		error("couldn't init video mode");
+
+	/* read palette */
+	file = fopen("palette.dat", "rb");
+	if (!file)
+		error("couldn't find palette.dat");
+	fread(gamestate.palette, 3, 256, file);
+	fclose(file);
+
+	/* set palette */
+	dos_set_palette(gamestate.palette);
 
 	/* allocate pixelmaps */
 	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, (void *)DOS_GRAPHICS_MEMORY);
@@ -74,17 +87,21 @@ int main(int argc, char **argv)
 		if (gamestate.keys[SC_ESCAPE])
 			break;
 
-		/* handle console */
+		/* handle console inputs */
+		/*
 		while ((key = kb_getkey()) >= 0)
 		{
 			console_input(key);
 		}
+		*/
 
 		/* clear screen */
 		pixelmap_clear8(gamestate.color, 0);
 
 		/* render console */
+		/*
 		console_render(gamestate.color);
+		*/
 
 		/* copy to screen */
 		pixelmap_copy(gamestate.screen, gamestate.color);
@@ -101,8 +118,9 @@ int main(int argc, char **argv)
 	/* reset video mode */
 	dos_set_mode(gamestate.video_mode_old);
 
-	/* quit kbhandler */
+	/* quit handlers */
 	kb_quit();
+	timer_quit();
 
 	return 0;
 }

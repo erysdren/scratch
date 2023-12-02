@@ -1,4 +1,4 @@
-/*/*
+/*
 MIT License
 
 Copyright (c) 2023 erysdren (it/she/they)
@@ -23,49 +23,16 @@ SOFTWARE.
 */
 
 #pragma once
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _TIMER_H_
+#define _TIMER_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
-
-#include "dos.h"
-#include "pixelmap.h"
-#include "level.h"
-#include "wad.h"
-
-typedef struct gamestate_t {
-
-	/* game */
-	level_t *level;
-	wad_t *wad;
-
-	/* engine */
-	uint64_t ticks;
-
-	/* video */
-	pixelmap_t *screen;
-	pixelmap_t *color;
-	pixelmap_t *depth;
-	uint8_t palette[256][3];
-
-	/* dos */
-	int video_mode_old;
-	int video_mode;
-	_go32_dpmi_seginfo kbhandler_old;
-	_go32_dpmi_seginfo kbhandler_new;
-	_go32_dpmi_seginfo timerhandler_old;
-	_go32_dpmi_seginfo timerhandler_new;
-	char keys[256];
-	char key_last;
-} gamestate_t;
-
-/* global gamestate */
-extern gamestate_t gamestate;
+void timer_init(void);
+void timer_quit(void);
 
 #ifdef __cplusplus
 }
 #endif
-#endif /* _MAIN_H_ */
+#endif /* _TIMER_H_ */

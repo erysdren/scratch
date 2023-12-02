@@ -85,6 +85,12 @@ extern "C" {
 #define DOS_TEXT_MEMORY (0xB8000 + __djgpp_conventional_base)
 
 /*
+ * other constants
+ */
+
+#define DOS_CLOCK_SPEED 1193181
+
+/*
  * keyboard scancodes
  */
 

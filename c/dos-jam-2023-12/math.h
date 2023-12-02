@@ -51,12 +51,23 @@ typedef struct vec2_t {
 	fix32_t y;
 } vec2_t;
 
+typedef struct vec2i_t {
+	int x;
+	int y;
+} vec2i_t;
+
 /* vec3 */
 typedef struct vec3_t {
 	fix32_t x;
 	fix32_t y;
 	fix32_t z;
 } vec3_t;
+
+typedef struct vec3i_t {
+	int x;
+	int y;
+	int z;
+} vec3i_t;
 
 /* vec4 */
 typedef struct vec4_t {
@@ -65,6 +76,13 @@ typedef struct vec4_t {
 	fix32_t z;
 	fix32_t w;
 } vec4_t;
+
+typedef struct vec4i_t {
+	int x;
+	int y;
+	int z;
+	int w;
+} vec4i_t;
 
 /* dotproduct */
 fix32_t vec2_dotproduct(vec2_t *v1, vec2_t *v2);
