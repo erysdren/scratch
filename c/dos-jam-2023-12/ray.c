@@ -70,10 +70,11 @@ void ray_render(pixelmap_t *dst, vec2_t *origin, fix32_t angle)
 {
 	/* current pixel position */
 	int x, y;
+	fix32_t sn, cs;
 
 	/* lookup sin and cos of player's view */
-	fix32_t sn = FIX32_SIN(angle);
-	fix32_t cs = FIX32_COS(angle);
+	sn = FIX32_SIN(FIX32_DEG2RAD(angle));
+	cs = FIX32_COS(FIX32_DEG2RAD(angle));
 
 	/* ray sweep loop */
 	for (x = 0; x < dst->width; x++)

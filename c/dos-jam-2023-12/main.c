@@ -51,8 +51,9 @@ int main(int argc, char **argv)
 	int lump;
 	FILE *file;
 	vec2_t origin;
-	int angle;
+	fix32_t angle;
 	vec2_t direction;
+	uint64_t tick;
 
 	/* zero gamestate */
 	memset(&gamestate, 0, sizeof(gamestate_t));
@@ -95,35 +96,54 @@ int main(int argc, char **argv)
 	console_init();
 
 	/* main loop */
-	while (true)
+	for (tick = gamestate.ticks;;)
 	{
 		/* process misc inputs */
 		if (gamestate.keys[SC_ESCAPE])
 			break;
 
-		/* get look direction */
-		direction.x = FIX32_COS(FIX32_DEG2RAD(FIX32(angle)));
-		direction.y = FIX32_MUL(FIX32(-1), FIX32_SIN(FIX32_DEG2RAD(FIX32(angle))));
-
-		direction.x = FIX32_DIV(direction.x, FIX32(64));
-		direction.y = FIX32_DIV(direction.y, FIX32(64));
-
-		/* process player inputs */
-		if (gamestate.keys[SC_W])
+		/* poll on timer */
+		for (; tick < gamestate.ticks; tick++)
 		{
-			origin.x += direction.x;
-			origin.y += direction.y;
-		}
-		else if (gamestate.keys[SC_S])
-		{
-			origin.x -= direction.x;
-			origin.y -= direction.y;
-		}
+			/* process player look */
+			if (gamestate.keys[SC_LEFT])
+				angle += FIX32(0.01);
+			if (gamestate.keys[SC_RIGHT])
+				angle -= FIX32(0.01);
+			if (angle < FIX32(0))
+				angle += FIX32(360);
+			if (angle > FIX32(359))
+				angle -= FIX32(360);
 
-		if (gamestate.keys[SC_A])
-			angle += 1;
-		else if (gamestate.keys[SC_D])
-			angle -= 1;
+			/* get look direction */
+			direction.x = FIX32_SIN(FIX32_DEG2RAD(angle));
+			direction.y = FIX32_COS(FIX32_DEG2RAD(angle));
+
+			direction.x = FIX32_DIV(direction.x, FIX32(64));
+			direction.y = FIX32_DIV(direction.y, FIX32(64));
+
+			/* process player inputs */
+			if (gamestate.keys[SC_W])
+			{
+				origin.x += direction.x;
+				origin.y += direction.y;
+			}
+			if (gamestate.keys[SC_S])
+			{
+				origin.x -= direction.x;
+				origin.y -= direction.y;
+			}
+			if (gamestate.keys[SC_A])
+			{
+				origin.x += direction.y;
+				origin.y -= direction.x;
+			}
+			if (gamestate.keys[SC_D])
+			{
+				origin.x -= direction.y;
+				origin.y += direction.x;
+			}
+		}
 
 		/* clear screen */
 		pixelmap_clear8(gamestate.color, 0);
