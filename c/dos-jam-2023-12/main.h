@@ -54,6 +54,7 @@ typedef struct gamestate_t {
 	pixelmap_t *console;
 	pixelmap_t *palette;
 	pixelmap_t *colormap;
+	pixelmap_t *font8x8;
 
 	/* audio */
 	bool adlib;

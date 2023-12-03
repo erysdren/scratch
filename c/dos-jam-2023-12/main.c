@@ -72,16 +72,23 @@ void engine_init(void)
 	if (!gamestate.screen || !gamestate.color || !gamestate.console)
 		error("couldn't allocate pixelmaps");
 
-	/* set palette */
+	/* get palette */
 	gamestate.palette = pixelmap_load("palette.pxl");
 	if (!gamestate.palette)
 		error("couldn't load palette.pxl");
+
+	/* set palette */
 	dos_set_palette(gamestate.palette->pixels);
 
 	/* get colormap */
 	gamestate.colormap = pixelmap_load("colormap.pxl");
 	if (!gamestate.colormap)
 		error("couldn't load colormap.pxl");
+
+	/* get font */
+	gamestate.font8x8 = pixelmap_load("font8x8.pxl");
+	if (!gamestate.font8x8)
+		error("couldn't load font8x8.pxl");
 
 	/* init console */
 	console_init();
@@ -125,6 +132,7 @@ void engine_quit(void)
 	pixelmap_free(gamestate.colormap);
 	pixelmap_free(gamestate.console);
 	pixelmap_free(gamestate.palette);
+	pixelmap_free(gamestate.font8x8);
 	level_free(gamestate.level);
 }
 
@@ -205,13 +213,9 @@ int main(int argc, char **argv)
 			}
 		}
 
-		/* clear screen */
+		/* clear screen, render raycaster, then blit to screen */
 		pixelmap_clear8(gamestate.color, 0);
-
-		/* render ray */
 		ray_render(gamestate.color, &gamestate.player, 2);
-
-		/* copy to screen */
 		pixelmap_copy(gamestate.screen, gamestate.color);
 	}
 

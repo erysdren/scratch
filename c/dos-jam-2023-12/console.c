@@ -43,7 +43,6 @@ SOFTWARE.
 #define CON_BUFSIZE 4096
 
 static struct {
-	pixelmap_t *font8x8;
 	char textbuf[CON_BUFSIZE];
 	char *textbuf_ptr;
 	char *lines[CON_NUMLINES];
@@ -60,16 +59,11 @@ void console_init(void)
 
 	/* set text buffer pointer */
 	con.textbuf_ptr = con.textbuf;
-
-	/* allocate font */
-	con.font8x8 = pixelmap_load("font8x8.pxl");
-	if (!con.font8x8)
-		error("couldn't load font8x8.pxl");
 }
 
 void console_quit(void)
 {
-	pixelmap_free(con.font8x8);
+
 }
 
 static void console_push_line(char *ptr)
@@ -194,7 +188,7 @@ void console_render(pixelmap_t *dst)
 			c = con.lines[i][x] << 3;
 
 			/* blit */
-			pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, con.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
+			pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, gamestate.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
 		}
 
 		/* move y down */
@@ -213,7 +207,7 @@ void console_render(pixelmap_t *dst)
 		c = con.input[x] << 3;
 
 		/* blit */
-		pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, con.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
+		pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, gamestate.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
 	}
 }
 
@@ -354,6 +348,7 @@ void console_run(void)
 		{
 			switch (key)
 			{
+				case SC_TILDE:
 				case SC_ESCAPE:
 					redraw = false;
 					done = true;
