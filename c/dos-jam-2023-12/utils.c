@@ -29,7 +29,7 @@ SOFTWARE.
 #include <stdarg.h>
 #include <ctype.h>
 
-#include "main.h"
+#include "engine.h"
 #include "dos.h"
 #include "utils.h"
 #include "console.h"

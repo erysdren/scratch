@@ -1,4 +1,4 @@
-/*
+/*/*
 MIT License
 
 Copyright (c) 2023 erysdren (it/she/they)
@@ -22,19 +22,73 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "engine.h"
+#pragma once
+#ifndef _ENGINE_H_
+#define _ENGINE_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/* main */
-int main(int argc, char **argv)
-{
-	/* init engine */
-	engine_init();
+#include <stdbool.h>
+#include <stdint.h>
 
-	/* main loop */
-	while (engine_run());
+#include "dos.h"
+#include "pixelmap.h"
+#include "level.h"
+#include "wad.h"
+#include "actor.h"
 
-	/* shutdown engine */
-	engine_quit();
+enum {
+	STATE_EXIT,
+	STATE_GAME,
+	STATE_CONSOLE,
+	STATE_MENU
+};
 
-	return 0;
+typedef struct engine_t {
+
+	/* game */
+	level_t *level;
+	wad_t *wad;
+	actor_t player;
+
+	/* engine */
+	uint64_t ticks;
+	int tickrate;
+	fix32_t time;
+	fix32_t frametime;
+	int state;
+
+	/* video */
+	pixelmap_t *screen;
+	pixelmap_t *color;
+	pixelmap_t *console;
+	pixelmap_t *palette;
+	pixelmap_t *colormap;
+	pixelmap_t *font8x8;
+
+	/* audio */
+	bool adlib;
+
+	/* dos */
+	int video_mode_old;
+	int video_mode;
+	_go32_dpmi_seginfo kbhandler_old;
+	_go32_dpmi_seginfo kbhandler_new;
+	_go32_dpmi_seginfo timerhandler_old;
+	_go32_dpmi_seginfo timerhandler_new;
+	char keys[256];
+	char key_last;
+} engine_t;
+
+/* global engine state */
+extern engine_t engine;
+
+void engine_quit(void);
+void engine_init(void);
+bool engine_run(void);
+
+#ifdef __cplusplus
 }
+#endif
+#endif /* _ENGINE_H_ */

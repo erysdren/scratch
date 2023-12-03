@@ -28,7 +28,7 @@ SOFTWARE.
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "main.h"
+#include "engine.h"
 #include "pixelmap.h"
 #include "dos.h"
 #include "utils.h"

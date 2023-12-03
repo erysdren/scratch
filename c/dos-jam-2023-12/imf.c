@@ -24,7 +24,7 @@ SOFTWARE.
 
 #include <stdio.h>
 #include <stdbool.h>
-#include "main.h"
+#include "engine.h"
 #include "utils.h"
 #include "console.h"
 #include "adlib.h"

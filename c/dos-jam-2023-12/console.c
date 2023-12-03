@@ -33,7 +33,7 @@ SOFTWARE.
 #include "console.h"
 #include "cmd.h"
 #include "cvar.h"
-#include "main.h"
+#include "engine.h"
 #include "utils.h"
 #include "keyboard.h"
 

@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "dos.h"
-#include "main.h"
+#include "engine.h"
 #include "timer.h"
 
 static uint64_t last_ticks;

@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 #include "dos.h"
-#include "main.h"
+#include "engine.h"
 #include "keyboard.h"
 
 #define BUFSZ 64
