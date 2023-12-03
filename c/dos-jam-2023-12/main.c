@@ -46,47 +46,47 @@ SOFTWARE.
 #include "actor.h"
 #include "game.h"
 
-/* global gamestate */
-gamestate_t gamestate;
+/* global engine state */
+engine_t engine;
 
 /* init everything */
 void engine_init(void)
 {
-	/* zero gamestate struct */
-	memset(&gamestate, 0, sizeof(gamestate_t));
+	/* zero engine struct */
+	memset(&engine, 0, sizeof(engine_t));
 
 	/* init dos handlers */
 	kb_init();
 	timer_init(120);
 
 	/* set video mode */
-	gamestate.video_mode_old = dos_get_mode();
-	if ((gamestate.video_mode = dos_set_mode(DOS_MODE_13)) != DOS_MODE_13)
+	engine.video_mode_old = dos_get_mode();
+	if ((engine.video_mode = dos_set_mode(DOS_MODE_13)) != DOS_MODE_13)
 		error("couldn't set video mode");
 
 	/* allocate pixelmaps */
-	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, (void *)DOS_GRAPHICS_MEMORY);
-	gamestate.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
-	gamestate.console = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
-	if (!gamestate.screen || !gamestate.color || !gamestate.console)
+	engine.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, (void *)DOS_GRAPHICS_MEMORY);
+	engine.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
+	engine.console = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
+	if (!engine.screen || !engine.color || !engine.console)
 		error("couldn't allocate pixelmaps");
 
 	/* get palette */
-	gamestate.palette = pixelmap_load("palette.pxl");
-	if (!gamestate.palette)
+	engine.palette = pixelmap_load("palette.pxl");
+	if (!engine.palette)
 		error("couldn't load palette.pxl");
 
 	/* set palette */
-	dos_set_palette(gamestate.palette->pixels);
+	dos_set_palette(engine.palette->pixels);
 
 	/* get colormap */
-	gamestate.colormap = pixelmap_load("colormap.pxl");
-	if (!gamestate.colormap)
+	engine.colormap = pixelmap_load("colormap.pxl");
+	if (!engine.colormap)
 		error("couldn't load colormap.pxl");
 
 	/* get font */
-	gamestate.font8x8 = pixelmap_load("font8x8.pxl");
-	if (!gamestate.font8x8)
+	engine.font8x8 = pixelmap_load("font8x8.pxl");
+	if (!engine.font8x8)
 		error("couldn't load font8x8.pxl");
 
 	/* init console */
@@ -95,17 +95,20 @@ void engine_init(void)
 	cvarlib_init();
 
 	/* detect adlib card */
-	if ((gamestate.adlib = adlib_detect()) == true)
+	if ((engine.adlib = adlib_detect()) == true)
 		console_printf("adlib card detected");
 	else
-		console_printf("adlib card support disabled");
+		warning("adlib card support disabled");
 
 	/* load level */
-	if ((gamestate.level = level_load("test1.lvl")) == NULL)
+	if ((engine.level = level_load("test1.lvl")) == NULL)
 		error("couldn't load test1.lvl");
 
 	/* init raycaster */
-	ray_init(gamestate.level);
+	ray_init(engine.level);
+
+	/* set state */
+	engine.state = STATE_GAME;
 }
 
 /* quit everything */
@@ -116,7 +119,7 @@ void engine_quit(void)
 	timer_quit();
 
 	/* and reset video mode */
-	dos_set_mode(gamestate.video_mode_old);
+	dos_set_mode(engine.video_mode_old);
 
 	/* quit raycaster */
 	ray_quit();
@@ -127,54 +130,61 @@ void engine_quit(void)
 	cvarlib_quit();
 
 	/* free memory */
-	pixelmap_free(gamestate.screen);
-	pixelmap_free(gamestate.color);
-	pixelmap_free(gamestate.colormap);
-	pixelmap_free(gamestate.console);
-	pixelmap_free(gamestate.palette);
-	pixelmap_free(gamestate.font8x8);
-	level_free(gamestate.level);
+	pixelmap_free(engine.screen);
+	pixelmap_free(engine.color);
+	pixelmap_free(engine.colormap);
+	pixelmap_free(engine.console);
+	pixelmap_free(engine.palette);
+	pixelmap_free(engine.font8x8);
+	level_free(engine.level);
 }
 
 /* main */
 int main(int argc, char **argv)
 {
-	uint64_t tick;
-	int key;
-
 	/* init everything */
 	engine_init();
 
 	/* setup player */
-	gamestate.player.origin.x = FIX32(16.5);
-	gamestate.player.origin.y = FIX32(18.5);
+	engine.player.origin.x = FIX32(16.5);
+	engine.player.origin.y = FIX32(18.5);
 
 	/* main loop */
-	for (tick = gamestate.ticks;;)
+	while (true)
 	{
-		/* handle queued inputs */
-		while ((key = kb_getkey()) >= 0)
+		/* handle engine state */
+		switch (engine.state)
 		{
-			switch (key)
-			{
-				/* run console */
-				case SC_TILDE:
-					console_run();
-					break;
+			/* exiting */
+			case STATE_EXIT:
+				engine_quit();
+				exit(0);
+				break;
 
-				/* just quit on esc */
-				case SC_ESCAPE:
-					engine_quit();
-					exit(0);
-					break;
-			}
+			/* game */
+			case STATE_GAME:
+				engine.state = game_run();
+				break;
+
+			/* console */
+			case STATE_CONSOLE:
+				engine.state = console_run();
+				break;
+
+			/* menu */
+			case STATE_MENU:
+				error("menu state not implemented yet");
+				break;
+
+			/* error */
+			default:
+				error("unknown engine state %d", engine.state);
+				break;
 		}
-
-		/* run game ticks */
-		game_run();
 	}
 
 	/* shutdown everything */
+	/* (this code is probably unreachable) */
 	engine_quit();
 
 	return 0;

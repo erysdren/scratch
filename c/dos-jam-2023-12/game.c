@@ -46,50 +46,72 @@ SOFTWARE.
 #include "actor.h"
 
 /* run one tick of game loop */
-void game_run(void)
+int game_run(void)
 {
+	int key;
+	int state = STATE_GAME;
+
+	/* handle queued inputs */
+	while ((key = kb_getkey()) >= 0)
+	{
+		switch (key)
+		{
+			/* run console */
+			case SC_TILDE:
+				state = STATE_CONSOLE;
+				break;
+
+			/* just quit on esc */
+			case SC_ESCAPE:
+				state = STATE_EXIT;
+				break;
+		}
+	}
+
 	/* process player look */
-	if (gamestate.keys[SC_LEFT])
-		gamestate.player.yaw += FIX32_MUL(FIX32(0.002), gamestate.frametime);
-	if (gamestate.keys[SC_RIGHT])
-		gamestate.player.yaw -= FIX32_MUL(FIX32(0.002), gamestate.frametime);
-	if (gamestate.player.yaw < FIX32(0))
-		gamestate.player.yaw += FIX32(2);
-	if (gamestate.player.yaw > FIX32(2))
-		gamestate.player.yaw -= FIX32(2);
+	if (engine.keys[SC_LEFT])
+		engine.player.yaw += FIX32_MUL(FIX32(0.002), engine.frametime);
+	if (engine.keys[SC_RIGHT])
+		engine.player.yaw -= FIX32_MUL(FIX32(0.002), engine.frametime);
+	if (engine.player.yaw < FIX32(0))
+		engine.player.yaw += FIX32(2);
+	if (engine.player.yaw > FIX32(2))
+		engine.player.yaw -= FIX32(2);
 
 	/* get look direction */
-	gamestate.player.dir.x = FIX32_SIN(gamestate.player.yaw);
-	gamestate.player.dir.y = FIX32_COS(gamestate.player.yaw);
+	engine.player.dir.x = FIX32_SIN(engine.player.yaw);
+	engine.player.dir.y = FIX32_COS(engine.player.yaw);
 
-	gamestate.player.dir.x = FIX32_MUL(gamestate.player.dir.x, gamestate.frametime);
-	gamestate.player.dir.y = FIX32_MUL(gamestate.player.dir.y, gamestate.frametime);
+	engine.player.dir.x = FIX32_MUL(engine.player.dir.x, engine.frametime);
+	engine.player.dir.y = FIX32_MUL(engine.player.dir.y, engine.frametime);
 
 	/* process player inputs */
-	if (gamestate.keys[SC_W])
+	if (engine.keys[SC_W])
 	{
-		gamestate.player.origin.x += gamestate.player.dir.x;
-		gamestate.player.origin.y += gamestate.player.dir.y;
+		engine.player.origin.x += engine.player.dir.x;
+		engine.player.origin.y += engine.player.dir.y;
 	}
-	if (gamestate.keys[SC_S])
+	if (engine.keys[SC_S])
 	{
-		gamestate.player.origin.x -= gamestate.player.dir.x;
-		gamestate.player.origin.y -= gamestate.player.dir.y;
+		engine.player.origin.x -= engine.player.dir.x;
+		engine.player.origin.y -= engine.player.dir.y;
 	}
-	if (gamestate.keys[SC_A])
+	if (engine.keys[SC_A])
 	{
-		gamestate.player.origin.x += gamestate.player.dir.y;
-		gamestate.player.origin.y -= gamestate.player.dir.x;
+		engine.player.origin.x += engine.player.dir.y;
+		engine.player.origin.y -= engine.player.dir.x;
 	}
-	if (gamestate.keys[SC_D])
+	if (engine.keys[SC_D])
 	{
-		gamestate.player.origin.x -= gamestate.player.dir.y;
-		gamestate.player.origin.y += gamestate.player.dir.x;
+		engine.player.origin.x -= engine.player.dir.y;
+		engine.player.origin.y += engine.player.dir.x;
 	}
 
 	/* render game */
-	pixelmap_clear8(gamestate.color, 0);
-	ray_render(gamestate.color, &gamestate.player, 2);
-	pixelmap_copy(gamestate.screen, gamestate.color);
+	pixelmap_clear8(engine.color, 0);
+	ray_render(engine.color, &engine.player, 2);
+	pixelmap_copy(engine.screen, engine.color);
+
+	return state;
 }
 

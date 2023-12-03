@@ -37,8 +37,8 @@ void console_init(void);
 /* quit console */
 void console_quit(void);
 
-/* push console up with a line of text, optionally prefixed */
-void console_push(char *src, char prefix);
+/* push console up with a line of text */
+void console_push(char *src);
 
 /* print formatted text to console */
 void console_printf(const char *s, ...);
@@ -52,11 +52,14 @@ void console_input(int c);
 /* evaluate string of console input */
 void console_eval(char *s);
 
-/* clear entire console buffer */
+/* clear console non-input lines */
 void console_clear(void);
 
+/* clear console input line */
+void console_clear_input(void);
+
 /* run console */
-void console_run(void);
+int console_run(void);
 
 #ifdef __cplusplus
 }

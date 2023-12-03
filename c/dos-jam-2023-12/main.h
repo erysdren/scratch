@@ -38,7 +38,14 @@ extern "C" {
 #include "wad.h"
 #include "actor.h"
 
-typedef struct gamestate_t {
+enum {
+	STATE_EXIT,
+	STATE_GAME,
+	STATE_CONSOLE,
+	STATE_MENU
+};
+
+typedef struct engine_t {
 
 	/* game */
 	level_t *level;
@@ -50,6 +57,7 @@ typedef struct gamestate_t {
 	int tickrate;
 	fix32_t time;
 	fix32_t frametime;
+	int state;
 
 	/* video */
 	pixelmap_t *screen;
@@ -71,10 +79,10 @@ typedef struct gamestate_t {
 	_go32_dpmi_seginfo timerhandler_new;
 	char keys[256];
 	char key_last;
-} gamestate_t;
+} engine_t;
 
-/* global gamestate */
-extern gamestate_t gamestate;
+/* global engine state */
+extern engine_t engine;
 
 void engine_quit(void);
 void engine_init(void);

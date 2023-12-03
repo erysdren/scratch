@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 /* run one tick of game loop */
-void game_run(void);
+int game_run(void);
 
 #ifdef __cplusplus
 }

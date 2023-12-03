@@ -31,16 +31,16 @@ static uint64_t last_ticks;
 void timerhandler(void)
 {
 	/* iterate tick counter */
-	gamestate.ticks++;
+	engine.ticks++;
 
 	/* get frametime in seconds */
-	gamestate.frametime = FIX32_DIV(FIX32(gamestate.ticks - last_ticks), FIX32(gamestate.tickrate));
+	engine.frametime = FIX32_DIV(FIX32(engine.ticks - last_ticks), FIX32(engine.tickrate));
 
 	/* add to time */
-	gamestate.time += gamestate.frametime;
+	engine.time += engine.frametime;
 
 	/* store last tick */
-	last_ticks = gamestate.ticks;
+	last_ticks = engine.ticks;
 
 	outp(0x20, 0x20);
 }
@@ -49,24 +49,24 @@ void timer_init(int rate)
 {
 	const int speed = DOS_CLOCK_SPEED / rate;
 
-	_go32_dpmi_get_protected_mode_interrupt_vector(8, &gamestate.timerhandler_old);
-	gamestate.timerhandler_new.pm_offset = (int)timerhandler;
-	gamestate.timerhandler_new.pm_selector = _go32_my_cs();
-	_go32_dpmi_allocate_iret_wrapper(&gamestate.timerhandler_new);
-	_go32_dpmi_set_protected_mode_interrupt_vector(8, &gamestate.timerhandler_new);
+	_go32_dpmi_get_protected_mode_interrupt_vector(8, &engine.timerhandler_old);
+	engine.timerhandler_new.pm_offset = (int)timerhandler;
+	engine.timerhandler_new.pm_selector = _go32_my_cs();
+	_go32_dpmi_allocate_iret_wrapper(&engine.timerhandler_new);
+	_go32_dpmi_set_protected_mode_interrupt_vector(8, &engine.timerhandler_new);
 
 	outp(0x43, 0x34);
 	outp(0x40, speed);
 	outp(0x40, speed >> 8);
 
 	last_ticks = 0;
-	gamestate.tickrate = rate;
+	engine.tickrate = rate;
 }
 
 void timer_quit(void)
 {
-	_go32_dpmi_set_protected_mode_interrupt_vector(8, &gamestate.timerhandler_old);
-	_go32_dpmi_free_iret_wrapper(&gamestate.timerhandler_new);
+	_go32_dpmi_set_protected_mode_interrupt_vector(8, &engine.timerhandler_old);
+	_go32_dpmi_free_iret_wrapper(&engine.timerhandler_new);
 
 	outp(0x43, 0x34);
 	outp(0x40, 0x00);

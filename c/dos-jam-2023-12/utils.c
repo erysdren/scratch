@@ -32,22 +32,7 @@ SOFTWARE.
 #include "main.h"
 #include "dos.h"
 #include "utils.h"
-
-void error(const char *s, ...)
-{
-	static char errbuf[256];
-	va_list args;
-
-	engine_quit();
-
-	va_start(args, s);
-	vsnprintf(errbuf, 256, s, args);
-	va_end(args);
-
-	printf("Error: %s\n", errbuf);
-
-	exit(0);
-}
+#include "console.h"
 
 char **tokenize(char *s, int *num_args)
 {
@@ -82,4 +67,36 @@ char **tokenize(char *s, int *num_args)
 	argv[argc] = 0;
 	*num_args = argc;
 	return argv;
+}
+
+void error(const char *s, ...)
+{
+	static char errbuf[256];
+	va_list args;
+
+	engine_quit();
+
+	va_start(args, s);
+	vsnprintf(errbuf, 256, s, args);
+	va_end(args);
+
+	printf("Error: %s\n", errbuf);
+
+	exit(0);
+}
+
+void warning(const char *s, ...)
+{
+	static char errbuf[256];
+	va_list args;
+
+	engine_quit();
+
+	va_start(args, s);
+	vsnprintf(errbuf, 256, s, args);
+	va_end(args);
+
+	console_printf("Warning: %s", errbuf);
+
+	exit(0);
 }

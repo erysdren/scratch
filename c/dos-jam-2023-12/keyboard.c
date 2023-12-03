@@ -74,7 +74,7 @@ void kbhandler(void)
 	}
 
 	/* add to key table */
-	gamestate.keys[gamestate.key_last = key & 0x7F] = !(key & 0x80);
+	engine.keys[engine.key_last = key & 0x7F] = !(key & 0x80);
 	outp(0x20, 0x20);
 }
 
@@ -84,11 +84,11 @@ void kb_init(void)
 	kb_clearqueue();
 
 	/* setup keyboard handler */
-	_go32_dpmi_get_protected_mode_interrupt_vector(9, &gamestate.kbhandler_old);
-	gamestate.kbhandler_new.pm_offset = (int)kbhandler;
-	gamestate.kbhandler_new.pm_selector = _go32_my_cs();
-	_go32_dpmi_allocate_iret_wrapper(&gamestate.kbhandler_new);
-	_go32_dpmi_set_protected_mode_interrupt_vector(9, &gamestate.kbhandler_new);
+	_go32_dpmi_get_protected_mode_interrupt_vector(9, &engine.kbhandler_old);
+	engine.kbhandler_new.pm_offset = (int)kbhandler;
+	engine.kbhandler_new.pm_selector = _go32_my_cs();
+	_go32_dpmi_allocate_iret_wrapper(&engine.kbhandler_new);
+	_go32_dpmi_set_protected_mode_interrupt_vector(9, &engine.kbhandler_new);
 }
 
 void kb_quit(void)
@@ -97,8 +97,8 @@ void kb_quit(void)
 	kb_clearqueue();
 
 	/* restore old keyboard handler */
-	_go32_dpmi_set_protected_mode_interrupt_vector(9, &gamestate.kbhandler_old);
-	_go32_dpmi_free_iret_wrapper(&gamestate.kbhandler_new);
+	_go32_dpmi_set_protected_mode_interrupt_vector(9, &engine.kbhandler_old);
+	_go32_dpmi_free_iret_wrapper(&engine.kbhandler_new);
 }
 
 int kb_getkey(void)
@@ -117,7 +117,7 @@ int kb_getkey(void)
 int kb_toascii(int sc)
 {
 	/* return shifted ascii */
-	if (gamestate.keys[SC_LSHIFT] || gamestate.keys[SC_RSHIFT])
+	if (engine.keys[SC_LSHIFT] || engine.keys[SC_RSHIFT])
 		return shifted_to_ascii[sc & 0x7F];
 
 	/* return normal ascii */

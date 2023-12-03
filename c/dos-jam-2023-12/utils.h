@@ -33,6 +33,7 @@ extern "C" {
 
 char **tokenize(char *s, int *num_args);
 void error(const char *s, ...);
+void warning(const char *s, ...);
 
 #ifdef __cplusplus
 }

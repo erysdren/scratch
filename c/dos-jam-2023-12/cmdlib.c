@@ -173,10 +173,10 @@ int _cmd_map(int argc, char **argv)
 	}
 
 	/* free old level */
-	level_free(gamestate.level);
+	level_free(engine.level);
 
 	/* load new level */
-	if ((gamestate.level = level_load(argv[1])) == NULL)
+	if ((engine.level = level_load(argv[1])) == NULL)
 	{
 		console_printf("map %s not found", argv[1]);
 		return 1;
@@ -186,7 +186,7 @@ int _cmd_map(int argc, char **argv)
 
 	/* restart raycaster */
 	ray_quit();
-	ray_init(gamestate.level);
+	ray_init(engine.level);
 
 	return 0;
 }

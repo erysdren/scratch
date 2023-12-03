@@ -41,6 +41,7 @@ SOFTWARE.
 #define CON_NUMLINES 64
 #define CON_LINESIZE 64
 #define CON_BUFSIZE 4096
+#define CON_PREFIXSIZE 2
 
 static struct {
 	char textbuf[CON_BUFSIZE];
@@ -50,7 +51,6 @@ static struct {
 	char input[CON_LINESIZE];
 	int input_len;
 	int input_cursor;
-	bool redraw;
 } con;
 
 void console_init(void)
@@ -61,8 +61,8 @@ void console_init(void)
 	/* set text buffer pointer */
 	con.textbuf_ptr = con.textbuf;
 
-	/* set redraw to true */
-	con.redraw = true;
+	/* setup input buffer */
+	console_clear_input();
 }
 
 void console_quit(void)
@@ -103,7 +103,7 @@ static void console_push_line(char *ptr)
 	}
 }
 
-void console_push(char *src, char prefix)
+void console_push(char *src)
 {
 	int i;
 	int len_src = strlen(src);
@@ -113,16 +113,12 @@ void console_push(char *src, char prefix)
 		con.textbuf_ptr = con.textbuf;
 
 	/* add string to text buffer */
-	if (prefix)
-		sprintf(con.textbuf_ptr, "%c %s", prefix, src);
-	else
-		sprintf(con.textbuf_ptr, "%s", src);
+	sprintf(con.textbuf_ptr, "%s", src);
 
 	/* add pointer to lines buffer */
 	console_push_line(con.textbuf_ptr);
 
 	/* advance text buffer pointer */
-	if (prefix) len_src += 2;
 	con.textbuf_ptr += len_src + 1;
 
 	/* check for newlines and push line again */
@@ -152,10 +148,7 @@ void console_printf(const char *s, ...)
 #endif
 
 	/* push up console buffer with the text */
-	console_push(line, 0);
-
-	/* tell them to redraw */
-	con.redraw = true;
+	console_push(line);
 }
 
 void console_render(pixelmap_t *dst)
@@ -195,7 +188,7 @@ void console_render(pixelmap_t *dst)
 			c = con.lines[i][x] << 3;
 
 			/* blit */
-			pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, gamestate.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
+			pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, engine.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
 		}
 
 		/* move y down */
@@ -214,7 +207,7 @@ void console_render(pixelmap_t *dst)
 		c = con.input[x] << 3;
 
 		/* blit */
-		pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, gamestate.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
+		pixelmap_blit8(dst, xx, yy, xx + 8, yy + 8, engine.font8x8, c, 0, c + 8, 8, PM_MODE_COLORKEY);
 	}
 }
 
@@ -293,15 +286,14 @@ void console_input(int c)
 		case '\n':
 		case '\r':
 			con.input[con.input_len] = '\0';
-			con.input_len = con.input_cursor = 0;
-			console_push(con.input, '>');
-			console_eval(con.input);
-			memset(con.input, 0, CON_LINESIZE);
+			console_push(con.input);
+			console_eval(con.input + CON_PREFIXSIZE);
+			console_clear_input();
 			break;
 
 		/* backspace */
 		case '\b':
-			if (con.input_len)
+			if (con.input_len > CON_PREFIXSIZE)
 			{
 				if (con.input_cursor == con.input_len)
 				{
@@ -337,48 +329,47 @@ void console_clear(void)
 	memset(con.textbuf, 0, CON_BUFSIZE);
 	con.textbuf_ptr = con.textbuf;
 	memset(con.lines, 0, CON_NUMLINES * sizeof(char *));
+	console_clear_input();
 }
 
-void console_run(void)
+void console_clear_input(void)
 {
-	bool done = false;
+	/* clear buffer */
+	memset(con.input, 0, CON_LINESIZE);
+	con.input_len = con.input_cursor = CON_PREFIXSIZE;
+
+	/* setup prefix */
+	con.input[0] = '>';
+	con.input[1] = ' ';
+}
+
+int console_run(void)
+{
 	int key;
+	int state = STATE_CONSOLE;
 
-	/* force redraw */
-	con.redraw = true;
-
-	/* clear keyboard queue */
-	kb_clearqueue();
-
-	/* console process loop */
-	while (!done)
+	/* process queued keyboard inputs */
+	while ((key = kb_getkey()) >= 0)
 	{
-		/* process queued keyboard inputs */
-		while ((key = kb_getkey()) >= 0)
+		switch (key)
 		{
-			switch (key)
-			{
-				case SC_TILDE:
-				case SC_ESCAPE:
-					con.redraw = false;
-					done = true;
-					break;
+			case SC_TILDE:
+			case SC_ESCAPE:
+				console_clear_input();
+				state = STATE_GAME;
+				break;
 
-				default:
-					console_input(kb_toascii(key));
-					con.redraw = true;
-					break;
-			}
-		}
-
-		/* redraw if necessary */
-		if (con.redraw == true)
-		{
-			/* shade game screen, render console text, then copy to video memory */
-			pixelmap_shade8(gamestate.console, gamestate.color, 2, gamestate.colormap);
-			console_render(gamestate.console);
-			pixelmap_copy(gamestate.screen, gamestate.console);
-			con.redraw = false;
+			default:
+				console_input(kb_toascii(key));
+				break;
 		}
 	}
+
+	/* shade game screen, render console text, then copy to video memory */
+	/* TODO: add redraw back */
+	pixelmap_shade8(engine.console, engine.color, 2, engine.colormap);
+	console_render(engine.console);
+	pixelmap_copy(engine.screen, engine.console);
+
+	return state;
 }
