@@ -28,7 +28,7 @@ SOFTWARE.
 int main(int argc, char **argv)
 {
 	/* init engine */
-	engine_init();
+	engine_init(argc, argv);
 
 	/* main loop */
 	while (engine_run());

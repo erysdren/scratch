@@ -50,7 +50,7 @@ SOFTWARE.
 engine_t engine;
 
 /* init everything */
-void engine_init(void)
+void engine_init(int argc, char **argv)
 {
 	/* zero engine struct */
 	memset(&engine, 0, sizeof(engine_t));
@@ -58,6 +58,10 @@ void engine_init(void)
 	/* init dos handlers */
 	kb_init();
 	timer_init(120);
+
+	/* assign argv and argc */
+	engine.argc = argc;
+	engine.argv = argv;
 
 	/* set video mode */
 	engine.video_mode_old = dos_get_mode();
@@ -93,6 +97,7 @@ void engine_init(void)
 	console_init();
 	cmdlib_init();
 	cvarlib_init();
+	console_printf("console initialized");
 
 	/* detect adlib card */
 	if ((engine.adlib = adlib_detect()) == true)
@@ -101,14 +106,22 @@ void engine_init(void)
 		warning("adlib card support disabled");
 
 	/* load level */
-	if ((engine.level = level_load("test1.lvl")) == NULL)
-		error("couldn't load test1.lvl");
+	if (argv[1])
+	{
+		if ((engine.level = level_load(argv[1])) == NULL)
+			error("couldn't load %s", argv[1]);
 
-	/* init raycaster */
-	ray_init(engine.level);
+		/* init raycaster */
+		ray_init(engine.level);
 
-	/* set state */
-	engine.state = STATE_GAME;
+		/* set state */
+		engine.state = STATE_GAME;
+	}
+	else
+	{
+		/* set state */
+		engine.state = STATE_CONSOLE;
+	}
 }
 
 /* quit everything */
@@ -146,6 +159,8 @@ bool engine_run(void)
 	{
 		/* exiting */
 		case STATE_EXIT:
+			engine_quit();
+			exit(0);
 			return false;
 
 		/* game */

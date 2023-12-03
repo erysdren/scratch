@@ -34,6 +34,8 @@ extern "C" {
 char **tokenize(char *s, int *num_args);
 void error(const char *s, ...);
 void warning(const char *s, ...);
+int check_arg(const char *pattern);
+const char *get_arg(const char *pattern);
 
 #ifdef __cplusplus
 }

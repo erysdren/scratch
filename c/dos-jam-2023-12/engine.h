@@ -58,6 +58,8 @@ typedef struct engine_t {
 	fix32_t time;
 	fix32_t frametime;
 	int state;
+	int argc;
+	char **argv;
 
 	/* video */
 	pixelmap_t *screen;
@@ -85,7 +87,7 @@ typedef struct engine_t {
 extern engine_t engine;
 
 void engine_quit(void);
-void engine_init(void);
+void engine_init(int argc, char **argv);
 bool engine_run(void);
 
 #ifdef __cplusplus

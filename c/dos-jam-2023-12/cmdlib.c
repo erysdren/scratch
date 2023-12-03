@@ -31,13 +31,6 @@ SOFTWARE.
 #include "level.h"
 #include "ray.h"
 
-int _cmd_restart(int argc, char **argv)
-{
-	engine_quit();
-	engine_init();
-	return 0;
-}
-
 int _cmd_quit(int argc, char **argv)
 {
 	engine_quit();
@@ -192,7 +185,6 @@ int _cmd_map(int argc, char **argv)
 }
 
 cmd_t _cmdlib[] = {
-	CMD("restart", "restart engine", _cmd_restart),
 	CMD("quit", "return to dos", _cmd_quit),
 	CMD("exit", "return to dos", _cmd_quit),
 	CMD("typeof", "print type of cvar", _cmd_typeof),

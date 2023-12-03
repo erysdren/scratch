@@ -100,3 +100,38 @@ void warning(const char *s, ...)
 
 	exit(0);
 }
+
+/* check arg */
+int check_arg(const char *pattern)
+{
+	int i;
+
+	for (i = 0; i < engine.argc; i++)
+	{
+		/* check if arg is there */
+		if (strcmp(engine.argv[i], pattern) == 0)
+			return 1;
+	}
+
+	return 0;
+}
+
+/* get arg */
+const char *get_arg(const char *pattern)
+{
+	int i;
+
+	for (i = 0; i < engine.argc; i++)
+	{
+		/* check if arg is there */
+		if (strcmp(engine.argv[i], pattern) != 0)
+			continue;
+
+		/* check if it has a value */
+		if (engine.argc > (i + 1))
+			return engine.argv[i + 1];
+	}
+
+	return NULL;
+}
+
