@@ -31,13 +31,6 @@ SOFTWARE.
 #include "ray.h"
 #include "actor.h"
 
-/* basic map */
-#define NUM_PLANES 2
-#define PLANE_FLOORS 0
-#define PLANE_WALLS 1
-#define MAP_WIDTH 64
-#define MAP_HEIGHT 64
-
 /* state */
 static struct {
 	int width;
@@ -55,7 +48,7 @@ bool ray_init(level_t *level)
 
 	ray.width = level->width;
 	ray.height = level->height;
-	ray.walls = level->planes[1];
+	ray.walls = level->planes[0];
 
 	return true;
 }
@@ -149,7 +142,7 @@ void ray_render(pixelmap_t *dst, actor_t *camera, int ceiling)
 				hit = true;
 
 			/* check if ray has gone out of bounds */
-			if (map_pos.y >= MAP_HEIGHT || map_pos.y < 0 || map_pos.x >= MAP_WIDTH || map_pos.x < 0)
+			if (map_pos.y >= ray.height || map_pos.y < 0 || map_pos.x >= ray.width || map_pos.x < 0)
 				oob = true;
 		}
 

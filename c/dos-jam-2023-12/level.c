@@ -37,7 +37,8 @@ level_t *level_load(const char *filename)
 	FILE *file;
 	level_t *level;
 	char magic[4];
-	int32_t width, height;
+	int32_t width, height, num_planes;
+	int i;
 
 	/* open file */
 	file = fopen(filename, "rb");
@@ -52,14 +53,14 @@ level_t *level_load(const char *filename)
 	/* read header */
 	fread(&width, 4, 1, file);
 	fread(&height, 4, 1, file);
+	fread(&num_planes, 4, 1, file);
 
 	/* create level */
-	level = level_allocate(width, height);
+	level = level_allocate(width, height, num_planes);
 
 	/* read planes */
-	fread(level->planes[0], 2, width * height, file);
-	fread(level->planes[1], 2, width * height, file);
-	fread(level->planes[2], 2, width * height, file);
+	for (i = 0; i < num_planes; i++)
+		fread(level->planes[i], 2, width * height, file);
 
 	/* close file */
 	fclose(file);
@@ -70,6 +71,7 @@ level_t *level_load(const char *filename)
 void level_save(level_t *level, const char *filename)
 {
 	FILE *file;
+	int i;
 
 	/* open file */
 	file = fopen(filename, "wb");
@@ -80,41 +82,50 @@ void level_save(level_t *level, const char *filename)
 	fwrite(lvl_magic, 1, 4, file);
 	fwrite(&level->width, 4, 1, file);
 	fwrite(&level->height, 4, 1, file);
+	fwrite(&level->num_planes, 4, 1, file);
 
 	/* write planes */
-	fwrite(level->planes[0], 2, level->width * level->height, file);
-	fwrite(level->planes[1], 2, level->width * level->height, file);
-	fwrite(level->planes[2], 2, level->width * level->height, file);
+	for (i = 0; i < level->num_planes; i++)
+		fwrite(level->planes[i], 2, level->width * level->height, file);
 
 	/* close file */
 	fclose(file);
 }
 
-level_t *level_allocate(int width, int height)
+level_t *level_allocate(int width, int height, int num_planes)
 {
 	level_t *level;
+	int i;
+
+	if (!width || !height || !num_planes)
+		return NULL;
 
 	level = calloc(1, sizeof(level_t));
-	level->planes[0] = calloc(2, width * height);
-	level->planes[1] = calloc(2, width * height);
-	level->planes[2] = calloc(2, width * height);
+	level->planes = calloc(num_planes, sizeof(uint16_t *));
+
+	for (i = 0; i < num_planes; i++)
+		level->planes[i] = calloc(2, width * height);
 
 	level->width = width;
 	level->height = height;
+	level->num_planes = num_planes;
 
 	return level;
 }
 
 void level_free(level_t *level)
 {
+	int i;
+
 	if (level)
 	{
-		if (level->planes[0])
-			free(level->planes[0]);
-		if (level->planes[1])
-			free(level->planes[1]);
-		if (level->planes[2])
-			free(level->planes[2]);
+		if (level->planes)
+		{
+			for (i = 0; i < level->num_planes; i++)
+				free(level->planes[i]);
+
+			free(level->planes);
+		}
 
 		free(level);
 	}

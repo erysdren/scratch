@@ -28,11 +28,7 @@ if __name__ == "__main__":
 		outfile.write(bytes("LVL\0".encode("ascii"))) # magic
 		outfile.write(struct.pack("<i", injson["width"])) # width
 		outfile.write(struct.pack("<i", injson["height"])) # height
-
-		# sanity check
-		if len(injson["layers"]) != 3:
-			print("incorrect number of layers in TMJ, should be 3")
-			continue
+		outfile.write(struct.pack("<i", len(injson["layers"]))) # number of layers
 
 		# write planes
 		for layer in injson["layers"]:

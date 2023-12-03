@@ -48,7 +48,7 @@ SOFTWARE.
 /* global gamestate */
 gamestate_t gamestate;
 
-#define CONSOLE 1
+#define CONSOLE 0
 
 /* init everything */
 void engine_init(void)
@@ -93,6 +93,12 @@ void engine_init(void)
 		console_printf("adlib card detected");
 	else
 		console_printf("adlib card support disabled");
+
+	/* load level */
+	if ((gamestate.level = level_load("test1.lvl")) == NULL)
+		error("couldn't load test1.lvl");
+
+	ray_init(gamestate.level);
 }
 
 /* quit everything */

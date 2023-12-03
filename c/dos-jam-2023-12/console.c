@@ -335,3 +335,8 @@ void console_clear(void)
 	con.textbuf_ptr = con.textbuf;
 	memset(con.lines, 0, CON_NUMLINES * sizeof(char *));
 }
+
+bool console_exec(const char *filename)
+{
+	return false;
+}

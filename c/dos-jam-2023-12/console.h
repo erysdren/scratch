@@ -29,14 +29,34 @@ SOFTWARE.
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
+/* init console */
 void console_init(void);
+
+/* quit console */
 void console_quit(void);
+
+/* push console up with a line of text, optionally prefixed */
 void console_push(char *src, char prefix);
+
+/* print formatted text to console */
 void console_printf(const char *s, ...);
+
+/* render console text to pixelmap */
 void console_render(pixelmap_t *dst);
+
+/* process one char of console input */
 void console_input(int c);
+
+/* evaluate string of console input */
 void console_eval(char *s);
+
+/* clear entire console buffer */
 void console_clear(void);
+
+/* execute config file from filename */
+bool console_exec(const char *filename);
 
 #ifdef __cplusplus
 }

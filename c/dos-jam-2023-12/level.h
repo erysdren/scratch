@@ -35,7 +35,8 @@ extern "C" {
 typedef struct level_t {
 	int32_t width;
 	int32_t height;
-	uint16_t *planes[3];
+	int32_t num_planes;
+	uint16_t **planes;
 } level_t;
 
 /* disk */
@@ -43,7 +44,7 @@ level_t *level_load(const char *filename);
 void level_save(level_t *level, const char *filename);
 
 /* creation and destruction */
-level_t *level_allocate(int width, int height);
+level_t *level_allocate(int width, int height, int num_planes);
 void level_free(level_t *level);
 
 #ifdef __cplusplus

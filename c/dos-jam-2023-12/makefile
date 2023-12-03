@@ -3,6 +3,9 @@ CC = i586-pc-msdosdjgpp-gcc
 LD = i586-pc-msdosdjgpp-ld
 AS = i586-pc-msdosdjgpp-as
 RM ?= rm -f
+PYTHON ?= python3
+CP ?= cp
+MV ?= mv
 
 CFLAGS += -Ofast -ffast-math -funroll-loops -fomit-frame-pointer
 
@@ -18,6 +21,14 @@ clean:
 
 run: $(EXEC)
 	dosbox-x -conf build/dosbox-x.conf
+
+wads:
+	$(PYTHON) tools/pxlgen assetsrc/*.png
+	$(MV) assetsrc/*.pxl build/
+
+levels:
+	$(PYTHON) tools/lvlgen assetsrc/*.tmj
+	$(MV) assetsrc/*.lvl build/
 
 $(EXEC): $(OBJECTS)
 	$(CC) -o $@ $^ $(LDFLAGS)
