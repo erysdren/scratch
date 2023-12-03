@@ -31,37 +31,29 @@ SOFTWARE.
 static int buffer[BUFSZ];
 static int buf_ridx, buf_widx;
 
-/* table with rough translations from set 1 scancodes to ASCII-ish */
-static int scan_to_ascii[] = {
-
-	/* 0 - e */
+static int scan_to_ascii[128] = {
 	0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
-
-	/* f - 1c */
 	'\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
-
-	/* 1d - 29 */
 	0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
-
-	/* 2a - 36 */
 	0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0,
-
-	/* 37 - 44 */
 	0, 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-	/* 45 - 4e */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-	/* 4d - 58 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-
-	/* 59 - 5f */
 	0, 0, 0, 0, 0, 0, 0,
-
-	/* 60 - 6f */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
 
-	/* 70 - 7f */
+static int shifted_to_ascii[128] = {
+	0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b',
+	'\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',
+	0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~',
+	0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0,
+	0, 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
@@ -73,7 +65,8 @@ void kbhandler(void)
 	/* add to keys buffer */
 	if (!(key & 0x80))
 	{
-		buffer[buf_widx] = scan_to_ascii[key & 0x7F];
+		buffer[buf_widx] = key & 0x7F;
+
 		ADVANCE(buf_widx);
 
 		if (buf_widx == buf_ridx)
@@ -87,8 +80,10 @@ void kbhandler(void)
 
 void kb_init(void)
 {
-	buf_ridx = buf_widx = 0;
+	/* clear keyboard queue */
+	kb_clearqueue();
 
+	/* setup keyboard handler */
 	_go32_dpmi_get_protected_mode_interrupt_vector(9, &gamestate.kbhandler_old);
 	gamestate.kbhandler_new.pm_offset = (int)kbhandler;
 	gamestate.kbhandler_new.pm_selector = _go32_my_cs();
@@ -98,6 +93,10 @@ void kb_init(void)
 
 void kb_quit(void)
 {
+	/* clear keyboard queue */
+	kb_clearqueue();
+
+	/* restore old keyboard handler */
 	_go32_dpmi_set_protected_mode_interrupt_vector(9, &gamestate.kbhandler_old);
 	_go32_dpmi_free_iret_wrapper(&gamestate.kbhandler_new);
 }
@@ -113,4 +112,19 @@ int kb_getkey(void)
 	ADVANCE(buf_ridx);
 
 	return res;
+}
+
+int kb_toascii(int sc)
+{
+	/* return shifted ascii */
+	if (gamestate.keys[SC_LSHIFT] || gamestate.keys[SC_RSHIFT])
+		return shifted_to_ascii[sc & 0x7F];
+
+	/* return normal ascii */
+	return scan_to_ascii[sc & 0x7F];
+}
+
+void kb_clearqueue(void)
+{
+	buf_ridx = buf_widx = 0;
 }

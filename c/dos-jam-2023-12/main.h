@@ -51,7 +51,9 @@ typedef struct gamestate_t {
 	/* video */
 	pixelmap_t *screen;
 	pixelmap_t *color;
-	uint8_t palette[256][3];
+	pixelmap_t *console;
+	pixelmap_t *palette;
+	pixelmap_t *colormap;
 
 	/* audio */
 	bool adlib;

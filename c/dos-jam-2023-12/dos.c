@@ -83,12 +83,12 @@ void dos_set_palette_color(uint8_t i, uint8_t r, uint8_t g, uint8_t b)
 }
 
 /* set the palette from buffer */
-void dos_set_palette(uint8_t palette[256][3])
+void dos_set_palette(uint8_t *palette)
 {
 	int i;
 	for (i = 0; i < 256; i++)
 	{
-		dos_set_palette_color(i, palette[i][0], palette[i][1], palette[i][2]);
+		dos_set_palette_color(i, palette[i * 3], palette[(i * 3) + 1], palette[(i * 3) + 2]);
 	}
 }
 

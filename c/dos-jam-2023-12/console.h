@@ -55,8 +55,8 @@ void console_eval(char *s);
 /* clear entire console buffer */
 void console_clear(void);
 
-/* execute config file from filename */
-bool console_exec(const char *filename);
+/* run console */
+void console_run(void);
 
 #ifdef __cplusplus
 }

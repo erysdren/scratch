@@ -48,12 +48,10 @@ SOFTWARE.
 /* global gamestate */
 gamestate_t gamestate;
 
-#define CONSOLE 0
-
 /* init everything */
 void engine_init(void)
 {
-	FILE *palette;
+	FILE *palfile;
 
 	/* zero gamestate struct */
 	memset(&gamestate, 0, sizeof(gamestate_t));
@@ -67,21 +65,23 @@ void engine_init(void)
 	if ((gamestate.video_mode = dos_set_mode(DOS_MODE_13)) != DOS_MODE_13)
 		error("couldn't set video mode");
 
-	/* read palette */
-	palette = fopen("palette.dat", "rb");
-	if (!palette)
-		error("couldn't find palette.dat");
-	fread(gamestate.palette, 3, 256, palette);
-	fclose(palette);
-
-	/* set palette */
-	dos_set_palette(gamestate.palette);
-
 	/* allocate pixelmaps */
 	gamestate.screen = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, (void *)DOS_GRAPHICS_MEMORY);
 	gamestate.color = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
-	if (!gamestate.screen || !gamestate.color)
+	gamestate.console = pixelmap_allocate(320, 200, PM_TYPE_INDEX_8, NULL);
+	if (!gamestate.screen || !gamestate.color || !gamestate.console)
 		error("couldn't allocate pixelmaps");
+
+	/* set palette */
+	gamestate.palette = pixelmap_load("palette.pxl");
+	if (!gamestate.palette)
+		error("couldn't load palette.pxl");
+	dos_set_palette(gamestate.palette->pixels);
+
+	/* get colormap */
+	gamestate.colormap = pixelmap_load("colormap.pxl");
+	if (!gamestate.colormap)
+		error("couldn't load colormap.pxl");
 
 	/* init console */
 	console_init();
@@ -122,6 +122,9 @@ void engine_quit(void)
 	/* free memory */
 	pixelmap_free(gamestate.screen);
 	pixelmap_free(gamestate.color);
+	pixelmap_free(gamestate.colormap);
+	pixelmap_free(gamestate.console);
+	pixelmap_free(gamestate.palette);
 	level_free(gamestate.level);
 }
 
@@ -141,15 +144,24 @@ int main(int argc, char **argv)
 	/* main loop */
 	for (tick = gamestate.ticks;;)
 	{
-		/* process misc inputs */
-		if (gamestate.keys[SC_ESCAPE])
-			break;
-
-#if CONSOLE
-		/* handle console input */
+		/* handle queued inputs */
 		while ((key = kb_getkey()) >= 0)
-			console_input(key);
-#else
+		{
+			switch (key)
+			{
+				/* run console */
+				case SC_TILDE:
+					console_run();
+					break;
+
+				/* just quit on esc */
+				case SC_ESCAPE:
+					engine_quit();
+					exit(0);
+					break;
+			}
+		}
+
 		/* poll on timer */
 		for (; tick < gamestate.ticks; tick++)
 		{
@@ -192,18 +204,12 @@ int main(int argc, char **argv)
 				gamestate.player.origin.y += gamestate.player.dir.x;
 			}
 		}
-#endif
 
 		/* clear screen */
 		pixelmap_clear8(gamestate.color, 0);
 
-#if CONSOLE
-		/* render console */
-		console_render(gamestate.color);
-#else
 		/* render ray */
 		ray_render(gamestate.color, &gamestate.player, 2);
-#endif
 
 		/* copy to screen */
 		pixelmap_copy(gamestate.screen, gamestate.color);

@@ -32,6 +32,8 @@ extern "C" {
 void kb_init(void);
 void kb_quit(void);
 int kb_getkey(void);
+int kb_toascii(int sc);
+void kb_clearqueue(void);
 
 #ifdef __cplusplus
 }

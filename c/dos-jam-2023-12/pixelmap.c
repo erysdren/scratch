@@ -126,6 +126,7 @@ pixelmap_t *pixelmap_allocate(int width, int height, int type, void *buffer)
 	pixelmap->stride = width * (pixelmap->bpp / 8);
 
 	/* setup structure data */
+	pixelmap->type = type;
 	pixelmap->width = width;
 	pixelmap->height = height;
 	pixelmap->pixels = buffer != NULL ? buffer : calloc(height, pixelmap->stride);
@@ -318,6 +319,23 @@ void pixelmap_blend8(pixelmap_t *dst, pixelmap_t *src1, pixelmap_t *src2, pixelm
 		for (x = dst->width; x--;)
 		{
 			*a++ = clut->pixels[*b++ * clut->width + *c++];
+		}
+	}
+}
+
+/* shade with color */
+void pixelmap_shade8(pixelmap_t *dst, pixelmap_t *src, uint8_t color, pixelmap_t *clut)
+{
+	int x, y;
+
+	for (y = dst->height; y--;)
+	{
+		uint8_t *a = dst->scanlines.b[y];
+		uint8_t *b = src->scanlines.b[y];
+
+		for (x = dst->width; x--;)
+		{
+			*a++ = clut->pixels[*b++ * clut->width + color];
 		}
 	}
 }

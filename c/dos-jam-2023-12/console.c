@@ -33,7 +33,9 @@ SOFTWARE.
 #include "console.h"
 #include "cmd.h"
 #include "cvar.h"
+#include "main.h"
 #include "utils.h"
+#include "keyboard.h"
 
 #define CON_PRINTF_STDIO 0
 #define CON_NUMLINES 64
@@ -336,7 +338,42 @@ void console_clear(void)
 	memset(con.lines, 0, CON_NUMLINES * sizeof(char *));
 }
 
-bool console_exec(const char *filename)
+void console_run(void)
 {
-	return false;
+	bool redraw = true, done = false;
+	int key;
+
+	/* clear keyboard queue */
+	kb_clearqueue();
+
+	/* console process loop */
+	while (!done)
+	{
+		/* process queued keyboard inputs */
+		while ((key = kb_getkey()) >= 0)
+		{
+			switch (key)
+			{
+				case SC_ESCAPE:
+					redraw = false;
+					done = true;
+					break;
+
+				default:
+					console_input(kb_toascii(key));
+					redraw = true;
+					break;
+			}
+		}
+
+		/* redraw if necessary */
+		if (redraw)
+		{
+			/* shade game screen, render console text, then copy to video memory */
+			pixelmap_shade8(gamestate.console, gamestate.color, 2, gamestate.colormap);
+			console_render(gamestate.console);
+			pixelmap_copy(gamestate.screen, gamestate.console);
+			redraw = false;
+		}
+	}
 }
