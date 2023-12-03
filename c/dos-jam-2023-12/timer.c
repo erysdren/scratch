@@ -26,9 +26,22 @@ SOFTWARE.
 #include "main.h"
 #include "timer.h"
 
+static uint64_t last_ticks;
+
 void timerhandler(void)
 {
+	/* iterate tick counter */
 	gamestate.ticks++;
+
+	/* get frametime in seconds */
+	gamestate.frametime = FIX32_DIV(FIX32(gamestate.ticks - last_ticks), FIX32(gamestate.tickrate));
+
+	/* add to time */
+	gamestate.time += gamestate.frametime;
+
+	/* store last tick */
+	last_ticks = gamestate.ticks;
+
 	outp(0x20, 0x20);
 }
 
@@ -45,6 +58,9 @@ void timer_init(int rate)
 	outp(0x43, 0x34);
 	outp(0x40, speed);
 	outp(0x40, speed >> 8);
+
+	last_ticks = 0;
+	gamestate.tickrate = rate;
 }
 
 void timer_quit(void)

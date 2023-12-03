@@ -50,6 +50,7 @@ static struct {
 	char input[CON_LINESIZE];
 	int input_len;
 	int input_cursor;
+	bool redraw;
 } con;
 
 void console_init(void)
@@ -59,6 +60,9 @@ void console_init(void)
 
 	/* set text buffer pointer */
 	con.textbuf_ptr = con.textbuf;
+
+	/* set redraw to true */
+	con.redraw = true;
 }
 
 void console_quit(void)
@@ -149,6 +153,9 @@ void console_printf(const char *s, ...)
 
 	/* push up console buffer with the text */
 	console_push(line, 0);
+
+	/* tell them to redraw */
+	con.redraw = true;
 }
 
 void console_render(pixelmap_t *dst)
@@ -334,8 +341,11 @@ void console_clear(void)
 
 void console_run(void)
 {
-	bool redraw = true, done = false;
+	bool done = false;
 	int key;
+
+	/* force redraw */
+	con.redraw = true;
 
 	/* clear keyboard queue */
 	kb_clearqueue();
@@ -350,25 +360,25 @@ void console_run(void)
 			{
 				case SC_TILDE:
 				case SC_ESCAPE:
-					redraw = false;
+					con.redraw = false;
 					done = true;
 					break;
 
 				default:
 					console_input(kb_toascii(key));
-					redraw = true;
+					con.redraw = true;
 					break;
 			}
 		}
 
 		/* redraw if necessary */
-		if (redraw)
+		if (con.redraw == true)
 		{
 			/* shade game screen, render console text, then copy to video memory */
 			pixelmap_shade8(gamestate.console, gamestate.color, 2, gamestate.colormap);
 			console_render(gamestate.console);
 			pixelmap_copy(gamestate.screen, gamestate.console);
-			redraw = false;
+			con.redraw = false;
 		}
 	}
 }

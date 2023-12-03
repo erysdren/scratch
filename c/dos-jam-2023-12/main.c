@@ -44,6 +44,7 @@ SOFTWARE.
 #include "cvarlib.h"
 #include "adlib.h"
 #include "actor.h"
+#include "game.h"
 
 /* global gamestate */
 gamestate_t gamestate;
@@ -51,8 +52,6 @@ gamestate_t gamestate;
 /* init everything */
 void engine_init(void)
 {
-	FILE *palfile;
-
 	/* zero gamestate struct */
 	memset(&gamestate, 0, sizeof(gamestate_t));
 
@@ -105,6 +104,7 @@ void engine_init(void)
 	if ((gamestate.level = level_load("test1.lvl")) == NULL)
 		error("couldn't load test1.lvl");
 
+	/* init raycaster */
 	ray_init(gamestate.level);
 }
 
@@ -146,8 +146,8 @@ int main(int argc, char **argv)
 	engine_init();
 
 	/* setup player */
-	gamestate.player.origin.x = FIX32(10.5);
-	gamestate.player.origin.y = FIX32(16.5);
+	gamestate.player.origin.x = FIX32(16.5);
+	gamestate.player.origin.y = FIX32(18.5);
 
 	/* main loop */
 	for (tick = gamestate.ticks;;)
@@ -170,53 +170,8 @@ int main(int argc, char **argv)
 			}
 		}
 
-		/* poll on timer */
-		for (; tick < gamestate.ticks; tick++)
-		{
-			/* process player look */
-			if (gamestate.keys[SC_LEFT])
-				gamestate.player.yaw += FIX32(0.0001);
-			if (gamestate.keys[SC_RIGHT])
-				gamestate.player.yaw -= FIX32(0.0001);
-			if (gamestate.player.yaw < FIX32(0))
-				gamestate.player.yaw += FIX32(2);
-			if (gamestate.player.yaw > FIX32(2))
-				gamestate.player.yaw -= FIX32(2);
-
-			/* get look direction */
-			gamestate.player.dir.x = FIX32_SIN(gamestate.player.yaw);
-			gamestate.player.dir.y = FIX32_COS(gamestate.player.yaw);
-
-			gamestate.player.dir.x = FIX32_DIV(gamestate.player.dir.x, FIX32(64));
-			gamestate.player.dir.y = FIX32_DIV(gamestate.player.dir.y, FIX32(64));
-
-			/* process player inputs */
-			if (gamestate.keys[SC_W])
-			{
-				gamestate.player.origin.x += gamestate.player.dir.x;
-				gamestate.player.origin.y += gamestate.player.dir.y;
-			}
-			if (gamestate.keys[SC_S])
-			{
-				gamestate.player.origin.x -= gamestate.player.dir.x;
-				gamestate.player.origin.y -= gamestate.player.dir.y;
-			}
-			if (gamestate.keys[SC_A])
-			{
-				gamestate.player.origin.x += gamestate.player.dir.y;
-				gamestate.player.origin.y -= gamestate.player.dir.x;
-			}
-			if (gamestate.keys[SC_D])
-			{
-				gamestate.player.origin.x -= gamestate.player.dir.y;
-				gamestate.player.origin.y += gamestate.player.dir.x;
-			}
-		}
-
-		/* clear screen, render raycaster, then blit to screen */
-		pixelmap_clear8(gamestate.color, 0);
-		ray_render(gamestate.color, &gamestate.player, 2);
-		pixelmap_copy(gamestate.screen, gamestate.color);
+		/* run game ticks */
+		game_run();
 	}
 
 	/* shutdown everything */
