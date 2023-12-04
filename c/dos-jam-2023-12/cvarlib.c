@@ -29,7 +29,7 @@ SOFTWARE.
 #include "cvarlib.h"
 
 cvar_t _cvarlib[] = {
-	CVAR_STRING("meow", "meow!!")
+	CVAR_BOOL("r_textures", true)
 };
 
 void cvarlib_init(void)

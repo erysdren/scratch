@@ -83,6 +83,14 @@ cvar_t *cvar_retrieve(const char *name);
 /* add cvar to chain */
 void cvar_register(cvar_t *cvar);
 
+/* retrieve values from cvar */
+bool cvar_get_bool(const char *name);
+int cvar_get_int(const char *name);
+unsigned int cvar_get_uint(const char *name);
+fix32_t cvar_get_fixed(const char *name);
+float cvar_get_float(const char *name);
+const char *cvar_get_string(const char *name);
+
 #ifdef __cplusplus
 }
 #endif

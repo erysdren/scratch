@@ -30,6 +30,7 @@ SOFTWARE.
 #include "pixelmap.h"
 #include "ray.h"
 #include "actor.h"
+#include "cvar.h"
 
 /* state */
 static struct {
@@ -175,9 +176,19 @@ void ray_render(pixelmap_t *dst, actor_t *camera, int ceiling)
 		line_end = clamp(line_end, 0, dst->height);
 
 		/* draw */
-		for (y = line_start; y < line_end; y++)
+		if (cvar_get_bool("r_textures"))
 		{
-			pixelmap_pixel8(dst, x, y) = 15;
+			for (y = line_start; y < line_end; y++)
+			{
+				pixelmap_pixel8(dst, x, y) = 31;
+			}
+		}
+		else
+		{
+			for (y = line_start; y < line_end; y++)
+			{
+				pixelmap_pixel8(dst, x, y) = 15;
+			}
 		}
 	}
 }
