@@ -29,7 +29,7 @@ SOFTWARE.
 #include "cvarlib.h"
 
 cvar_t _cvarlib[] = {
-	CVAR_BOOL("r_textures", true)
+	CVAR_BOOL("r_textures", false)
 };
 
 void cvarlib_init(void)

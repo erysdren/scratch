@@ -170,7 +170,7 @@ int _cmd_map(int argc, char **argv)
 {
 	if (argc < 2)
 	{
-		console_printf("must specify map filename");
+		warning("must specify map filename");
 		return 1;
 	}
 
@@ -180,7 +180,7 @@ int _cmd_map(int argc, char **argv)
 	/* load new level */
 	if ((engine.level = level_load(argv[1])) == NULL)
 	{
-		console_printf("map %s not found", argv[1]);
+		warning("map %s not found", argv[1]);
 		return 1;
 	}
 

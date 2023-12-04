@@ -51,6 +51,13 @@ int game_run(void)
 	int key;
 	int state = STATE_GAME;
 
+	/* sanity check */
+	if (!engine.level)
+	{
+		warning("level is not loaded!");
+		return STATE_CONSOLE;
+	}
+
 	/* handle queued inputs */
 	while ((key = kb_getkey()) >= 0)
 	{

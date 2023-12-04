@@ -90,15 +90,11 @@ void warning(const char *s, ...)
 	static char errbuf[256];
 	va_list args;
 
-	engine_quit();
-
 	va_start(args, s);
 	vsnprintf(errbuf, 256, s, args);
 	va_end(args);
 
 	console_printf("Warning: %s", errbuf);
-
-	exit(0);
 }
 
 /* check arg */
@@ -134,4 +130,3 @@ const char *get_arg(const char *pattern)
 
 	return NULL;
 }
-
