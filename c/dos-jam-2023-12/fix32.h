@@ -74,6 +74,7 @@ typedef uint16_t ufrac32_t;
 /* math macros */
 #define FIX32_MUL(a, b) (((int64_t)(a) * (b)) >> 16)
 #define FIX32_DIV(a, b) (((int64_t)(a) << 16) / (b))
+#define FIX32_SAFEDIV(a, b) ((((a) == 0) || (b) == 0) ? FIX32_MIN : FIX32_DIV((a), (b)))
 #define FIX32_INV(a) (FIX32_DIV(FIX32(1), (a)))
 #define FIX32_FLOOR(a) ((a)&FRAC32_MASK)
 #define FIX32_CEIL(a) ((((a)&FIX32_MASK) == 0) ? (a) : FIX32_FLOOR((a) + FIX32_ONE))

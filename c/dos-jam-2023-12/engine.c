@@ -99,6 +99,18 @@ void engine_init(int argc, char **argv)
 	cvarlib_init();
 	console_printf("console initialized");
 
+	/* load wall textures */
+	for (int i = 0; i < MAX_WALLS; i++)
+	{
+		char filename[16];
+		snprintf(filename, 16, "wall%003d.pxl", i + 1);
+		if ((engine.walls[i] = pixelmap_load(filename)) == NULL)
+		{
+			console_printf("loaded %d wall textures", i);
+			break;
+		}
+	}
+
 	/* detect adlib card */
 	if ((engine.adlib = adlib_detect()) == true)
 		console_printf("adlib card detected");
@@ -142,13 +154,19 @@ void engine_quit(void)
 	cmdlib_quit();
 	cvarlib_quit();
 
-	/* free memory */
+	/* free pixelmap memory */
 	pixelmap_free(engine.screen);
 	pixelmap_free(engine.color);
 	pixelmap_free(engine.colormap);
 	pixelmap_free(engine.console);
 	pixelmap_free(engine.palette);
 	pixelmap_free(engine.font8x8);
+
+	/* free wall memory */
+	for (int i = 0; i < MAX_WALLS; i++)
+		pixelmap_free(engine.walls[i]);
+
+	/* free level memory */
 	level_free(engine.level);
 }
 

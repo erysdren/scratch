@@ -39,7 +39,6 @@ extern "C" {
 #define imax(a, b) ((a) > (b) ? (a) : (b))
 
 /* generic comparison functions */
-#define abs(a) (((a) >= 0) ? (a) : -(a))
 #define sgn(a) (((a) < 0) ? -1 : (((a) > 0) ? 1 : 0))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) > (b) ? (a) : (b))

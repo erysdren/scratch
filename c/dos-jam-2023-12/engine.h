@@ -45,6 +45,8 @@ enum {
 	STATE_MENU
 };
 
+#define MAX_WALLS 256
+
 typedef struct engine_t {
 
 	/* game */
@@ -68,6 +70,7 @@ typedef struct engine_t {
 	pixelmap_t *palette;
 	pixelmap_t *colormap;
 	pixelmap_t *font8x8;
+	pixelmap_t *walls[MAX_WALLS];
 
 	/* audio */
 	bool adlib;

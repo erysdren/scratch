@@ -31,6 +31,9 @@ SOFTWARE.
 #include "ray.h"
 #include "actor.h"
 #include "cvar.h"
+#include "engine.h"
+#include "utils.h"
+#include "console.h"
 
 /* state */
 static struct {
@@ -178,13 +181,52 @@ void ray_render(pixelmap_t *dst, actor_t *camera, int ceiling)
 		/* draw */
 		if (cvar_get_bool("r_textures"))
 		{
+			fix32_t wall_x;
+			fix32_t step;
+			fix32_t texcoord;
+			int tex_x;
+			int tex_y;
+			int wallnum;
+
+			/* get wall num */
+			wallnum = ray.walls[map_pos.y * ray.width + map_pos.x] - 1;
+
+			/* get x coordinate on wall */
+			if (side == false)
+				wall_x = camera->origin.y + FIX32_MUL(dist, raydir.y);
+			else
+				wall_x = camera->origin.x + FIX32_MUL(dist, raydir.x);
+
+			/* keep past the decimal only */
+			wall_x -= FIX32_FLOOR(wall_x);
+
+			/* get x coordinate on texture */
+			tex_x = FIX32_TO_INT(FIX32_MUL(wall_x, FIX32(64)));
+
+			/* get x coordinate on wall */
+			if (side == false && raydir.x > 0)
+				tex_x = 64 - tex_x - 1;
+			if (side == true && raydir.y < 0)
+				tex_x = 64 - tex_x - 1;
+
+			/* texcoord per screen pixel */
+			step = FIX32_DIV(FIX32(64), FIX32(line_height));
+
+			/* starting texture coord */
+			texcoord = FIX32_MUL(FIX32(line_start - (dst->height / 2) + (line_height / 2)), step);
+
+			/* draw texture */
 			for (y = line_start; y < line_end; y++)
 			{
-				pixelmap_pixel8(dst, x, y) = 31;
+				tex_x = abs(tex_x) & 63;
+				tex_y = abs(FIX32_TO_INT(texcoord)) & 63;
+				texcoord += step;
+				pixelmap_pixel8(dst, x, y) = pixelmap_pixel8(engine.walls[wallnum], tex_x, tex_y);
 			}
 		}
 		else
 		{
+			/* draw solid color */
 			for (y = line_start; y < line_end; y++)
 			{
 				pixelmap_pixel8(dst, x, y) = 15;
