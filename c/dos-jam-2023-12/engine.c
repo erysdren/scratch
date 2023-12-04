@@ -55,6 +55,10 @@ void engine_init(int argc, char **argv)
 	/* zero engine struct */
 	memset(&engine, 0, sizeof(engine_t));
 
+	/* enable djgpp near pointers */
+	if (!__djgpp_nearptr_enable())
+		error("couldn't disable memory protection!");
+
 	/* init dos handlers */
 	kb_init();
 	timer_init(120);
@@ -139,6 +143,9 @@ void engine_init(int argc, char **argv)
 /* quit everything */
 void engine_quit(void)
 {
+	/* disable near pointers */
+	__djgpp_nearptr_disable();
+
 	/* first thing we do on quit is reset dos interrupts */
 	kb_quit();
 	timer_quit();
