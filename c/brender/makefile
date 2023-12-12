@@ -9,7 +9,7 @@ EXECS = $(TILE_EXEC)
 TILE_OBJECTS = tile.o brprogram.o
 OBJECTS = $(TILE_OBJECTS)
 
-override CFLAGS += $(shell $(PKGCONFIG) sdl2 brender --cflags)
+override CFLAGS += -g3 $(shell $(PKGCONFIG) sdl2 brender --cflags)
 override LDFLAGS += $(shell $(PKGCONFIG) sdl2 brender --libs) -lm
 
 all: clean $(EXECS)

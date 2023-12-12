@@ -14,6 +14,13 @@ static br_pixelmap *colour = NULL;
 static br_pixelmap *depth = NULL;
 static br_uint_64 then = 0;
 static br_uint_64 now = 0;
+const Uint8 *keys;
+
+/* keyboard buffer */
+#define KB_BUFSZ 64
+#define KB_ADVANCE(x) ((x) = ((x) + 1) & (KB_BUFSZ - 1))
+static int kb_buffer[KB_BUFSZ];
+static int kb_buffer_ridx, kb_buffer_widx;
 
 /* constants */
 br_actor *world = NULL;
@@ -102,6 +109,9 @@ int BrProgram(const char *title, int w, int h)
 	/* main loop */
 	while (running == BR_TRUE && r == BRE_OK)
 	{
+		/* get key state */
+		keys = SDL_GetKeyboardState(NULL);
+
 		/* event poll loop */
 		while (SDL_PollEvent(&event) > 0)
 		{
@@ -149,6 +159,16 @@ int BrProgram(const char *title, int w, int h)
 					break;
 				}
 
+				/* add to keyboard buffer */
+				case SDL_KEYDOWN:
+				{
+					kb_buffer[kb_buffer_widx] = event.key.keysym.scancode;
+					KB_ADVANCE(kb_buffer_widx);
+					if (kb_buffer_widx == kb_buffer_ridx)
+						KB_ADVANCE(kb_buffer_ridx);
+					break;
+				}
+
 				/* not handled */
 				default:
 				{
@@ -187,4 +207,25 @@ int BrProgram(const char *title, int w, int h)
 	BrEnd();
 
 	return 0;
+}
+
+int BrProgramGetKey(int sc)
+{
+	int res;
+
+	if (sc)
+		return keys[sc] ? 1 : 0;
+
+	if (kb_buffer_ridx == kb_buffer_widx)
+		return -1;
+
+	res = kb_buffer[kb_buffer_ridx];
+	KB_ADVANCE(kb_buffer_ridx);
+
+	return res;
+}
+
+void BrProgramClearKeyQueue(void)
+{
+	kb_buffer_ridx = kb_buffer_widx = 0;
 }
