@@ -6,6 +6,11 @@
 
 #include "brprogram.h"
 
+typedef struct br_tile {
+	br_uint_16 x;
+	br_uint_16 y;
+} br_tile;
+
 /* map */
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24
@@ -113,11 +118,22 @@ br_error prog_init(br_actor *world, br_actor *camera, br_pixelmap *screen, br_pi
 		{
 			if (map[y][x] > 0)
 			{
+				/* create actor */
 				br_actor *cube = BrActorAdd(prog.level, BrActorAllocate(BR_ACTOR_MODEL, NULL));
 
+				/* create tile info */
+				br_tile *tile = BrResAllocate(cube, sizeof(br_tile), BR_MEMORY_APPLICATION);
+				tile->x = x;
+				tile->y = y;
+
+				/* add model and material */
 				cube->model = BrModelFind("cube.dat");
 				cube->material = BrMaterialFind("checkerboard.mat");
 
+				/* add tile info */
+				cube->user = (void *)tile;
+
+				/* move to position */
 				BrMatrix34Translate(&cube->t.t.mat, BR_SCALAR(x), BR_SCALAR(0), BR_SCALAR(y));
 			}
 		}
@@ -173,12 +189,12 @@ br_error prog_render(void)
 	/* update bbox */
 	BrMatrix34Copy(&prog.camera_bbox->t.t.mat, &prog.camera->t.t.mat);
 
-	/* determine collision with any map block */
+	/* update block positions */
 	br_actor *block;
 	BR_FOR_SIMPLELIST(prog.level->children, block)
 	{
-		if (actor_overlapping(block, prog.camera_bbox))
-			printf("camera colliding!\n");
+		br_tile *tile = (br_tile *)block->user;
+		BrMatrix34Translate(&block->t.t.mat, BR_SCALAR(tile->x), BR_SCALAR(0), BR_SCALAR(tile->y));
 	}
 
 	/* do render */
