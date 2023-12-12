@@ -12,7 +12,7 @@ BRROTT_OBJECTS = brrott.o brprogram.o
 OBJECTS = $(TILE_OBJECTS) $(BRROTT_OBJECTS)
 
 override CFLAGS += $(shell $(PKGCONFIG) sdl2 brender --cflags)
-override LDFLAGS += -lm $(shell $(PKGCONFIG) sdl2 brender --libs)
+override LDFLAGS += $(shell $(PKGCONFIG) sdl2 brender --libs) -lm
 
 all: clean $(EXECS)
 
