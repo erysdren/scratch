@@ -46,6 +46,7 @@ static const uint32_t rle_tag_registered = 0x4344;
 static const uint32_t rle_tag_shareware = 0x4d4b;
 static const char rtl_magic[4] = {'R', 'T', 'L', '\0'};
 static const char rtc_magic[4] = {'R', 'T', 'C', '\0'};
+static const char rtr_magic[4] = {'R', 'T', 'R', '\0'};
 static const char rxl_magic[4] = {'R', 'X', 'L', '\0'};
 static const char rxc_magic[4] = {'R', 'X', 'C', '\0'};
 
@@ -62,7 +63,8 @@ static bool rtl_is_valid(FILE *file)
 
 	/* rott */
 	if ((memcmp(magic, rtl_magic, 4) == 0 ||
-		memcmp(magic, rtc_magic, 4) == 0) &&
+		memcmp(magic, rtc_magic, 4) == 0 ||
+		memcmp(magic, rtr_magic, 4) == 0) &&
 		version <= rtl_version)
 		return true;
 
@@ -73,6 +75,23 @@ static bool rtl_is_valid(FILE *file)
 		return true;
 
 	/* fail */
+	return false;
+}
+
+/* returns true if this rtl file is from randrott */
+static bool rtl_is_randrott(FILE *file)
+{
+	char magic[4];
+
+	/* read magic */
+	fseek(file, 0, SEEK_SET);
+	fread(magic, 1, 4, file);
+
+	/* check magics */
+	if (memcmp(magic, rtr_magic, 4) == 0)
+		return true;
+
+	/* nope */
 	return false;
 }
 
@@ -286,6 +305,7 @@ rtl_t *rtl_open(const char *filename)
 	rtl->commbat = rtl_is_commbat(file);
 	rtl->ludicrous = rtl_is_ludicrous(file);
 	rtl->shareware = rtl_is_shareware(file);
+	rtl->randrott = rtl_is_randrott(file);
 	rtl->file = file;
 
 	/* return success */

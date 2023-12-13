@@ -75,6 +75,7 @@ typedef struct rtl_t {
 	bool commbat;					/* true if this is for comm-bat only */
 	bool ludicrous;					/* true if this is from ROTT: LE */
 	bool shareware;					/* true if this for shareware only */
+	bool randrott;					/* true if this is from randrott */
 	FILE *file;						/* file handle for reading map planes */
 } rtl_t;
 
