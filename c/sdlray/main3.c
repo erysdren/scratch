@@ -116,6 +116,18 @@ static struct {
 
 static int ybuffer[WIDTH];
 
+SDL_Surface *wall_texture;
+
+int remap(int value, int a1, int a2, int b1, int b2)
+{
+	return b1 + (value - a1) * (b2 - b1) / (a2 - a1);
+}
+
+float remapf(float value, float a1, float a2, float b1, float b2)
+{
+	return b1 + (value - a1) * (b2 - b1) / (a2 - a1);
+}
+
 void draw_vertical_line(int x, int y0, int y1, uint8_t c)
 {
 	int y;
@@ -171,13 +183,14 @@ int _ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t
 	return 0;
 }
 
-void _ray_draw_column(int column)
+void _ray_draw_column(int x)
 {
 	vec2f_t ray_dir, delta_dist, side_dist, temp;
 	vec2i_t step, map_pos;
 	int side;
-	float perp_wall_dist;
+	float dist;
 	int line_start, line_end;
+	int line_start_c, line_end_c;
 	int y;
 	float block_top, block_bottom;
 	float pixel_height_scale = HEIGHT / 2;
@@ -187,7 +200,7 @@ void _ray_draw_column(int column)
 	map_pos.y = (int)camera.y;
 
 	/* get ray direction */
-	ray_dir.x = ((2.0f / (float)WIDTH) * (float)column) - 1.0f;
+	ray_dir.x = ((2.0f / (float)WIDTH) * (float)x) - 1.0f;
 	ray_dir.y = 1.0f;
 
 	/* rotate around (0, 0) by camera yaw */
@@ -225,26 +238,54 @@ void _ray_draw_column(int column)
 	/* do dda */
 	while (_ray_cast(&side_dist, &delta_dist, &map_pos, &step, &side))
 	{
-		/* get perp_wall_dist */
+		/* get dist */
 		if (!side)
-			perp_wall_dist = side_dist.x - delta_dist.x;
+			dist = side_dist.x - delta_dist.x;
 		else
-			perp_wall_dist = side_dist.y - delta_dist.y;
+			dist = side_dist.y - delta_dist.y;
 
 		/* line heights */
 		block_top = camera.z - map[map_pos.y][map_pos.x];
 		block_bottom = camera.z;
 
 		/* line start and end */
-		line_start = ((block_top / perp_wall_dist) * pixel_height_scale) + ray.horizon;
-		line_end = ((block_bottom / perp_wall_dist) * pixel_height_scale) + ray.horizon;
+		line_start = ((block_top / dist) * pixel_height_scale) + ray.horizon;
+		line_end = ((block_bottom / dist) * pixel_height_scale) + ray.horizon;
 
 		/* clamp to screen resolution */
-		line_start = CLAMP(line_start, 0, ybuffer[column]);
-		line_end = CLAMP(line_end, 0, ybuffer[column]);
+		line_start_c = CLAMP(line_start, 0, ybuffer[x]);
+		line_end_c = CLAMP(line_end, 0, ybuffer[x]);
 
-		/* draw colored line */
-		draw_vertical_line(column, line_start, line_end, map[map_pos.y][map_pos.x]);
+		if (1)
+		{
+			/* draw textured line */
+			float wall_x;
+			int tex_x;
+
+			if (!side)
+				wall_x = camera.y + dist * ray_dir.y;
+			else
+				wall_x = camera.x + dist * ray_dir.x;
+
+			wall_x -= floorf(wall_x);
+
+			tex_x = wall_x * wall_texture->w;
+			if ((side == 0 && ray_dir.x > 0) || (side == 1 && ray_dir.y < 0))
+				tex_x = wall_texture->w - tex_x - 1;
+
+			for (y = line_start_c; y < line_end_c; y++)
+			{
+				int tex_y = remap(y, line_start, line_end, 0, wall_texture->h);
+
+				sdl.pixels[y * WIDTH + x] = ((Uint8 *)wall_texture->pixels)[tex_y * wall_texture->w + tex_x];
+				ybuffer[x] = line_start_c;
+			}
+		}
+		else
+		{
+			/* draw colored line */
+			draw_vertical_line(x, line_start, line_end, map[map_pos.y][map_pos.x]);
+		}
 	}
 }
 
@@ -337,6 +378,8 @@ int main(int argc, char **argv)
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
+	wall_texture = IMG_Load("wall.png");
+	install_palette("palette.dat", wall_texture);
 	install_palette("palette.dat", sdl.surface8);
 
 	sdl.pixels = sdl.surface8->pixels;
@@ -422,11 +465,14 @@ int main(int argc, char **argv)
 		SDL_RenderPresent(sdl.renderer);
 	}
 
+	SDL_SaveBMP(sdl.surface8, "untracked/screenshot.bmp");
+
 	/* quit */
 	SDL_SetRelativeMouseMode(SDL_FALSE);
 	SDL_DestroyWindow(sdl.window);
 	SDL_DestroyRenderer(sdl.renderer);
 	SDL_DestroyTexture(sdl.texture);
+	SDL_FreeSurface(wall_texture);
 	SDL_FreeSurface(sdl.surface8);
 	SDL_FreeSurface(sdl.surface32);
 	IMG_Quit();
