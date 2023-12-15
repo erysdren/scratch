@@ -145,6 +145,7 @@ sprite_t sprites[1] = {
 bool r_sky = true;
 bool r_textures = true;
 bool r_texture_stretch = false;
+bool r_floors = false;
 
 int remap(int value, int a1, int a2, int b1, int b2)
 {
@@ -213,7 +214,7 @@ void ray_draw_sprite(sprite_t *sprite)
 	sdl.pixels[y * WIDTH + x] = 255;
 }
 
-void ray_draw_walls(int x)
+void ray_draw_column(int x)
 {
 	vec2f_t ray_dir, delta_dist, side_dist, temp;
 	vec2i_t step, map_pos;
@@ -225,6 +226,7 @@ void ray_draw_walls(int x)
 	float block_top, block_bottom;
 	float pixel_height_scale = HEIGHT / 1.5;
 	int ystart = HEIGHT;
+	int floorstart = 0;
 
 	/* get map pos */
 	map_pos.x = (int)camera.x;
@@ -298,6 +300,10 @@ void ray_draw_walls(int x)
 		line_start_c = CLAMP(line_start, 0, ystart);
 		line_end_c = CLAMP(line_end, 0, ystart);
 
+		/* set floorstart */
+		if (floorstart < line_end_c)
+			floorstart = line_end_c;
+
 		if (r_sky)
 		{
 			int tex_x;
@@ -370,13 +376,24 @@ void ray_draw_walls(int x)
 			/* set ystart for next cast */
 			ystart = line_start_c;
 		}
+
+		if (r_floors)
+		{
+
+		}
+		else
+		{
+			for (y = floorstart; y < HEIGHT; y++)
+			{
+				sdl.pixels[y * WIDTH + x] = 2;
+			}
+		}
 	}
 }
 
 void ray_draw(void)
 {
-	int x;
-	int i;
+	int x, y;
 
 	/* get sin and cos of camera yaw */
 	ray.viewsin = sinf(DEG2RAD(camera.yaw));
@@ -385,15 +402,10 @@ void ray_draw(void)
 	/* calculate camera horizon */
 	ray.horizon = -camera.shear + (HEIGHT / 2);
 
-	/* draw walls */
+	/* draw walls, floors, and sky */
 	for (x = 0; x < WIDTH; x++)
 	{
-		ray_draw_walls(x);
-	}
-
-	for (i = 0; i < num_sprites; i++)
-	{
-		ray_draw_sprite(&sprites[i]);
+		ray_draw_column(x);
 	}
 }
 
@@ -552,9 +564,10 @@ int main(int argc, char **argv)
 			camera.y += camera.dir.x;
 		}
 
-		/* render */
-		memset(sdl.surface8->pixels, 0, sdl.surface8->h * sdl.surface8->pitch);
+		/* clamp camera shear */
 		camera.shear = CLAMP(camera.shear, -150, 150);
+
+		/* draw */
 		ray_draw();
 
 		/* blit to screen */
