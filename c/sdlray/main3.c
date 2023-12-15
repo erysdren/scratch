@@ -247,6 +247,10 @@ void _ray_draw_column(int x)
 	/* do dda */
 	while (_ray_cast(&side_dist, &delta_dist, &map_pos, &step, &side))
 	{
+		/* early out */
+		if (!ybuffer[x])
+			break;
+
 		/* get dist */
 		if (!side)
 			dist = side_dist.x - delta_dist.x;
