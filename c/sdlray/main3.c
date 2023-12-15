@@ -90,6 +90,11 @@ uint8_t map[MAP_HEIGHT][MAP_WIDTH]=
 	{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 };
 
+typedef struct tile_t {
+	uint8_t texture;
+	uint8_t height;
+} tile_t;
+
 typedef struct vec2i_t {
 	int x, y;
 } vec2i_t;
@@ -116,7 +121,7 @@ static struct {
 
 static int ybuffer[WIDTH];
 
-SDL_Surface *wall_texture;
+SDL_Surface *wall_textures[4];
 
 bool r_textures = true;
 bool r_texture_stretch = false;
@@ -265,7 +270,12 @@ void _ray_draw_column(int x)
 			/* draw textured line */
 			float wall_x;
 			int tex_x;
+			SDL_Surface *wall_texture;
 
+			/* get texture */
+			wall_texture = wall_textures[map[map_pos.y][map_pos.x] & 3];
+
+			/* get wall impact point */
 			if (!side)
 				wall_x = camera.y + dist * ray_dir.y;
 			else
@@ -273,6 +283,7 @@ void _ray_draw_column(int x)
 
 			wall_x -= floorf(wall_x);
 
+			/* get texture x coord */
 			tex_x = wall_x * wall_texture->w;
 			if ((side == 0 && ray_dir.x > 0) || (side == 1 && ray_dir.y < 0))
 				tex_x = wall_texture->w - tex_x - 1;
@@ -392,8 +403,14 @@ int main(int argc, char **argv)
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	wall_texture = IMG_Load("gfx/wall.png");
-	install_palette("gfx/palette.dat", wall_texture);
+	wall_textures[0] = IMG_Load("gfx/wall1.png");
+	wall_textures[1] = IMG_Load("gfx/wall2.png");
+	wall_textures[2] = IMG_Load("gfx/wall3.png");
+	wall_textures[3] = IMG_Load("gfx/wall4.png");
+	install_palette("gfx/palette.dat", wall_textures[0]);
+	install_palette("gfx/palette.dat", wall_textures[1]);
+	install_palette("gfx/palette.dat", wall_textures[2]);
+	install_palette("gfx/palette.dat", wall_textures[3]);
 	install_palette("gfx/palette.dat", sdl.surface8);
 
 	sdl.pixels = sdl.surface8->pixels;
@@ -486,7 +503,10 @@ int main(int argc, char **argv)
 	SDL_DestroyWindow(sdl.window);
 	SDL_DestroyRenderer(sdl.renderer);
 	SDL_DestroyTexture(sdl.texture);
-	SDL_FreeSurface(wall_texture);
+	SDL_FreeSurface(wall_textures[0]);
+	SDL_FreeSurface(wall_textures[1]);
+	SDL_FreeSurface(wall_textures[2]);
+	SDL_FreeSurface(wall_textures[3]);
 	SDL_FreeSurface(sdl.surface8);
 	SDL_FreeSurface(sdl.surface32);
 	IMG_Quit();
