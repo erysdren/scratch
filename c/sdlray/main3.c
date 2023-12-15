@@ -392,9 +392,9 @@ int main(int argc, char **argv)
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	wall_texture = IMG_Load("wall.png");
-	install_palette("palette.dat", wall_texture);
-	install_palette("palette.dat", sdl.surface8);
+	wall_texture = IMG_Load("gfx/wall.png");
+	install_palette("gfx/palette.dat", wall_texture);
+	install_palette("gfx/palette.dat", sdl.surface8);
 
 	sdl.pixels = sdl.surface8->pixels;
 
