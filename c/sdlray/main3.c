@@ -118,14 +118,18 @@ static int ybuffer[WIDTH];
 
 SDL_Surface *wall_texture;
 
+bool r_textures = true;
+bool r_texture_stretch = false;
+
 int remap(int value, int a1, int a2, int b1, int b2)
 {
 	return b1 + (value - a1) * (b2 - b1) / (a2 - a1);
 }
 
-float remapf(float value, float a1, float a2, float b1, float b2)
+int wrap(int value, int mod)
 {
-	return b1 + (value - a1) * (b2 - b1) / (a2 - a1);
+	int cmp = value < 0;
+	return cmp * mod + (value % mod) - cmp;
 }
 
 void draw_vertical_line(int x, int y0, int y1, uint8_t c)
@@ -193,7 +197,7 @@ void _ray_draw_column(int x)
 	int line_start_c, line_end_c;
 	int y;
 	float block_top, block_bottom;
-	float pixel_height_scale = HEIGHT / 2;
+	float pixel_height_scale = HEIGHT / 1.5;
 
 	/* get map pos */
 	map_pos.x = (int)camera.x;
@@ -256,7 +260,7 @@ void _ray_draw_column(int x)
 		line_start_c = CLAMP(line_start, 0, ybuffer[x]);
 		line_end_c = CLAMP(line_end, 0, ybuffer[x]);
 
-		if (1)
+		if (r_textures)
 		{
 			/* draw textured line */
 			float wall_x;
@@ -276,7 +280,17 @@ void _ray_draw_column(int x)
 			ybuffer[x] = line_start_c;
 			for (y = line_start_c; y < line_end_c; y++)
 			{
-				int tex_y = remap(y, line_start, line_end, 0, wall_texture->h);
+				int tex_y;
+
+				if (r_texture_stretch)
+				{
+					tex_y = remap(y, line_start, line_end, 0, wall_texture->h);
+				}
+				else
+				{
+					tex_y = remap(y, line_start, line_end, 0, wall_texture->h * map[map_pos.y][map_pos.x]);
+					tex_y = wrap(tex_y, wall_texture->h);
+				}
 
 				sdl.pixels[y * WIDTH + x] = ((Uint8 *)wall_texture->pixels)[tex_y * wall_texture->w + tex_x];
 			}
