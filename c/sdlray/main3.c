@@ -122,7 +122,9 @@ static struct {
 static int ybuffer[WIDTH];
 
 SDL_Surface *wall_textures[4];
+SDL_Surface *sky_texture;
 
+bool r_sky = true;
 bool r_textures = true;
 bool r_texture_stretch = false;
 
@@ -269,6 +271,24 @@ void _ray_draw_column(int x)
 		line_start_c = CLAMP(line_start, 0, ybuffer[x]);
 		line_end_c = CLAMP(line_end, 0, ybuffer[x]);
 
+		if (r_sky)
+		{
+			int tex_x;
+			int tex_y;
+
+			tex_x = x - camera.yaw * 4;
+			tex_x = wrap(tex_x / 2, sky_texture->w);
+
+			for (y = 0; y < line_start_c; y++)
+			{
+				tex_y = y - ray.horizon;
+
+				tex_y = wrap(tex_y / 2, sky_texture->h);
+
+				sdl.pixels[y * WIDTH + x] = ((Uint8 *)sky_texture->pixels)[tex_y * sky_texture->w + tex_x];
+			}
+		}
+
 		if (r_textures)
 		{
 			/* draw textured line */
@@ -411,10 +431,12 @@ int main(int argc, char **argv)
 	wall_textures[1] = IMG_Load("gfx/wall2.png");
 	wall_textures[2] = IMG_Load("gfx/wall3.png");
 	wall_textures[3] = IMG_Load("gfx/wall4.png");
+	sky_texture = IMG_Load("gfx/sky.png");
 	install_palette("gfx/palette.dat", wall_textures[0]);
 	install_palette("gfx/palette.dat", wall_textures[1]);
 	install_palette("gfx/palette.dat", wall_textures[2]);
 	install_palette("gfx/palette.dat", wall_textures[3]);
+	install_palette("gfx/palette.dat", sky_texture);
 	install_palette("gfx/palette.dat", sdl.surface8);
 
 	sdl.pixels = sdl.surface8->pixels;
@@ -490,6 +512,7 @@ int main(int argc, char **argv)
 
 		/* render */
 		memset(sdl.surface8->pixels, 0, sdl.surface8->h * sdl.surface8->pitch);
+		camera.shear = CLAMP(camera.shear, -150, 150);
 		ray_render();
 
 		/* blit to screen */
@@ -511,6 +534,7 @@ int main(int argc, char **argv)
 	SDL_FreeSurface(wall_textures[1]);
 	SDL_FreeSurface(wall_textures[2]);
 	SDL_FreeSurface(wall_textures[3]);
+	SDL_FreeSurface(sky_texture);
 	SDL_FreeSurface(sdl.surface8);
 	SDL_FreeSurface(sdl.surface32);
 	IMG_Quit();
