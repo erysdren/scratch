@@ -473,13 +473,13 @@ int main(int argc, char **argv)
 	wall_textures[3] = IMG_Load("gfx/wall4.png");
 	sky_texture = IMG_Load("gfx/sky.png");
 	sprite_texture = IMG_Load("gfx/barrel.png");
-	install_palette("gfx/palette.dat", wall_textures[0]);
-	install_palette("gfx/palette.dat", wall_textures[1]);
-	install_palette("gfx/palette.dat", wall_textures[2]);
-	install_palette("gfx/palette.dat", wall_textures[3]);
-	install_palette("gfx/palette.dat", sky_texture);
-	install_palette("gfx/palette.dat", sprite_texture);
-	install_palette("gfx/palette.dat", sdl.surface8);
+	install_palette("gfx/rott.pal", wall_textures[0]);
+	install_palette("gfx/rott.pal", wall_textures[1]);
+	install_palette("gfx/rott.pal", wall_textures[2]);
+	install_palette("gfx/rott.pal", wall_textures[3]);
+	install_palette("gfx/rott.pal", sky_texture);
+	install_palette("gfx/rott.pal", sprite_texture);
+	install_palette("gfx/rott.pal", sdl.surface8);
 
 	sdl.pixels = sdl.surface8->pixels;
 
