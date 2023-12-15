@@ -55,6 +55,9 @@
 /c/rtlx2rtl/*.rtcx
 /c/rtlx2rtl/*.wad
 
+# sdlray
+/c/sdlray/sdlray
+
 # troika_texture_tool
 /c/troika_texture_tool/ttt
 /c/troika_texture_tool/*.tth
