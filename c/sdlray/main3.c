@@ -103,6 +103,16 @@ typedef struct vec2f_t {
 	float x, y;
 } vec2f_t;
 
+typedef struct vec3f_t {
+	float x, y, z;
+} vec3f_t;
+
+typedef struct sprite_t {
+	float x;
+	float y;
+	float z;
+} sprite_t;
+
 static struct {
 	float x;
 	float y;
@@ -120,9 +130,17 @@ static struct {
 } ray;
 
 static int ybuffer[WIDTH];
+static float zbuffer[WIDTH];
 
 SDL_Surface *wall_textures[4];
 SDL_Surface *sky_texture;
+SDL_Surface *sprite_texture;
+
+/* sprites */
+int num_sprites = 1;
+sprite_t sprites[1] = {
+	{3.5, 3.5, 0}
+};
 
 bool r_sky = true;
 bool r_textures = true;
@@ -139,31 +157,7 @@ int wrap(int value, int mod)
 	return cmp * mod + (value % mod) - cmp;
 }
 
-void draw_vertical_line(int x, int y0, int y1, uint8_t c)
-{
-	int y;
-
-	if (y0 < y1)
-	{
-		for (y = y0; y < y1; y++)
-		{
-			sdl.pixels[y * WIDTH + x] = c;
-		}
-
-		ybuffer[x] = y0;
-	}
-	else if (y1 < y0)
-	{
-		for (y = y1; y < y0; y++)
-		{
-			sdl.pixels[y * WIDTH + x] = c;
-		}
-
-		ybuffer[x] = y1;
-	}
-}
-
-int _ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t *step, int *side)
+int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t *step, int *side)
 {
 	while (1)
 	{
@@ -194,7 +188,32 @@ int _ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t
 	return 0;
 }
 
-void _ray_draw_column(int x)
+void ray_draw_sprite(sprite_t *sprite)
+{
+	vec3f_t temp, origin;
+	int x, y;
+
+	/* get origin offset */
+	origin.x = sprite->x - camera.x;
+	origin.y = sprite->y - camera.y;
+	origin.z = sprite->z;
+
+	/* rotate around view */
+	temp = origin;
+	origin.x = (-temp.x * ray.viewcos) - (-temp.y * ray.viewsin);
+	origin.y = (temp.x * ray.viewsin) + (temp.y * ray.viewcos);
+
+	/* get screen coordinates */
+	x = (origin.x * (WIDTH / 2) / origin.y) + (WIDTH / 2);
+	y = (origin.z * (WIDTH / 2) / origin.y) + (HEIGHT / 2);
+
+	x = CLAMP(x, 0, WIDTH);
+	y = CLAMP(y, 0, HEIGHT);
+
+	sdl.pixels[y * WIDTH + x] = 255;
+}
+
+void ray_draw_walls(int x)
 {
 	vec2f_t ray_dir, delta_dist, side_dist, temp;
 	vec2i_t step, map_pos;
@@ -205,6 +224,7 @@ void _ray_draw_column(int x)
 	int y;
 	float block_top, block_bottom;
 	float pixel_height_scale = HEIGHT / 1.5;
+	int ystart = HEIGHT;
 
 	/* get map pos */
 	map_pos.x = (int)camera.x;
@@ -246,11 +266,14 @@ void _ray_draw_column(int x)
 		side_dist.y = ((float)map_pos.y + 1.0f - camera.y) * delta_dist.y;
 	}
 
+	/* set zbuffer */
+	zbuffer[x] = FLT_MAX;
+
 	/* do dda */
-	while (_ray_cast(&side_dist, &delta_dist, &map_pos, &step, &side))
+	while (ray_cast(&side_dist, &delta_dist, &map_pos, &step, &side))
 	{
 		/* early out */
-		if (!ybuffer[x])
+		if (!ystart)
 			break;
 
 		/* get dist */
@@ -258,6 +281,10 @@ void _ray_draw_column(int x)
 			dist = side_dist.x - delta_dist.x;
 		else
 			dist = side_dist.y - delta_dist.y;
+
+		/* set zbuffer */
+		if (zbuffer[x] > dist)
+			zbuffer[x] = dist;
 
 		/* line heights */
 		block_top = camera.z - map[map_pos.y][map_pos.x];
@@ -268,8 +295,8 @@ void _ray_draw_column(int x)
 		line_end = ((block_bottom / dist) * pixel_height_scale) + ray.horizon;
 
 		/* clamp to screen resolution */
-		line_start_c = CLAMP(line_start, 0, ybuffer[x]);
-		line_end_c = CLAMP(line_end, 0, ybuffer[x]);
+		line_start_c = CLAMP(line_start, 0, ystart);
+		line_end_c = CLAMP(line_end, 0, ystart);
 
 		if (r_sky)
 		{
@@ -291,7 +318,6 @@ void _ray_draw_column(int x)
 
 		if (r_textures)
 		{
-			/* draw textured line */
 			float wall_x;
 			int tex_x;
 			SDL_Surface *wall_texture;
@@ -312,7 +338,7 @@ void _ray_draw_column(int x)
 			if ((side == 0 && ray_dir.x > 0) || (side == 1 && ray_dir.y < 0))
 				tex_x = wall_texture->w - tex_x - 1;
 
-			ybuffer[x] = line_start_c;
+			/* draw textured line */
 			for (y = line_start_c; y < line_end_c; y++)
 			{
 				int tex_y;
@@ -329,18 +355,28 @@ void _ray_draw_column(int x)
 
 				sdl.pixels[y * WIDTH + x] = ((Uint8 *)wall_texture->pixels)[tex_y * wall_texture->w + tex_x];
 			}
+
+			/* set ystart for next cast */
+			ystart = line_start_c;
 		}
 		else
 		{
 			/* draw colored line */
-			draw_vertical_line(x, line_start, line_end, map[map_pos.y][map_pos.x]);
+			for (y = line_start_c; y < line_end_c; y++)
+			{
+				sdl.pixels[y * WIDTH + x] = map[map_pos.y][map_pos.x];
+			}
+
+			/* set ystart for next cast */
+			ystart = line_start_c;
 		}
 	}
 }
 
-void ray_render(void)
+void ray_draw(void)
 {
 	int x;
+	int i;
 
 	/* get sin and cos of camera yaw */
 	ray.viewsin = sinf(DEG2RAD(camera.yaw));
@@ -349,11 +385,15 @@ void ray_render(void)
 	/* calculate camera horizon */
 	ray.horizon = -camera.shear + (HEIGHT / 2);
 
-	/* ray sweep loop */
+	/* draw walls */
 	for (x = 0; x < WIDTH; x++)
 	{
-		ybuffer[x] = HEIGHT;
-		_ray_draw_column(x);
+		ray_draw_walls(x);
+	}
+
+	for (i = 0; i < num_sprites; i++)
+	{
+		ray_draw_sprite(&sprites[i]);
 	}
 }
 
@@ -432,11 +472,13 @@ int main(int argc, char **argv)
 	wall_textures[2] = IMG_Load("gfx/wall3.png");
 	wall_textures[3] = IMG_Load("gfx/wall4.png");
 	sky_texture = IMG_Load("gfx/sky.png");
+	sprite_texture = IMG_Load("gfx/barrel.png");
 	install_palette("gfx/palette.dat", wall_textures[0]);
 	install_palette("gfx/palette.dat", wall_textures[1]);
 	install_palette("gfx/palette.dat", wall_textures[2]);
 	install_palette("gfx/palette.dat", wall_textures[3]);
 	install_palette("gfx/palette.dat", sky_texture);
+	install_palette("gfx/palette.dat", sprite_texture);
 	install_palette("gfx/palette.dat", sdl.surface8);
 
 	sdl.pixels = sdl.surface8->pixels;
@@ -513,7 +555,7 @@ int main(int argc, char **argv)
 		/* render */
 		memset(sdl.surface8->pixels, 0, sdl.surface8->h * sdl.surface8->pitch);
 		camera.shear = CLAMP(camera.shear, -150, 150);
-		ray_render();
+		ray_draw();
 
 		/* blit to screen */
 		SDL_BlitSurface(sdl.surface8, &sdl.rect, sdl.surface32, &sdl.rect);
@@ -535,6 +577,7 @@ int main(int argc, char **argv)
 	SDL_FreeSurface(wall_textures[2]);
 	SDL_FreeSurface(wall_textures[3]);
 	SDL_FreeSurface(sky_texture);
+	SDL_FreeSurface(sprite_texture);
 	SDL_FreeSurface(sdl.surface8);
 	SDL_FreeSurface(sdl.surface32);
 	IMG_Quit();
