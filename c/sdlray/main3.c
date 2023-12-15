@@ -71,7 +71,7 @@ uint8_t map[MAP_HEIGHT][MAP_WIDTH]=
 	{1,0,0,0,0,0,2,2,2,2,2,0,0,0,0,1,0,1,0,1,0,0,0,1},
 	{1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1},
 	{1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,2,0,5,0,2,0,0,0,1},
-	{1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1},
+	{1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,0,0,6,0,0,0,0,0,1},
 	{1,0,0,0,0,0,2,2,0,2,2,0,0,0,0,3,0,4,0,3,0,0,0,1},
 	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
 	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
@@ -128,6 +128,7 @@ static float zbuffer[WIDTH];
 
 SDL_Surface *wall_textures[4];
 SDL_Surface *sky_texture;
+SDL_Surface *mask_texture;
 
 bool r_sky = true;
 bool r_textures = true;
@@ -144,6 +145,13 @@ int wrap(int value, int mod)
 	int cmp = value < 0;
 	return cmp * mod + (value % mod) - cmp;
 }
+
+/* ray hit result enum */
+enum {
+	HIT_DONE = 0,
+	HIT_WALL = 1,
+	HIT_MASK = 2
+};
 
 int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t *step, int *side)
 {
@@ -164,16 +172,18 @@ int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t 
 
 		/* out of bounds */
 		if (map_pos->y < 0 || map_pos->y >= MAP_HEIGHT)
-			return 0;
+			return HIT_DONE;
 		if (map_pos->x < 0 || map_pos->x >= MAP_WIDTH)
-			return 0;
+			return HIT_DONE;
 
 		/* hit */
-		if (map[map_pos->y][map_pos->x] > 0)
-			return 1;
+		if (map[map_pos->y][map_pos->x] == 6)
+			return HIT_MASK;
+		else if (map[map_pos->y][map_pos->x] > 0)
+			return HIT_WALL;
 	}
 
-	return 0;
+	return HIT_DONE;
 }
 
 void ray_draw_column(int x)
@@ -189,6 +199,11 @@ void ray_draw_column(int x)
 	float pixel_height_scale = HEIGHT / 1.5;
 	int ystart = HEIGHT;
 	int floorstart = 0;
+	int hit;
+	uint8_t stencil[HEIGHT];
+
+	/* reset stencil buffer */
+	memset(stencil, 0, sizeof(stencil));
 
 	/* get map pos */
 	map_pos.x = (int)camera.x;
@@ -233,8 +248,8 @@ void ray_draw_column(int x)
 	/* set zbuffer */
 	zbuffer[x] = FLT_MAX;
 
-	/* do dda */
-	while (ray_cast(&side_dist, &delta_dist, &map_pos, &step, &side))
+	/* do cast */
+	while ((hit = ray_cast(&side_dist, &delta_dist, &map_pos, &step, &side)) != HIT_DONE)
 	{
 		/* early out */
 		if (!ystart)
@@ -251,7 +266,10 @@ void ray_draw_column(int x)
 			zbuffer[x] = dist;
 
 		/* line heights */
-		block_top = camera.z - map[map_pos.y][map_pos.x];
+		if (hit == HIT_MASK)
+			block_top = camera.z - 1;
+		else
+			block_top = camera.z - map[map_pos.y][map_pos.x];
 		block_bottom = camera.z;
 
 		/* line start and end */
@@ -263,26 +281,8 @@ void ray_draw_column(int x)
 		line_end_c = CLAMP(line_end, 0, ystart);
 
 		/* set floorstart */
-		if (floorstart < line_end_c)
+		if (floorstart < line_end_c && hit == HIT_WALL)
 			floorstart = line_end_c;
-
-		if (r_sky)
-		{
-			int tex_x;
-			int tex_y;
-
-			tex_x = x - camera.yaw * 4;
-			tex_x = wrap(tex_x / 2, sky_texture->w);
-
-			for (y = 0; y < line_start_c; y++)
-			{
-				tex_y = y - ray.horizon;
-
-				tex_y = wrap(tex_y / 2, sky_texture->h);
-
-				sdl.pixels[y * WIDTH + x] = ((Uint8 *)sky_texture->pixels)[tex_y * sky_texture->w + tex_x];
-			}
-		}
 
 		if (r_textures)
 		{
@@ -291,7 +291,10 @@ void ray_draw_column(int x)
 			SDL_Surface *wall_texture;
 
 			/* get texture */
-			wall_texture = wall_textures[map[map_pos.y][map_pos.x] & 3];
+			if (hit == HIT_MASK)
+				wall_texture = mask_texture;
+			else
+				wall_texture = wall_textures[map[map_pos.y][map_pos.x] & 3];
 
 			/* get wall impact point */
 			if (!side)
@@ -310,8 +313,9 @@ void ray_draw_column(int x)
 			for (y = line_start_c; y < line_end_c; y++)
 			{
 				int tex_y;
+				uint8_t c;
 
-				if (r_texture_stretch)
+				if (r_texture_stretch || hit == HIT_MASK)
 				{
 					tex_y = remap(y, line_start, line_end, 0, wall_texture->h);
 				}
@@ -321,11 +325,25 @@ void ray_draw_column(int x)
 					tex_y = wrap(tex_y, wall_texture->h);
 				}
 
-				sdl.pixels[y * WIDTH + x] = ((Uint8 *)wall_texture->pixels)[tex_y * wall_texture->w + tex_x];
+				/* texture color at pixel */
+				c = ((Uint8 *)wall_texture->pixels)[tex_y * wall_texture->w + tex_x];
+
+				if (hit == HIT_MASK && c != 255)
+				{
+					/* draw masked texture */
+					sdl.pixels[y * WIDTH + x] = c;
+					stencil[y] = 1;
+				}
+				else if (hit == HIT_WALL && !stencil[y])
+				{
+					/* draw wall texture */
+					sdl.pixels[y * WIDTH + x] = c;
+				}
 			}
 
 			/* set ystart for next cast */
-			ystart = line_start_c;
+			if (hit == HIT_WALL)
+				ystart = line_start_c;
 		}
 		else
 		{
@@ -339,6 +357,25 @@ void ray_draw_column(int x)
 			ystart = line_start_c;
 		}
 
+		if (r_sky)
+		{
+			int tex_x;
+			int tex_y;
+
+			tex_x = x - camera.yaw * 4;
+			tex_x = wrap(tex_x / 2, sky_texture->w);
+
+			for (y = 0; y < line_start_c; y++)
+			{
+				tex_y = y - ray.horizon;
+
+				tex_y = wrap(tex_y / 2, sky_texture->h);
+
+				if (!stencil[y])
+					sdl.pixels[y * WIDTH + x] = ((Uint8 *)sky_texture->pixels)[tex_y * sky_texture->w + tex_x];
+			}
+		}
+
 		if (r_floors)
 		{
 
@@ -347,7 +384,8 @@ void ray_draw_column(int x)
 		{
 			for (y = floorstart; y < HEIGHT; y++)
 			{
-				sdl.pixels[y * WIDTH + x] = 2;
+				if (!stencil[y])
+					sdl.pixels[y * WIDTH + x] = 0;
 			}
 		}
 	}
@@ -446,11 +484,13 @@ int main(int argc, char **argv)
 	wall_textures[2] = IMG_Load("gfx/wall3.png");
 	wall_textures[3] = IMG_Load("gfx/wall4.png");
 	sky_texture = IMG_Load("gfx/sky.png");
+	mask_texture = IMG_Load("gfx/mask2.png");
 	install_palette("gfx/rott.pal", wall_textures[0]);
 	install_palette("gfx/rott.pal", wall_textures[1]);
 	install_palette("gfx/rott.pal", wall_textures[2]);
 	install_palette("gfx/rott.pal", wall_textures[3]);
 	install_palette("gfx/rott.pal", sky_texture);
+	install_palette("gfx/rott.pal", mask_texture);
 	install_palette("gfx/rott.pal", sdl.surface8);
 
 	sdl.pixels = sdl.surface8->pixels;
@@ -550,6 +590,7 @@ int main(int argc, char **argv)
 	SDL_FreeSurface(wall_textures[2]);
 	SDL_FreeSurface(wall_textures[3]);
 	SDL_FreeSurface(sky_texture);
+	SDL_FreeSurface(mask_texture);
 	SDL_FreeSurface(sdl.surface8);
 	SDL_FreeSurface(sdl.surface32);
 	IMG_Quit();
