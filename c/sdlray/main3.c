@@ -273,12 +273,12 @@ void _ray_draw_column(int x)
 			if ((side == 0 && ray_dir.x > 0) || (side == 1 && ray_dir.y < 0))
 				tex_x = wall_texture->w - tex_x - 1;
 
+			ybuffer[x] = line_start_c;
 			for (y = line_start_c; y < line_end_c; y++)
 			{
 				int tex_y = remap(y, line_start, line_end, 0, wall_texture->h);
 
 				sdl.pixels[y * WIDTH + x] = ((Uint8 *)wall_texture->pixels)[tex_y * wall_texture->w + tex_x];
-				ybuffer[x] = line_start_c;
 			}
 		}
 		else
