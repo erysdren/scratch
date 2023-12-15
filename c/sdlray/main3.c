@@ -107,12 +107,6 @@ typedef struct vec3f_t {
 	float x, y, z;
 } vec3f_t;
 
-typedef struct sprite_t {
-	float x;
-	float y;
-	float z;
-} sprite_t;
-
 static struct {
 	float x;
 	float y;
@@ -134,13 +128,6 @@ static float zbuffer[WIDTH];
 
 SDL_Surface *wall_textures[4];
 SDL_Surface *sky_texture;
-SDL_Surface *sprite_texture;
-
-/* sprites */
-int num_sprites = 1;
-sprite_t sprites[1] = {
-	{3.5, 3.5, 0}
-};
 
 bool r_sky = true;
 bool r_textures = true;
@@ -187,31 +174,6 @@ int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t 
 	}
 
 	return 0;
-}
-
-void ray_draw_sprite(sprite_t *sprite)
-{
-	vec3f_t temp, origin;
-	int x, y;
-
-	/* get origin offset */
-	origin.x = sprite->x - camera.x;
-	origin.y = sprite->y - camera.y;
-	origin.z = sprite->z;
-
-	/* rotate around view */
-	temp = origin;
-	origin.x = (-temp.x * ray.viewcos) - (-temp.y * ray.viewsin);
-	origin.y = (temp.x * ray.viewsin) + (temp.y * ray.viewcos);
-
-	/* get screen coordinates */
-	x = (origin.x * (WIDTH / 2) / origin.y) + (WIDTH / 2);
-	y = (origin.z * (WIDTH / 2) / origin.y) + (HEIGHT / 2);
-
-	x = CLAMP(x, 0, WIDTH);
-	y = CLAMP(y, 0, HEIGHT);
-
-	sdl.pixels[y * WIDTH + x] = 255;
 }
 
 void ray_draw_column(int x)
@@ -484,13 +446,11 @@ int main(int argc, char **argv)
 	wall_textures[2] = IMG_Load("gfx/wall3.png");
 	wall_textures[3] = IMG_Load("gfx/wall4.png");
 	sky_texture = IMG_Load("gfx/sky.png");
-	sprite_texture = IMG_Load("gfx/barrel.png");
 	install_palette("gfx/rott.pal", wall_textures[0]);
 	install_palette("gfx/rott.pal", wall_textures[1]);
 	install_palette("gfx/rott.pal", wall_textures[2]);
 	install_palette("gfx/rott.pal", wall_textures[3]);
 	install_palette("gfx/rott.pal", sky_texture);
-	install_palette("gfx/rott.pal", sprite_texture);
 	install_palette("gfx/rott.pal", sdl.surface8);
 
 	sdl.pixels = sdl.surface8->pixels;
@@ -590,7 +550,6 @@ int main(int argc, char **argv)
 	SDL_FreeSurface(wall_textures[2]);
 	SDL_FreeSurface(wall_textures[3]);
 	SDL_FreeSurface(sky_texture);
-	SDL_FreeSurface(sprite_texture);
 	SDL_FreeSurface(sdl.surface8);
 	SDL_FreeSurface(sdl.surface32);
 	IMG_Quit();
