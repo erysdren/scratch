@@ -380,6 +380,7 @@ void ray_draw_column(int x)
 		}
 
 		/* draw top slab */
+		if (hit == HIT_WALL)
 		{
 			if (!side)
 				dist2 = CLAMP(dist2, dist, dist + delta_dist.x);
