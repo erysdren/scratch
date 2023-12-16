@@ -188,7 +188,7 @@ void ray_draw_column(int x)
 	vec2f_t ray_dir, delta_dist, side_dist, temp;
 	vec2i_t step, map_pos;
 	int side;
-	float dist;
+	float dist, dist2;
 	int line_start, line_end;
 	int line_start_c, line_end_c;
 	int y;
@@ -251,9 +251,15 @@ void ray_draw_column(int x)
 
 		/* get dist */
 		if (!side)
+		{
 			dist = side_dist.x - delta_dist.x;
+			dist2 = side_dist.y;
+		}
 		else
+		{
 			dist = side_dist.y - delta_dist.y;
+			dist2 = side_dist.x;
+		}
 
 		/* line heights */
 		if (hit == HIT_MASK)
@@ -274,6 +280,29 @@ void ray_draw_column(int x)
 		if (floorstart < line_end_c && hit == HIT_WALL)
 			floorstart = line_end_c;
 
+		/* draw floors */
+		if (r_floors)
+		{
+
+		}
+		else
+		{
+			/* upper floor */
+			for (y = line_end_c; y < ystart; y++)
+			{
+				if (!stencil[y])
+					sdl.pixels[y * WIDTH + x] = 0;
+			}
+
+			/* lower floor */
+			for (y = floorstart; y < HEIGHT; y++)
+			{
+				if (!stencil[y])
+					sdl.pixels[y * WIDTH + x] = 0;
+			}
+		}
+
+		/* draw walls */
 		if (r_textures)
 		{
 			float wall_x;
@@ -350,6 +379,32 @@ void ray_draw_column(int x)
 			ystart = line_start_c;
 		}
 
+		/* draw top slab */
+		{
+			if (!side)
+				dist2 = CLAMP(dist2, dist, dist + delta_dist.x);
+			else
+				dist2 = CLAMP(dist2, dist, dist + delta_dist.y);
+
+			/* line start and end */
+			line_start = ((block_top / dist2) * pixel_height_scale) + ray.horizon;
+			line_end = ((block_bottom / dist2) * pixel_height_scale) + ray.horizon;
+
+			/* clamp to screen resolution */
+			line_start_c = CLAMP(line_start, 0, ystart);
+			line_end_c = CLAMP(line_end, 0, ystart);
+
+			/* draw colored line */
+			for (y = line_start_c; y < line_end_c; y++)
+			{
+				sdl.pixels[y * WIDTH + x] = 255;
+			}
+
+			/* set ystart for next cast */
+			ystart = line_start_c;
+		}
+
+		/* draw sky */
 		if (r_sky)
 		{
 			int tex_x;
@@ -366,19 +421,6 @@ void ray_draw_column(int x)
 
 				if (!stencil[y])
 					sdl.pixels[y * WIDTH + x] = ((Uint8 *)sky_texture->pixels)[tex_y * sky_texture->w + tex_x];
-			}
-		}
-
-		if (r_floors)
-		{
-
-		}
-		else
-		{
-			for (y = floorstart; y < HEIGHT; y++)
-			{
-				if (!stencil[y])
-					sdl.pixels[y * WIDTH + x] = 0;
 			}
 		}
 	}
@@ -562,7 +604,7 @@ int main(int argc, char **argv)
 		}
 		if (sdl.keys[SDL_SCANCODE_PAGEDOWN])
 		{
-			camera.x -= sdl.dt * 2;
+			camera.z -= sdl.dt * 2;
 		}
 
 		/* clamp camera shear */
