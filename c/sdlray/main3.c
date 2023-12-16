@@ -416,7 +416,7 @@ void ray_draw_column(int x)
 
 			for (y = 0; y < line_start_c; y++)
 			{
-				tex_y = y - ray.horizon;
+				tex_y = y - ray.horizon + (sky_texture->h / 2) * 2;
 
 				tex_y = wrap(tex_y / 2, sky_texture->h);
 
@@ -609,7 +609,7 @@ int main(int argc, char **argv)
 		}
 
 		/* clamp camera shear */
-		camera.shear = CLAMP(camera.shear, -150, 150);
+		camera.shear = CLAMP(camera.shear, -sky_texture->h / 4, sky_texture->h / 4);
 
 		/* draw */
 		ray_draw();
