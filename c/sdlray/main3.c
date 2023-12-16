@@ -123,9 +123,6 @@ static struct {
 	int horizon;
 } ray;
 
-static int ybuffer[WIDTH];
-static float zbuffer[WIDTH];
-
 SDL_Surface *wall_textures[4];
 SDL_Surface *sky_texture;
 SDL_Surface *mask_texture;
@@ -245,9 +242,6 @@ void ray_draw_column(int x)
 		side_dist.y = ((float)map_pos.y + 1.0f - camera.y) * delta_dist.y;
 	}
 
-	/* set zbuffer */
-	zbuffer[x] = FLT_MAX;
-
 	/* do cast */
 	while ((hit = ray_cast(&side_dist, &delta_dist, &map_pos, &step, &side)) != HIT_DONE)
 	{
@@ -260,10 +254,6 @@ void ray_draw_column(int x)
 			dist = side_dist.x - delta_dist.x;
 		else
 			dist = side_dist.y - delta_dist.y;
-
-		/* set zbuffer */
-		if (zbuffer[x] > dist)
-			zbuffer[x] = dist;
 
 		/* line heights */
 		if (hit == HIT_MASK)
