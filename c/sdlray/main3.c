@@ -60,40 +60,14 @@ static struct {
  *
  */
 
+typedef struct tile_t {
+	uint8_t height;
+	uint8_t texture;
+} tile_t;
+
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24
-uint8_t map[MAP_HEIGHT][MAP_WIDTH]=
-{
-	{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{1,0,0,0,0,0,2,2,2,2,2,0,0,0,0,1,6,1,6,1,0,0,0,1},
-	{1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,6,0,0,0,6,0,0,0,1},
-	{1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,2,0,5,0,2,0,0,0,1},
-	{1,0,0,0,0,0,2,0,0,0,2,0,0,0,0,6,0,0,0,6,0,0,0,1},
-	{1,0,0,0,0,0,2,2,0,2,2,0,0,0,0,3,6,4,6,3,0,0,0,1},
-	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{5,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{5,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{5,4,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{5,5,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{5,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{5,4,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{5,4,2,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{5,4,2,1,1,2,1,2,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{5,5,5,5,5,4,5,3,4,2,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-	{5,5,5,5,5,5,5,5,5,5,5,1,1,1,1,1,1,1,1,1,1,1,1,1}
-};
-
-typedef struct tile_t {
-	uint8_t texture;
-	uint8_t height;
-} tile_t;
+tile_t tilemap[MAP_HEIGHT][MAP_WIDTH];
 
 typedef struct vec2i_t {
 	int x, y;
@@ -174,9 +148,7 @@ int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t 
 			return HIT_DONE;
 
 		/* hit */
-		if (map[map_pos->y][map_pos->x] == 6)
-			return HIT_MASK;
-		else if (map[map_pos->y][map_pos->x] > 0)
+		else if (tilemap[map_pos->y][map_pos->x].height > 0)
 			return HIT_WALL;
 	}
 
@@ -265,7 +237,7 @@ void ray_draw_column(int x)
 		if (hit == HIT_MASK)
 			block_top = camera.z - 1;
 		else
-			block_top = camera.z - map[map_pos.y][map_pos.x] * 0.125f;
+			block_top = camera.z - tilemap[map_pos.y][map_pos.x].height * 0.125f;
 		block_bottom = camera.z;
 
 		/* line start and end */
@@ -313,7 +285,7 @@ void ray_draw_column(int x)
 			if (hit == HIT_MASK)
 				wall_texture = mask_texture;
 			else
-				wall_texture = wall_textures[map[map_pos.y][map_pos.x] & 3];
+				wall_texture = wall_textures[tilemap[map_pos.y][map_pos.x].texture & 3];
 
 			/* get wall impact point */
 			if (!side)
@@ -340,7 +312,7 @@ void ray_draw_column(int x)
 				}
 				else
 				{
-					tex_y = remap(y, line_start, line_end, 0, wall_texture->h * map[map_pos.y][map_pos.x] * 0.125f);
+					tex_y = remap(y, line_start, line_end, 0, wall_texture->h * tilemap[map_pos.y][map_pos.x].height * 0.125f);
 					tex_y = wrap(tex_y, wall_texture->h);
 				}
 
@@ -372,7 +344,7 @@ void ray_draw_column(int x)
 			/* draw colored line */
 			for (y = line_start_c; y < line_end_c; y++)
 			{
-				sdl.pixels[y * WIDTH + x] = map[map_pos.y][map_pos.x];
+				sdl.pixels[y * WIDTH + x] = tilemap[map_pos.y][map_pos.x].texture;
 			}
 
 			/* set ystart for next cast */
@@ -481,6 +453,7 @@ int main(int argc, char **argv)
 	uint32_t pixel_format;
 	unsigned int rmask, gmask, bmask, amask;
 	int bpp;
+	int x, y;
 
 	SDL_Init(SDL_INIT_VIDEO);
 	IMG_Init(IMG_INIT_PNG);
@@ -535,6 +508,17 @@ int main(int argc, char **argv)
 	sdl.now = SDL_GetPerformanceCounter();
 	sdl.last = 0;
 	sdl.dt = 0;
+
+	/* setup tilemap */
+	memset(tilemap, 0, sizeof(tilemap));
+	for (y = 0; y < MAP_HEIGHT; y++)
+	{
+		for (x = 0; x < MAP_WIDTH; x++)
+		{
+			if (x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1)
+				tilemap[y][x].height = 16;
+		}
+	}
 
 	/* setup raycaster */
 	camera.x = MAP_WIDTH / 2;
