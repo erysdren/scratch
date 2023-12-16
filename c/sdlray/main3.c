@@ -265,7 +265,7 @@ void ray_draw_column(int x)
 		if (hit == HIT_MASK)
 			block_top = camera.z - 1;
 		else
-			block_top = camera.z - map[map_pos.y][map_pos.x];
+			block_top = camera.z - map[map_pos.y][map_pos.x] * 0.125f;
 		block_bottom = camera.z;
 
 		/* line start and end */
@@ -340,7 +340,7 @@ void ray_draw_column(int x)
 				}
 				else
 				{
-					tex_y = remap(y, line_start, line_end, 0, wall_texture->h * map[map_pos.y][map_pos.x]);
+					tex_y = remap(y, line_start, line_end, 0, wall_texture->h * map[map_pos.y][map_pos.x] * 0.125f);
 					tex_y = wrap(tex_y, wall_texture->h);
 				}
 
@@ -398,7 +398,8 @@ void ray_draw_column(int x)
 			/* draw colored line */
 			for (y = line_start_c; y < line_end_c; y++)
 			{
-				sdl.pixels[y * WIDTH + x] = 255;
+				if (!stencil[y])
+					sdl.pixels[y * WIDTH + x] = 255;
 			}
 
 			/* set ystart for next cast */
