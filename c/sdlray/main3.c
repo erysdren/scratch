@@ -556,6 +556,14 @@ int main(int argc, char **argv)
 			camera.x -= camera.dir.y;
 			camera.y += camera.dir.x;
 		}
+		if (sdl.keys[SDL_SCANCODE_PAGEUP])
+		{
+			camera.z += sdl.dt * 2;
+		}
+		if (sdl.keys[SDL_SCANCODE_PAGEDOWN])
+		{
+			camera.x -= sdl.dt * 2;
+		}
 
 		/* clamp camera shear */
 		camera.shear = CLAMP(camera.shear, -150, 150);
