@@ -389,7 +389,7 @@ void ray_draw_column(int x)
 
 			/* line start and end */
 			line_start = ((block_top / dist2) * pixel_height_scale) + ray.horizon;
-			line_end = ((block_bottom / dist2) * pixel_height_scale) + ray.horizon;
+			line_end = ystart;
 
 			/* clamp to screen resolution */
 			line_start_c = CLAMP(line_start, 0, ystart);
