@@ -165,9 +165,6 @@ int _ray_draw_slab(int screen_x, slab_t *slab, int column_height, float dist, fl
 	 * draw the top or bottom of the voxel
 	 */
 
-	if (dist2 > (dist + 1.0f))
-		dist2 = dist + 1.0f;
-
 	/* height of the line on screen to draw */
 	line_start = (int)((height_delta1 / dist2) * pixel_height_scale) + ray.horizon;
 	line_end = (int)((height_delta2 / dist2) * pixel_height_scale) + ray.horizon;
@@ -222,12 +219,12 @@ int _ray_dda(int screen_x, vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *ste
 	{
 		case 1:
 			dist = side_dist->x - delta_dist->x;
-			dist2 = side_dist->y;
+			dist2 = CLAMP(side_dist->y, dist, dist + delta_dist->x);
 			break;
 
 		case 2:
 			dist = side_dist->y - delta_dist->y;
-			dist2 = side_dist->x;
+			dist2 = CLAMP(side_dist->x, dist, dist + delta_dist->y);
 			break;
 	}
 
@@ -394,7 +391,7 @@ int main(int argc, char **argv)
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	install_palette("palette.dat");
+	install_palette("gfx/rott.pal");
 
 	sdl.pixels = sdl.surface8->pixels;
 
