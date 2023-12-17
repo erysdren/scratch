@@ -97,9 +97,8 @@ static struct {
 	int horizon;
 } ray;
 
-SDL_Surface *wall_textures[4];
+SDL_Surface *wall_textures[256];
 SDL_Surface *sky_texture;
-SDL_Surface *mask_texture;
 
 bool r_sky = true;
 bool r_textures = true;
@@ -282,10 +281,7 @@ void ray_draw_column(int x)
 			SDL_Surface *wall_texture;
 
 			/* get texture */
-			if (hit == HIT_MASK)
-				wall_texture = mask_texture;
-			else
-				wall_texture = wall_textures[tilemap[map_pos.y][map_pos.x].texture & 3];
+			wall_texture = wall_textures[tilemap[map_pos.y][map_pos.x].texture - 1];
 
 			/* get wall impact point */
 			if (!side)
@@ -448,6 +444,42 @@ SDL_bool install_palette(const char *filename, SDL_Surface *surface)
 	return SDL_TRUE;
 }
 
+void load_walls(char *palette)
+{
+	int i;
+	char str[128];
+
+	memset(wall_textures, 0, sizeof(wall_textures));
+
+	for (i = 0; i < 256; i++)
+	{
+		snprintf(str, 128, "gfx/wall%d.png", i + 1);
+
+		wall_textures[i] = IMG_Load(str);
+
+		if (wall_textures[i] == NULL)
+		{
+			printf("Couldn't load %s\n", str);
+			break;
+		}
+
+		install_palette(palette, wall_textures[i]);
+	}
+
+	printf("Loaded %d wall textures.\n", i + 1);
+}
+
+void free_walls(void)
+{
+	int i;
+
+	for (i = 0; i < 256; i++)
+	{
+		if (wall_textures[i] != NULL)
+			SDL_FreeSurface(wall_textures[i]);
+	}
+}
+
 int main(int argc, char **argv)
 {
 	uint32_t pixel_format;
@@ -489,19 +521,10 @@ int main(int argc, char **argv)
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	wall_textures[0] = IMG_Load("gfx/wall1.png");
-	wall_textures[1] = IMG_Load("gfx/wall2.png");
-	wall_textures[2] = IMG_Load("gfx/wall3.png");
-	wall_textures[3] = IMG_Load("gfx/wall4.png");
+	load_walls("gfx/kenbuild.pal");
 	sky_texture = IMG_Load("gfx/sky.png");
-	mask_texture = IMG_Load("gfx/mask2.png");
-	install_palette("gfx/rott.pal", wall_textures[0]);
-	install_palette("gfx/rott.pal", wall_textures[1]);
-	install_palette("gfx/rott.pal", wall_textures[2]);
-	install_palette("gfx/rott.pal", wall_textures[3]);
-	install_palette("gfx/rott.pal", sky_texture);
-	install_palette("gfx/rott.pal", mask_texture);
-	install_palette("gfx/rott.pal", sdl.surface8);
+	install_palette("gfx/kenbuild.pal", sky_texture);
+	install_palette("gfx/kenbuild.pal", sdl.surface8);
 
 	sdl.pixels = sdl.surface8->pixels;
 
@@ -516,7 +539,10 @@ int main(int argc, char **argv)
 		for (x = 0; x < MAP_WIDTH; x++)
 		{
 			if (x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1)
+			{
 				tilemap[y][x].height = 16;
+				tilemap[y][x].texture = 5;
+			}
 		}
 	}
 
@@ -614,12 +640,8 @@ int main(int argc, char **argv)
 	SDL_DestroyWindow(sdl.window);
 	SDL_DestroyRenderer(sdl.renderer);
 	SDL_DestroyTexture(sdl.texture);
-	SDL_FreeSurface(wall_textures[0]);
-	SDL_FreeSurface(wall_textures[1]);
-	SDL_FreeSurface(wall_textures[2]);
-	SDL_FreeSurface(wall_textures[3]);
+	free_walls();
 	SDL_FreeSurface(sky_texture);
-	SDL_FreeSurface(mask_texture);
 	SDL_FreeSurface(sdl.surface8);
 	SDL_FreeSurface(sdl.surface32);
 	IMG_Quit();

@@ -5,7 +5,7 @@ RM ?= rm -f
 PKGCONFIG ?= pkg-config
 
 # base cflags and ldflags
-CFLAGS += $(shell $(PKGCONFIG) sdl2 SDL2_image --cflags) -Ofast
+CFLAGS += $(shell $(PKGCONFIG) sdl2 SDL2_image --cflags) -g3
 LDFLAGS += -lm $(shell $(PKGCONFIG) sdl2 SDL2_image --libs)
 
 # executable name
