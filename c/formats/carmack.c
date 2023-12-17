@@ -51,7 +51,7 @@ size_t carmack_uncompress(uint8_t *src, size_t src_len, uint16_t *dest, size_t d
 	written = 0;
 	in = src;
 	out = dest;
-	while (read <= src_len && written <= dest_len)
+	while (read < src_len && written < dest_len)
 	{
 		low = *in++;
 		high = *in++;
