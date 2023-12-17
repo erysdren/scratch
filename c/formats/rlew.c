@@ -46,7 +46,7 @@ size_t rlew_compress(uint16_t *src, size_t src_len, uint16_t tag, uint16_t *dest
 	/* compress and write source data */
 	read = 0;
 	written = 0;
-	while (read < src_len && written < dest_len)
+	while (read <= src_len && written <= dest_len)
 	{
 		count = 1;
 
@@ -92,10 +92,10 @@ size_t rlew_uncompress(uint16_t *src, size_t src_len, uint16_t tag, uint16_t *de
 	size_t read, written;
 	uint16_t test, rle_len, rle_value, i;
 
-	/* read plane data */
+	/* read source data */
 	read = 0;
 	written = 0;
-	while (read < src_len && written < dest_len)
+	while (read <= src_len && written <= dest_len)
 	{
 		/* read test value */
 		test = *src++;
