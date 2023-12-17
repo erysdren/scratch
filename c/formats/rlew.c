@@ -123,8 +123,6 @@ size_t rlew_uncompress(uint16_t *src, size_t src_len, uint16_t tag, uint16_t *de
 
 			written += sizeof(uint16_t);
 		}
-
-		read = src - start;
 	}
 
 	return written;
