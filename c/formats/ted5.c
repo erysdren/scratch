@@ -29,6 +29,8 @@ SOFTWARE.
  * utilized id Software's tile-based engines.
  *
  * Dependencies:
+ * - Carmack
+ * - RLEW
  * - libc
  */
 
@@ -71,97 +73,6 @@ static bool file_is_maphead(FILE *file)
 		return true;
 
 	return false;
-}
-
-#if 0
-/* compress and write plane with run-length encoding */
-/* returns the number of bytes written to the file */
-static uint32_t write_plane_rlew(FILE *file, uint16_t tag, uint16_t *source, uint32_t source_len)
-{
-	uint32_t startpos = ftell(file);
-	int read = 0;
-	uint16_t count;
-
-	/* compress and write source data */
-	while (read < source_len)
-	{
-		count = 1;
-
-		/* read 16-bit word from source */
-		uint16_t value = *source++;
-		read += 2;
-
-		/* count repetitions */
-		while (*source == value && read < source_len)
-		{
-			count++; /* repetitions */
-			source++; /* source data */
-			read += 2; /* total number of bytes read */
-		}
-
-		/* if more than 3 repetitions, or the value is the same as the tag */
-		if (count > 3 || value == tag)
-		{
-			fwrite(&tag, 2, 1, file); /* tag */
-			fwrite(&count, 2, 1, file); /* repetitions */
-			fwrite(&value, 2, 1, file); /* value */
-		}
-		else
-		{
-			/* otherwise write out the read values */
-			for (int i = 0; i < count; i++)
-			{
-				fwrite(&value, 2, 1, file);
-			}
-		}
-	}
-
-	return ftell(file) - startpos;
-}
-#endif
-
-/* uncompress and read plane with run-length encoding */
-static void read_plane_rlew(FILE *file, int source_ofs, int source_len, uint16_t tag, uint16_t *dest, uint32_t dest_len)
-{
-	/* seek to plane offset */
-	fseek(file, source_ofs, SEEK_SET);
-
-	/* read plane data */
-	int pos = 0;
-	int written = 0;
-	while (pos < source_len && written < dest_len)
-	{
-		/* read test value */
-		uint16_t test;
-		fread(&test, sizeof(uint16_t), 1, file);
-
-		if (test == tag)
-		{
-			/* read compressed data */
-			uint16_t rle_len, rle_value;
-			fread(&rle_len, sizeof(uint16_t), 1, file);
-			fread(&rle_value, sizeof(uint16_t), 1, file);
-
-			/* write compressed data */
-			for (int r = 0; r < rle_len; r++)
-			{
-				*dest = rle_value;
-				dest++;
-			}
-
-			written += rle_len * sizeof(uint16_t);
-		}
-		else
-		{
-			/* write uncompressed data */
-			*dest = test;
-			dest++;
-
-			written += sizeof(uint16_t);
-		}
-
-		pos = ftell(file) - source_ofs;
-	}
 }
 
 /* check if map plane is carmackized */
