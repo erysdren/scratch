@@ -36,12 +36,14 @@ SOFTWARE.
 #include <string.h>
 #include <stdlib.h>
 
+/* carmack format constants */
+const uint8_t carmack_tag_near = 0xA7;
+const uint8_t carmack_tag_far = 0xA8;
+
 /* uncompress data from SRC and read into DEST */
 /* returns the number of bytes written to DEST */
 size_t carmack_uncompress(uint8_t *src, size_t src_len, uint16_t *dest, size_t dest_len)
 {
-	const uint8_t tag_near = 0xA7;
-	const uint8_t tag_far = 0xA8;
 	size_t read, written, offset;
 	uint8_t low, high, *in;
 	uint16_t *out, *copy;
@@ -56,7 +58,7 @@ size_t carmack_uncompress(uint8_t *src, size_t src_len, uint16_t *dest, size_t d
 		low = *in++;
 		high = *in++;
 
-		if (high == tag_near)
+		if (high == carmack_tag_near)
 		{
 			if (!low)
 			{
@@ -73,7 +75,7 @@ size_t carmack_uncompress(uint8_t *src, size_t src_len, uint16_t *dest, size_t d
 					*out++ = *copy++;
 			}
 		}
-		else if (high == tag_far)
+		else if (high == carmack_tag_far)
 		{
 			if (!low)
 			{
