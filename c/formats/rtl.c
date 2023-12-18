@@ -29,6 +29,7 @@ SOFTWARE.
  * RTL 1.1, RXL 1.1, and RXL 2.0 format versions.
  *
  * Dependencies:
+ * - RLEW
  * - libc
  */
 
@@ -218,50 +219,6 @@ static int rtl_get_used_maps(FILE *file)
 	}
 
 	return used_maps;
-}
-
-/* read plane from rtl file map */
-static void rtl_read_plane(FILE *file, int ofs, int len, uint16_t tag, uint16_t *buffer)
-{
-	/* seek to plane offset */
-	fseek(file, ofs, SEEK_SET);
-
-	/* read plane data */
-	int pos = 0;
-	int written = 0;
-	while (pos < len && written < RTL_MAP_PLANE_SIZE)
-	{
-		/* read test value */
-		uint16_t test;
-		fread(&test, sizeof(uint16_t), 1, file);
-
-		if (test == tag)
-		{
-			/* read compressed data */
-			uint16_t rle_len, rle_value;
-			fread(&rle_len, sizeof(uint16_t), 1, file);
-			fread(&rle_value, sizeof(uint16_t), 1, file);
-
-			/* write compressed data */
-			for (int r = 0; r < rle_len; r++)
-			{
-				*buffer = rle_value;
-				buffer++;
-			}
-
-			written += rle_len * sizeof(uint16_t);
-		}
-		else
-		{
-			/* write uncompressed data */
-			*buffer = test;
-			buffer++;
-
-			written += sizeof(uint16_t);
-		}
-
-		pos = ftell(file) - ofs;
-	}
 }
 
 /* open rtl from filename */
