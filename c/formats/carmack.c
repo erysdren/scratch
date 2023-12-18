@@ -37,8 +37,8 @@ SOFTWARE.
 #include <stdlib.h>
 
 /* carmack format constants */
-const uint8_t carmack_tag_near = 0xA7;
-const uint8_t carmack_tag_far = 0xA8;
+static const uint8_t carmack_tag_near = 0xA7;
+static const uint8_t carmack_tag_far = 0xA8;
 
 /* uncompress data from SRC and read into DEST */
 /* returns the number of bytes written to DEST */
