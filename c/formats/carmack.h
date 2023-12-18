@@ -32,8 +32,8 @@ SOFTWARE.
  */
 
 #pragma once
-#ifndef _RLEW_H_
-#define _RLEW_H_
+#ifndef _CARMACK_H_
+#define _CARMACK_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -47,4 +47,4 @@ size_t carmack_uncompress(uint8_t *src, size_t src_len, uint16_t *dest, size_t d
 #ifdef __cplusplus
 }
 #endif
-#endif /* _RLEW_H_ */
+#endif /* _CARMACK_H_ */
