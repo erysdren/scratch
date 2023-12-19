@@ -91,10 +91,14 @@ static struct {
 	vec2f_t dir;
 } camera;
 
+#define EPS 0.00000001
+#define WALL_SIZE (64.0f)
+#define RAY_EPS (WALL_SIZE / 3.0f)
 static struct {
 	float viewsin;
 	float viewcos;
 	int horizon;
+	vec2i_t selected;
 } ray;
 
 SDL_Surface *wall_textures[256];
@@ -169,6 +173,7 @@ void ray_draw_column(int x)
 	int floorstart = 0;
 	int hit;
 	uint8_t stencil[HEIGHT];
+	bool selected = false;
 
 	/* reset stencil buffer */
 	memset(stencil, 0, sizeof(stencil));
@@ -247,6 +252,13 @@ void ray_draw_column(int x)
 		line_start_c = CLAMP(line_start, 0, ystart);
 		line_end_c = CLAMP(line_end, 0, ystart);
 
+		/* select block */
+		if (x == WIDTH / 2 && line_start_c < HEIGHT / 2 && line_end_c > HEIGHT / 2)
+			ray.selected = map_pos;
+
+		/* if selected */
+		selected = ray.selected.x == map_pos.x && ray.selected.y == map_pos.y;
+
 		/* set floorstart */
 		if (floorstart < line_end_c && hit == HIT_WALL)
 			floorstart = line_end_c;
@@ -274,7 +286,7 @@ void ray_draw_column(int x)
 		}
 
 		/* draw walls */
-		if (r_textures)
+		if (r_textures && !selected)
 		{
 			float wall_x;
 			int tex_x;
@@ -340,7 +352,7 @@ void ray_draw_column(int x)
 			/* draw colored line */
 			for (y = line_start_c; y < line_end_c; y++)
 			{
-				sdl.pixels[y * WIDTH + x] = tilemap[map_pos.y][map_pos.x].texture;
+				sdl.pixels[y * WIDTH + x] = 255;
 			}
 
 			/* set ystart for next cast */
