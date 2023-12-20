@@ -346,7 +346,7 @@ void ray_draw_column(int x)
 				int tex_y;
 				uint8_t c;
 
-				if (r_texture_stretch || hit == HIT_MASK)
+				if (r_texture_stretch)
 				{
 					tex_y = remap(y, line_start, line_end, 0, tex->h);
 				}
@@ -618,11 +618,13 @@ int main(int argc, char **argv)
 		}
 	}
 
-	tilemap[14][11].height = 8;
-	tilemap[14][11].texture = -1;
-	tilemap[14][12].height = 8;
-	tilemap[14][12].texture = -1;
-	tilemap[14][13].height = 8;
+	tilemap[14][10].height = 16;
+	tilemap[14][10].texture = 6;
+	tilemap[14][11].height = 16;
+	tilemap[14][11].texture = -2;
+	tilemap[14][12].height = 16;
+	tilemap[14][12].texture = -2;
+	tilemap[14][13].height = 16;
 	tilemap[14][13].texture = 6;
 
 	/* setup raycaster */
