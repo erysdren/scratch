@@ -166,9 +166,14 @@ int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t 
 		if (tilemap[map_pos->y][map_pos->x].height > 0)
 		{
 			if (tilemap[map_pos->y][map_pos->x].texture < 0)
+			{
+				*side = 1;
 				return HIT_MASK;
+			}
 			else
+			{
 				return HIT_WALL;
+			}
 		}
 	}
 
@@ -246,12 +251,22 @@ void ray_draw_column(int x)
 		if (!side)
 		{
 			dist = side_dist.x - delta_dist.x;
-			dist2 = side_dist.y;
+			dist2 = CLAMP(side_dist.y, dist, dist + delta_dist.x);
 		}
 		else
 		{
 			dist = side_dist.y - delta_dist.y;
-			dist2 = side_dist.x;
+			dist2 = CLAMP(side_dist.x, dist, dist + delta_dist.y);
+
+			if (hit == HIT_MASK)
+			{
+				if (dist + (delta_dist.y / 2) < side_dist.x - delta_dist.x)
+					continue;
+				else if (dist + (delta_dist.y / 2) > dist2)
+					continue;
+				else
+					dist += delta_dist.y / 2;
+			}
 		}
 
 		/* line heights */
@@ -379,11 +394,6 @@ void ray_draw_column(int x)
 		/* draw top slab */
 		if (hit == HIT_WALL)
 		{
-			if (!side)
-				dist2 = CLAMP(dist2, dist, dist + delta_dist.x);
-			else
-				dist2 = CLAMP(dist2, dist, dist + delta_dist.y);
-
 			/* line start and end */
 			line_start = ((block_top / dist2) * pixel_height_scale) + ray.horizon;
 			line_end = ystart;
@@ -608,8 +618,6 @@ int main(int argc, char **argv)
 		}
 	}
 
-	tilemap[14][10].height = 8;
-	tilemap[14][10].texture = 6;
 	tilemap[14][11].height = 8;
 	tilemap[14][11].texture = -1;
 	tilemap[14][12].height = 8;
