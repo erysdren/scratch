@@ -24,6 +24,14 @@
 #define CLAMP(a, min, max) MIN(MAX(a, min), max)
 #endif
 
+#ifndef DEG2RAD
+#define DEG2RAD(a) ((a) * M_PI / 180.0f)
+#endif
+
+#ifndef RAD2DEG
+#define RAD2DEG(a) ((a) * 180.0f / M_PI)
+#endif
+
 static struct {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
@@ -79,6 +87,7 @@ static struct {
 		float yaw;
 		int shear;
 		float drawdist;
+		vec2f_t dir;
 	} cam;
 
 	struct {
@@ -133,7 +142,7 @@ void draw_vertical_line(int x, int y0, int y1, uint8_t c)
 int _ray_draw_slab(int screen_x, slab_t *slab, int column_height, float dist, float dist2, float pixel_height_scale)
 {
 	float slab_z, slab_height, height_delta1, height_delta2;
-	int line_start, line_end;
+	int line_start, line_end, line_start_c, line_end_c;
 	int screen_y;
 
 	/* z position of the slab */
@@ -155,11 +164,11 @@ int _ray_draw_slab(int screen_x, slab_t *slab, int column_height, float dist, fl
 	line_end = (int)((height_delta2 / dist) * pixel_height_scale) + ray.horizon;
 
 	/* clamp the line to the visible region */
-	line_start = CLAMP(line_start, 0, HEIGHT);
-	line_end = CLAMP(line_end, 0, HEIGHT);
+	line_start_c = CLAMP(line_start, 0, HEIGHT);
+	line_end_c = CLAMP(line_end, 0, HEIGHT);
 
 	/* draw line */
-	draw_vertical_line(screen_x, line_start, line_end, slab->color_side);
+	draw_vertical_line(screen_x, line_start_c, line_end_c, slab->color_side);
 
 	/*
 	 * draw the top or bottom of the voxel
@@ -170,11 +179,11 @@ int _ray_draw_slab(int screen_x, slab_t *slab, int column_height, float dist, fl
 	line_end = (int)((height_delta2 / dist2) * pixel_height_scale) + ray.horizon;
 
 	/* clamp the line to the visible region */
-	line_start = CLAMP(line_start, 0, HEIGHT);
-	line_end = CLAMP(line_end, 0, HEIGHT);
+	line_start_c = CLAMP(line_start, 0, HEIGHT);
+	line_end_c = CLAMP(line_end, 0, HEIGHT);
 
 	/* draw line */
-	draw_vertical_line(screen_x, line_start, line_end, slab->color_bottom);
+	draw_vertical_line(screen_x, line_start_c, line_end_c, slab->color_bottom);
 
 	return column_height - (slab->voxels_skipped + slab->voxels_drawn);
 }
@@ -303,8 +312,8 @@ void _ray_draw_screen_column(int screen_x)
 void ray_render(void)
 {
 	/* get sin and cos of camera yaw */
-	ray.viewsin = sinf(ray.cam.yaw);
-	ray.viewcos = cosf(ray.cam.yaw);
+	ray.viewsin = sinf(DEG2RAD(ray.cam.yaw));
+	ray.viewcos = cosf(DEG2RAD(ray.cam.yaw));
 
 	/* get horizon from camera shear */
 	ray.horizon = -ray.cam.shear + (HEIGHT / 2);
@@ -358,12 +367,11 @@ int main(int argc, char **argv)
 	slab_t tempslab;
 
 	SDL_Init(SDL_INIT_VIDEO);
-	IMG_Init(IMG_INIT_PNG);
 
 	sdl.window = SDL_CreateWindow("sdlray",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		WIDTH, HEIGHT,
-		SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_MAXIMIZED
+		SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
 	);
 
 	SDL_SetWindowMinimumSize(sdl.window, WIDTH, HEIGHT);
@@ -391,7 +399,7 @@ int main(int argc, char **argv)
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	install_palette("gfx/rott.pal");
+	install_palette("gfx/palette.dat");
 
 	sdl.pixels = sdl.surface8->pixels;
 
@@ -448,7 +456,7 @@ int main(int argc, char **argv)
 
 				case SDL_MOUSEMOTION:
 					ray.cam.shear += sdl.event.motion.yrel;
-					ray.cam.yaw -= sdl.event.motion.xrel * sdl.dt;
+					ray.cam.yaw -= sdl.event.motion.xrel;
 					break;
 
 				default:
@@ -463,6 +471,40 @@ int main(int argc, char **argv)
 		sdl.last = sdl.now;
 		sdl.now = SDL_GetPerformanceCounter();
 		sdl.dt = ((double)(sdl.now - sdl.last) / (double)SDL_GetPerformanceFrequency());
+
+		/* get look direction */
+		ray.cam.dir.x = ray.viewsin * sdl.dt * 2;
+		ray.cam.dir.y = ray.viewcos * sdl.dt * 2;
+
+		/* process player inputs */
+		if (sdl.keys[SDL_SCANCODE_W])
+		{
+			ray.cam.x += ray.cam.dir.x;
+			ray.cam.y += ray.cam.dir.y;
+		}
+		if (sdl.keys[SDL_SCANCODE_S])
+		{
+			ray.cam.x -= ray.cam.dir.x;
+			ray.cam.y -= ray.cam.dir.y;
+		}
+		if (sdl.keys[SDL_SCANCODE_A])
+		{
+			ray.cam.x += ray.cam.dir.y;
+			ray.cam.y -= ray.cam.dir.x;
+		}
+		if (sdl.keys[SDL_SCANCODE_D])
+		{
+			ray.cam.x -= ray.cam.dir.y;
+			ray.cam.y += ray.cam.dir.x;
+		}
+		if (sdl.keys[SDL_SCANCODE_PAGEUP])
+		{
+			ray.cam.z += sdl.dt * 2;
+		}
+		if (sdl.keys[SDL_SCANCODE_PAGEDOWN])
+		{
+			ray.cam.z -= sdl.dt * 2;
+		}
 
 		/* render */
 		memset(sdl.surface8->pixels, 255, sdl.surface8->h * sdl.surface8->pitch);
@@ -483,7 +525,6 @@ int main(int argc, char **argv)
 	SDL_DestroyTexture(sdl.texture);
 	SDL_FreeSurface(sdl.surface8);
 	SDL_FreeSurface(sdl.surface32);
-	IMG_Quit();
 	SDL_Quit();
 
 	return 0;
