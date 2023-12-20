@@ -3,6 +3,11 @@
  * http://advsys.net/ken/voxlap.htm
  * https://lodev.org/cgtutor/raycasting.html
  * https://github.com/s-macke/VoxelSpace/
+ * https://lodev.org/cgtutor/raycasting2.html
+ * https://github.com/3DSage/OpenGL-Raycaster_v2/blob/main/3DSage_Raycaster_v2.c
+ * https://permadi.com/1996/05/ray-casting-tutorial-12/
+ * https://github.com/permadi-com/ray-cast/blob/master/demo/4/sample4.js
+ * https://wynnliam.github.io/raycaster/news/tutorial/2019/04/09/raycaster-part-03.html
  */
 
 #include <math.h>
@@ -101,6 +106,7 @@ static struct {
 	vec2i_t selected;
 } ray;
 
+SDL_Surface *floor_textures[64];
 SDL_Surface *wall_textures[64];
 SDL_Surface *mask_textures[64];
 SDL_Surface *sky_texture;
@@ -109,7 +115,7 @@ SDL_Surface *colormap;
 bool r_sky = true;
 bool r_textures = true;
 bool r_texture_stretch = false;
-bool r_floors = false;
+bool r_floors = true;
 
 int remap(int value, int a1, int a2, int b1, int b2)
 {
@@ -120,6 +126,28 @@ int wrap(int value, int mod)
 {
 	int cmp = value < 0;
 	return cmp * mod + (value % mod) - cmp;
+}
+
+float vectoangle(vec2f_t *v)
+{
+	float a;
+
+	/* special cases */
+	if (v->x == 0)
+		return (v->y > 0) ? 90 : (v->y == 0) ? 0 : 270;
+	else if (v->y == 0)
+		return (v->x >= 0) ? 0 : 180;
+
+	a = RAD2DEG(atan2f(v->y, v->x));
+
+	if (v->x < 0 && v->y < 0) /* quadrant 3 */
+		a = 180 + a;
+	else if (v->x < 0) /* quadrant 2 */
+		a = 180 + a;
+	else if (v->y < 0) /* quadrant 4 */
+		a = 270 + (90 + a);
+
+	return a;
 }
 
 uint8_t colormap_lookup(uint8_t color, int brightness)
@@ -270,7 +298,7 @@ void ray_draw_column(int x)
 		}
 
 		/* line heights */
-		block_top = camera.z - tilemap[map_pos.y][map_pos.x].height * 0.125f;
+		block_top = camera.z - tilemap[map_pos.y][map_pos.x].height;
 		block_bottom = camera.z;
 
 		/* line start and end */
@@ -295,7 +323,38 @@ void ray_draw_column(int x)
 		/* draw floors */
 		if (r_floors)
 		{
+			/* upper floor */
+			for (y = line_end_c; y < ystart; y++)
+			{
+				if (!stencil[y])
+					sdl.pixels[y * WIDTH + x] = 0;
+			}
 
+			/* lower floor */
+			for (y = floorstart; y < HEIGHT; y++)
+			{
+				if (!stencil[y])
+				{
+					SDL_Surface *tex;
+					vec2f_t floorpos;
+					uint8_t c;
+					int tex_x, tex_y;
+					float rowdist;
+
+					rowdist = (camera.z * HEIGHT) / (y - HEIGHT / 2);
+
+					floorpos.x = camera.x + (rowdist * ray_dir.x);
+					floorpos.y = camera.y + (rowdist * ray_dir.y);
+
+					tex = floor_textures[0];
+					tex_x = wrap(floorpos.x * tex->w, tex->w);
+					tex_y = wrap(floorpos.y * tex->h, tex->h);
+
+					c = ((Uint8 *)tex->pixels)[tex_y * tex->w + tex_x];
+
+					sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * -2);
+				}
+			}
 		}
 		else
 		{
@@ -352,7 +411,7 @@ void ray_draw_column(int x)
 				}
 				else
 				{
-					tex_y = remap(y, line_start, line_end, 0, tex->h * tilemap[map_pos.y][map_pos.x].height * 0.125f);
+					tex_y = remap(y, line_start, line_end, 0, tex->h * tilemap[map_pos.y][map_pos.x].height);
 					tex_y = wrap(tex_y, tex->h);
 				}
 
@@ -527,6 +586,28 @@ void load_masks(char *palette)
 	printf("Loaded %d mask textures.\n", i);
 }
 
+void load_floors(char *palette)
+{
+	int i;
+	char str[128];
+
+	memset(floor_textures, 0, sizeof(floor_textures));
+
+	for (i = 0; i < 64; i++)
+	{
+		snprintf(str, 128, "gfx/floor%d.png", i + 1);
+
+		floor_textures[i] = IMG_Load(str);
+
+		if (floor_textures[i] == NULL)
+			break;
+
+		install_palette(palette, floor_textures[i]);
+	}
+
+	printf("Loaded %d floor textures.\n", i);
+}
+
 void free_walls(void)
 {
 	int i;
@@ -546,6 +627,17 @@ void free_masks(void)
 	{
 		if (mask_textures[i] != NULL)
 			SDL_FreeSurface(mask_textures[i]);
+	}
+}
+
+void free_floors(void)
+{
+	int i;
+
+	for (i = 0; i < 64; i++)
+	{
+		if (floor_textures[i] != NULL)
+			SDL_FreeSurface(floor_textures[i]);
 	}
 }
 
@@ -592,6 +684,7 @@ int main(int argc, char **argv)
 
 	load_walls("gfx/palette.dat");
 	load_masks("gfx/palette.dat");
+	load_floors("gfx/palette.dat");
 	sky_texture = IMG_Load("gfx/sky.png");
 	colormap = IMG_Load("gfx/colormap.png");
 	install_palette("gfx/palette.dat", sky_texture);
@@ -612,19 +705,28 @@ int main(int argc, char **argv)
 		{
 			if (x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1)
 			{
-				tilemap[y][x].height = 16;
+				tilemap[y][x].height = 2;
 				tilemap[y][x].texture = 6;
 			}
 		}
 	}
 
-	tilemap[14][10].height = 16;
+	tilemap[10][10].height = 2;
+	tilemap[10][10].texture = 6;
+	tilemap[10][11].height = 1;
+	tilemap[10][11].texture = -2;
+	tilemap[10][12].height = 1;
+	tilemap[10][12].texture = -2;
+	tilemap[10][13].height = 2;
+	tilemap[10][13].texture = 6;
+
+	tilemap[14][10].height = 2;
 	tilemap[14][10].texture = 6;
-	tilemap[14][11].height = 16;
+	tilemap[14][11].height = 1;
 	tilemap[14][11].texture = -2;
-	tilemap[14][12].height = 16;
+	tilemap[14][12].height = 1;
 	tilemap[14][12].texture = -2;
-	tilemap[14][13].height = 16;
+	tilemap[14][13].height = 2;
 	tilemap[14][13].texture = 6;
 
 	/* setup raycaster */
@@ -649,7 +751,7 @@ int main(int argc, char **argv)
 					break;
 
 				case SDL_MOUSEMOTION:
-					camera.shear += sdl.event.motion.yrel;
+					/* camera.shear += sdl.event.motion.yrel; */
 					camera.yaw -= sdl.event.motion.xrel;
 					break;
 
@@ -723,6 +825,7 @@ int main(int argc, char **argv)
 	SDL_DestroyTexture(sdl.texture);
 	free_walls();
 	free_masks();
+	free_floors();
 	SDL_FreeSurface(colormap);
 	SDL_FreeSurface(sky_texture);
 	SDL_FreeSurface(sdl.surface8);
