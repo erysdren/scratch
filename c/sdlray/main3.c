@@ -90,9 +90,7 @@ typedef struct vec3f_t {
 } vec3f_t;
 
 static struct {
-	float x;
-	float y;
-	float z;
+	vec3f_t origin;
 	float yaw;
 	float draw_distance;
 	int shear;
@@ -211,6 +209,26 @@ int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t 
 	return HIT_DONE;
 }
 
+void ray_draw_floor(vec3f_t *origin, vec2f_t *ray_dir, int x, int y, int pixel_height_scale, SDL_Surface *tex)
+{
+	float rowdist;
+	vec2f_t floorpos;
+	vec2i_t texpos;
+	uint8_t c;
+
+	rowdist = (origin->z * pixel_height_scale) / (y - HEIGHT / 2);
+
+	floorpos.x = origin->x + rowdist * ray_dir->x;
+	floorpos.y = origin->y + rowdist * ray_dir->y;
+
+	texpos.x = wrap(floorpos.x * tex->w, tex->w);
+	texpos.y = wrap(floorpos.y * tex->h, tex->h);
+
+	c = ((Uint8 *)tex->pixels)[texpos.y * tex->w + texpos.x];
+
+	sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * LIGHT_SCALE + LIGHT_LEVEL);
+}
+
 void ray_draw_column(int x)
 {
 	vec2f_t ray_dir, delta_dist, side_dist, temp;
@@ -232,8 +250,8 @@ void ray_draw_column(int x)
 	memset(stencil, 0, sizeof(stencil));
 
 	/* get map pos */
-	map_pos.x = (int)camera.x;
-	map_pos.y = (int)camera.y;
+	map_pos.x = (int)camera.origin.x;
+	map_pos.y = (int)camera.origin.y;
 
 	/* get ray direction */
 	ray_dir.x = ((2.0f / (float)WIDTH) * (float)x) - 1.0f;
@@ -252,23 +270,23 @@ void ray_draw_column(int x)
 	if (ray_dir.x < 0)
 	{
 		step.x = -1;
-		side_dist.x = (camera.x - (float)map_pos.x) * delta_dist.x;
+		side_dist.x = (camera.origin.x - (float)map_pos.x) * delta_dist.x;
 	}
 	else
 	{
 		step.x = 1;
-		side_dist.x = ((float)map_pos.x + 1.0f - camera.x) * delta_dist.x;
+		side_dist.x = ((float)map_pos.x + 1.0f - camera.origin.x) * delta_dist.x;
 	}
 
 	if (ray_dir.y < 0)
 	{
 		step.y = -1;
-		side_dist.y = (camera.y - (float)map_pos.y) * delta_dist.y;
+		side_dist.y = (camera.origin.y - (float)map_pos.y) * delta_dist.y;
 	}
 	else
 	{
 		step.y = 1;
-		side_dist.y = ((float)map_pos.y + 1.0f - camera.y) * delta_dist.y;
+		side_dist.y = ((float)map_pos.y + 1.0f - camera.origin.y) * delta_dist.y;
 	}
 
 	/* do cast */
@@ -301,8 +319,8 @@ void ray_draw_column(int x)
 		}
 
 		/* line heights */
-		block_top = camera.z - tilemap[map_pos.y][map_pos.x].height;
-		block_bottom = camera.z;
+		block_top = camera.origin.z - tilemap[map_pos.y][map_pos.x].height * 0.125;
+		block_bottom = camera.origin.z;
 
 		/* line start and end */
 		line_start = ((block_top / dist) * pixel_height_scale) + ray.horizon;
@@ -340,17 +358,7 @@ void ray_draw_column(int x)
 			{
 				if (!stencil[y])
 				{
-					rowdist = (camera.z * pixel_height_scale) / (y - HEIGHT / 2);
-
-					floorpos.x = camera.x + (rowdist * ray_dir.x);
-					floorpos.y = camera.y + (rowdist * ray_dir.y);
-
-					tex_x = wrap(floorpos.x * tex->w, tex->w);
-					tex_y = wrap(floorpos.y * tex->h, tex->h);
-
-					c = ((Uint8 *)tex->pixels)[tex_y * tex->w + tex_x];
-
-					sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * LIGHT_SCALE + LIGHT_LEVEL);
+					ray_draw_floor(&camera.origin, &ray_dir, x, y, pixel_height_scale, tex);
 				}
 			}
 
@@ -359,20 +367,7 @@ void ray_draw_column(int x)
 			{
 				if (!stencil[y])
 				{
-					rowdist = (camera.z * pixel_height_scale) / (y - HEIGHT / 2);
-
-					floorpos.x = camera.x + rowdist * ray_dir.x;
-					floorpos.y = camera.y + rowdist * ray_dir.y;
-
-					floor_i.x = (int)floorpos.x;
-					floor_i.y = (int)floorpos.y;
-
-					tex_x = wrap(floorpos.x * tex->w, tex->w);
-					tex_y = wrap(floorpos.y * tex->h, tex->h);
-
-					c = ((Uint8 *)tex->pixels)[tex_y * tex->w + tex_x];
-
-					sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * LIGHT_SCALE + LIGHT_LEVEL);
+					ray_draw_floor(&camera.origin, &ray_dir, x, y, pixel_height_scale, tex);
 				}
 			}
 		}
@@ -408,9 +403,9 @@ void ray_draw_column(int x)
 
 			/* get wall impact point */
 			if (!side)
-				wall_x = camera.y + dist * ray_dir.y;
+				wall_x = camera.origin.y + dist * ray_dir.y;
 			else
-				wall_x = camera.x + dist * ray_dir.x;
+				wall_x = camera.origin.x + dist * ray_dir.x;
 
 			wall_x -= floorf(wall_x);
 
@@ -431,7 +426,7 @@ void ray_draw_column(int x)
 				}
 				else
 				{
-					tex_y = remap(y, line_start, line_end, 0, tex->h * tilemap[map_pos.y][map_pos.x].height);
+					tex_y = remap(y, line_start, line_end, 0, tex->h * tilemap[map_pos.y][map_pos.x].height * 0.125);
 					tex_y = wrap(tex_y, tex->h);
 				}
 
@@ -485,7 +480,19 @@ void ray_draw_column(int x)
 			for (y = line_start_c; y < line_end_c; y++)
 			{
 				if (!stencil[y])
-					sdl.pixels[y * WIDTH + x] = 95;
+				{
+					if (r_floors)
+					{
+						vec3f_t org;
+						org = camera.origin;
+						org.z = block_top;
+						ray_draw_floor(&org, &ray_dir, x, y, pixel_height_scale, floor_textures[0]);
+					}
+					else
+					{
+						sdl.pixels[y * WIDTH + x] = 95;
+					}
+				}
 			}
 
 			/* set ystart for next cast */
@@ -725,34 +732,34 @@ int main(int argc, char **argv)
 		{
 			if (x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1)
 			{
-				tilemap[y][x].height = 2;
+				tilemap[y][x].height = 8;
 				tilemap[y][x].texture = 6;
 			}
 		}
 	}
 
-	tilemap[10][10].height = 2;
+	tilemap[10][10].height = 12;
 	tilemap[10][10].texture = 6;
-	tilemap[10][11].height = 1;
+	tilemap[10][11].height = 8;
 	tilemap[10][11].texture = -2;
-	tilemap[10][12].height = 1;
+	tilemap[10][12].height = 8;
 	tilemap[10][12].texture = -2;
-	tilemap[10][13].height = 2;
+	tilemap[10][13].height = 12;
 	tilemap[10][13].texture = 6;
 
-	tilemap[14][10].height = 2;
+	tilemap[14][10].height = 12;
 	tilemap[14][10].texture = 6;
-	tilemap[14][11].height = 1;
+	tilemap[14][11].height = 8;
 	tilemap[14][11].texture = -2;
-	tilemap[14][12].height = 1;
+	tilemap[14][12].height = 8;
 	tilemap[14][12].texture = -2;
-	tilemap[14][13].height = 2;
+	tilemap[14][13].height = 12;
 	tilemap[14][13].texture = 6;
 
 	/* setup raycaster */
-	camera.x = MAP_WIDTH / 2;
-	camera.y = MAP_HEIGHT / 2;
-	camera.z = 0.5;
+	camera.origin.x = MAP_WIDTH / 2;
+	camera.origin.y = MAP_HEIGHT / 2;
+	camera.origin.z = 0.5;
 	camera.shear = 0;
 	camera.draw_distance = MAP_WIDTH * 2;
 
@@ -795,31 +802,31 @@ int main(int argc, char **argv)
 		/* process player inputs */
 		if (sdl.keys[SDL_SCANCODE_W])
 		{
-			camera.x += camera.dir.x;
-			camera.y += camera.dir.y;
+			camera.origin.x += camera.dir.x;
+			camera.origin.y += camera.dir.y;
 		}
 		if (sdl.keys[SDL_SCANCODE_S])
 		{
-			camera.x -= camera.dir.x;
-			camera.y -= camera.dir.y;
+			camera.origin.x -= camera.dir.x;
+			camera.origin.y -= camera.dir.y;
 		}
 		if (sdl.keys[SDL_SCANCODE_A])
 		{
-			camera.x += camera.dir.y;
-			camera.y -= camera.dir.x;
+			camera.origin.x += camera.dir.y;
+			camera.origin.y -= camera.dir.x;
 		}
 		if (sdl.keys[SDL_SCANCODE_D])
 		{
-			camera.x -= camera.dir.y;
-			camera.y += camera.dir.x;
+			camera.origin.x -= camera.dir.y;
+			camera.origin.y += camera.dir.x;
 		}
 		if (sdl.keys[SDL_SCANCODE_PAGEUP])
 		{
-			camera.z += sdl.dt * 2;
+			camera.origin.z += sdl.dt * 2;
 		}
 		if (sdl.keys[SDL_SCANCODE_PAGEDOWN])
 		{
-			camera.z -= sdl.dt * 2;
+			camera.origin.z -= sdl.dt * 2;
 		}
 
 		/* clamp camera shear */
