@@ -323,11 +323,31 @@ void ray_draw_column(int x)
 		/* draw floors */
 		if (r_floors)
 		{
+			SDL_Surface *tex;
+			vec2f_t floorpos;
+			uint8_t c;
+			int tex_x, tex_y;
+			float rowdist;
+
+			tex = floor_textures[0];
+
 			/* upper floor */
 			for (y = line_end_c; y < ystart; y++)
 			{
 				if (!stencil[y])
-					sdl.pixels[y * WIDTH + x] = 0;
+				{
+					rowdist = (camera.z * pixel_height_scale) / (y - HEIGHT / 2);
+
+					floorpos.x = camera.x + (rowdist * ray_dir.x);
+					floorpos.y = camera.y + (rowdist * ray_dir.y);
+
+					tex_x = wrap(floorpos.x * tex->w, tex->w);
+					tex_y = wrap(floorpos.y * tex->h, tex->h);
+
+					c = ((Uint8 *)tex->pixels)[tex_y * tex->w + tex_x];
+
+					sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * -2);
+				}
 			}
 
 			/* lower floor */
@@ -335,18 +355,11 @@ void ray_draw_column(int x)
 			{
 				if (!stencil[y])
 				{
-					SDL_Surface *tex;
-					vec2f_t floorpos;
-					uint8_t c;
-					int tex_x, tex_y;
-					float rowdist;
+					rowdist = (camera.z * pixel_height_scale) / (y - HEIGHT / 2);
 
-					rowdist = (camera.z * HEIGHT) / (y - HEIGHT / 2);
+					floorpos.x = camera.x + rowdist * ray_dir.x;
+					floorpos.y = camera.y + rowdist * ray_dir.y;
 
-					floorpos.x = camera.x + (rowdist * ray_dir.x);
-					floorpos.y = camera.y + (rowdist * ray_dir.y);
-
-					tex = floor_textures[0];
 					tex_x = wrap(floorpos.x * tex->w, tex->w);
 					tex_y = wrap(floorpos.y * tex->h, tex->h);
 
