@@ -71,6 +71,7 @@ static struct {
 typedef struct tile_t {
 	uint8_t height;
 	int8_t texture;
+	int8_t light;
 } tile_t;
 
 #define MAP_WIDTH 24
@@ -97,9 +98,6 @@ static struct {
 	vec2f_t dir;
 } camera;
 
-#define EPS 0.00000001
-#define WALL_SIZE (64.0f)
-#define RAY_EPS (WALL_SIZE / 3.0f)
 static struct {
 	float viewsin;
 	float viewcos;
@@ -127,28 +125,6 @@ int wrap(int value, int mod)
 {
 	int cmp = value < 0;
 	return cmp * mod + (value % mod) - cmp;
-}
-
-float vectoangle(vec2f_t *v)
-{
-	float a;
-
-	/* special cases */
-	if (v->x == 0)
-		return (v->y > 0) ? 90 : (v->y == 0) ? 0 : 270;
-	else if (v->y == 0)
-		return (v->x >= 0) ? 0 : 180;
-
-	a = RAD2DEG(atan2f(v->y, v->x));
-
-	if (v->x < 0 && v->y < 0) /* quadrant 3 */
-		a = 180 + a;
-	else if (v->x < 0) /* quadrant 2 */
-		a = 180 + a;
-	else if (v->y < 0) /* quadrant 4 */
-		a = 270 + (90 + a);
-
-	return a;
 }
 
 uint8_t colormap_lookup(uint8_t color, int brightness)
@@ -213,20 +189,44 @@ void ray_draw_floor(vec3f_t *origin, vec2f_t *ray_dir, int x, int y, int pixel_h
 {
 	float rowdist;
 	vec2f_t floorpos;
+	tile_t *tile;
 	vec2i_t texpos;
 	uint8_t c;
+	uint8_t light;
 
 	rowdist = (origin->z * pixel_height_scale) / (y - ray.horizon);
 
 	floorpos.x = origin->x + rowdist * ray_dir->x;
 	floorpos.y = origin->y + rowdist * ray_dir->y;
 
+	if (floorpos.y < 0 || floorpos.y >= MAP_HEIGHT || floorpos.x < 0 || floorpos.x >= MAP_WIDTH)
+		return;
+
+	tile = &tilemap[(int)floorpos.y][(int)floorpos.x];
+
+	/* select tile */
+	if (x == WIDTH / 2 && y == HEIGHT / 2)
+	{
+		ray.selected.x = floorpos.x;
+		ray.selected.y = floorpos.y;
+	}
+
+	/* act on selected */
+	if (ray.selected.x == (int)floorpos.x && ray.selected.y == (int)floorpos.y)
+	{
+		light = 32;
+	}
+	else
+	{
+		light = tile->light;
+	}
+
 	texpos.x = wrap(floorpos.x * tex->w, tex->w);
 	texpos.y = wrap(floorpos.y * tex->h, tex->h);
 
 	c = ((Uint8 *)tex->pixels)[texpos.y * tex->w + texpos.x];
 
-	sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * LIGHT_SCALE + LIGHT_LEVEL);
+	sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * LIGHT_SCALE + LIGHT_LEVEL + light);
 }
 
 void ray_draw_column(int x)
