@@ -492,7 +492,7 @@ void load_walls(char *palette)
 		install_palette(palette, wall_textures[i]);
 	}
 
-	printf("Loaded %d wall textures.\n", i + 1);
+	printf("Loaded %d wall textures.\n", i);
 }
 
 void load_masks(char *palette)
@@ -514,7 +514,7 @@ void load_masks(char *palette)
 		install_palette(palette, mask_textures[i]);
 	}
 
-	printf("Loaded %d mask textures.\n", i + 1);
+	printf("Loaded %d mask textures.\n", i);
 }
 
 void free_walls(void)
