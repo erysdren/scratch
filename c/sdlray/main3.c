@@ -192,7 +192,7 @@ void ray_draw_floor(vec3f_t *origin, vec2f_t *ray_dir, int x, int y, int pixel_h
 	tile_t *tile;
 	vec2i_t texpos;
 	uint8_t c;
-	uint8_t light;
+	int8_t light;
 
 	rowdist = (origin->z * pixel_height_scale) / (y - ray.horizon);
 
@@ -244,7 +244,7 @@ void ray_draw_column(int x)
 	int floorstart = 0;
 	int hit;
 	uint8_t stencil[HEIGHT];
-	bool selected = false;
+	int8_t light;
 
 	/* reset stencil buffer */
 	memset(stencil, 0, sizeof(stencil));
@@ -330,13 +330,6 @@ void ray_draw_column(int x)
 		line_start_c = CLAMP(line_start, 0, ystart);
 		line_end_c = CLAMP(line_end, 0, ystart);
 
-		/* select block */
-		if (x == WIDTH / 2 && line_start_c < HEIGHT / 2 && line_end_c > HEIGHT / 2)
-			ray.selected = map_pos;
-
-		/* if selected */
-		/* selected = ray.selected.x == map_pos.x && ray.selected.y == map_pos.y; */
-
 		/* set floorstart */
 		if (floorstart < line_end_c && hit == HIT_WALL)
 			floorstart = line_end_c;
@@ -389,7 +382,7 @@ void ray_draw_column(int x)
 		}
 
 		/* draw walls */
-		if (r_textures && !selected)
+		if (r_textures)
 		{
 			float wall_x;
 			int tex_x;
@@ -414,6 +407,12 @@ void ray_draw_column(int x)
 			if ((side == 0 && ray_dir.x > 0) || (side == 1 && ray_dir.y < 0))
 				tex_x = tex->w - tex_x - 1;
 
+			/* get light level */
+			if (ray.selected.x == map_pos.x && ray.selected.y == map_pos.y)
+				light = 32;
+			else
+				light = tilemap[map_pos.y][map_pos.x].light;
+
 			/* draw textured line */
 			for (y = line_start_c; y < line_end_c; y++)
 			{
@@ -433,18 +432,22 @@ void ray_draw_column(int x)
 				/* texture color at pixel */
 				c = ((Uint8 *)tex->pixels)[tex_y * tex->w + tex_x];
 
+				/* select tile */
+				if (x == WIDTH / 2 && y == HEIGHT / 2)
+					ray.selected = map_pos;
+
 				if (!stencil[y])
 				{
 					if (hit == HIT_MASK && c != 255)
 					{
 						/* draw masked texture */
-						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * LIGHT_SCALE + LIGHT_LEVEL);
+						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * LIGHT_SCALE + LIGHT_LEVEL + light);
 						stencil[y] = 1;
 					}
 					else
 					{
 						/* draw wall texture */
-						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * LIGHT_SCALE + LIGHT_LEVEL);
+						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * LIGHT_SCALE + LIGHT_LEVEL + light);
 					}
 				}
 			}
