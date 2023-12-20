@@ -216,7 +216,7 @@ void ray_draw_floor(vec3f_t *origin, vec2f_t *ray_dir, int x, int y, int pixel_h
 	vec2i_t texpos;
 	uint8_t c;
 
-	rowdist = (origin->z * pixel_height_scale) / (y - HEIGHT / 2);
+	rowdist = (origin->z * pixel_height_scale) / (y - ray.horizon);
 
 	floorpos.x = origin->x + rowdist * ray_dir->x;
 	floorpos.y = origin->y + rowdist * ray_dir->y;
@@ -778,7 +778,7 @@ int main(int argc, char **argv)
 					break;
 
 				case SDL_MOUSEMOTION:
-					/* camera.shear += sdl.event.motion.yrel; */
+					camera.shear += sdl.event.motion.yrel;
 					camera.yaw -= sdl.event.motion.xrel;
 					break;
 
