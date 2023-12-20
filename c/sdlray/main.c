@@ -1,14 +1,26 @@
-
 /*
- * http://advsys.net/ken/voxlap.htm
- * https://lodev.org/cgtutor/raycasting.html
- * https://github.com/s-macke/VoxelSpace/
- * https://lodev.org/cgtutor/raycasting2.html
- * https://github.com/3DSage/OpenGL-Raycaster_v2/blob/main/3DSage_Raycaster_v2.c
- * https://permadi.com/1996/05/ray-casting-tutorial-12/
- * https://github.com/permadi-com/ray-cast/blob/master/demo/4/sample4.js
- * https://wynnliam.github.io/raycaster/news/tutorial/2019/04/09/raycaster-part-03.html
- */
+MIT License
+
+Copyright (c) 2023 erysdren (it/she/they)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 #include <math.h>
 #include <float.h>
@@ -22,6 +34,8 @@
 
 #define WIDTH 640
 #define HEIGHT 480
+
+#define TILE_SELECTION 0
 
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
@@ -204,6 +218,7 @@ void ray_draw_floor(vec3f_t *origin, vec2f_t *ray_dir, int x, int y, int pixel_h
 
 	tile = &tilemap[(int)floorpos.y][(int)floorpos.x];
 
+#if TILE_SELECTION
 	/* select tile */
 	if (x == WIDTH / 2 && y == HEIGHT / 2)
 	{
@@ -220,6 +235,9 @@ void ray_draw_floor(vec3f_t *origin, vec2f_t *ray_dir, int x, int y, int pixel_h
 	{
 		light = tile->light;
 	}
+#else
+	light = tile->light;
+#endif /* TILE_SELECTION */
 
 	texpos.x = wrap(floorpos.x * tex->w, tex->w);
 	texpos.y = wrap(floorpos.y * tex->h, tex->h);
@@ -407,11 +425,15 @@ void ray_draw_column(int x)
 			if ((side == 0 && ray_dir.x > 0) || (side == 1 && ray_dir.y < 0))
 				tex_x = tex->w - tex_x - 1;
 
+#if TILE_SELECTION
 			/* get light level */
 			if (ray.selected.x == map_pos.x && ray.selected.y == map_pos.y)
 				light = 32;
 			else
 				light = tilemap[map_pos.y][map_pos.x].light;
+#else
+			light = tilemap[map_pos.y][map_pos.x].light;
+#endif /* TILE_SELECTION */
 
 			/* draw textured line */
 			for (y = line_start_c; y < line_end_c; y++)
@@ -432,9 +454,11 @@ void ray_draw_column(int x)
 				/* texture color at pixel */
 				c = ((Uint8 *)tex->pixels)[tex_y * tex->w + tex_x];
 
+#if TILE_SELECTION
 				/* select tile */
 				if (x == WIDTH / 2 && y == HEIGHT / 2)
 					ray.selected = map_pos;
+#endif /* TILE_SELECTION */
 
 				if (!stencil[y])
 				{
