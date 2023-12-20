@@ -103,6 +103,7 @@ static struct {
 
 SDL_Surface *wall_textures[256];
 SDL_Surface *sky_texture;
+SDL_Surface *colormap;
 
 bool r_sky = true;
 bool r_textures = true;
@@ -118,6 +119,16 @@ int wrap(int value, int mod)
 {
 	int cmp = value < 0;
 	return cmp * mod + (value % mod) - cmp;
+}
+
+uint8_t colormap_lookup(uint8_t color, int brightness)
+{
+	int x, y;
+
+	x = color;
+	y = CLAMP(-brightness + 31, 0, 63);
+
+	return ((uint8_t *)colormap->pixels)[y * colormap->pitch + x];
 }
 
 /* ray hit result enum */
@@ -257,7 +268,7 @@ void ray_draw_column(int x)
 			ray.selected = map_pos;
 
 		/* if selected */
-		selected = ray.selected.x == map_pos.x && ray.selected.y == map_pos.y;
+		/* selected = ray.selected.x == map_pos.x && ray.selected.y == map_pos.y; */
 
 		/* set floorstart */
 		if (floorstart < line_end_c && hit == HIT_WALL)
@@ -332,13 +343,13 @@ void ray_draw_column(int x)
 					if (hit == HIT_MASK && c != 255)
 					{
 						/* draw masked texture */
-						sdl.pixels[y * WIDTH + x] = c;
+						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * -2);
 						stencil[y] = 1;
 					}
 					else
 					{
 						/* draw wall texture */
-						sdl.pixels[y * WIDTH + x] = c;
+						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * -2);
 					}
 				}
 			}
@@ -379,7 +390,7 @@ void ray_draw_column(int x)
 			for (y = line_start_c; y < line_end_c; y++)
 			{
 				if (!stencil[y])
-					sdl.pixels[y * WIDTH + x] = 255;
+					sdl.pixels[y * WIDTH + x] = 95;
 			}
 
 			/* set ystart for next cast */
@@ -533,10 +544,12 @@ int main(int argc, char **argv)
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	load_walls("gfx/kenbuild.pal");
+	load_walls("gfx/palette.dat");
 	sky_texture = IMG_Load("gfx/sky.png");
-	install_palette("gfx/kenbuild.pal", sky_texture);
-	install_palette("gfx/kenbuild.pal", sdl.surface8);
+	colormap = IMG_Load("gfx/colormap.png");
+	install_palette("gfx/palette.dat", sky_texture);
+	install_palette("gfx/palette.dat", sdl.surface8);
+	install_palette("gfx/palette.dat", colormap);
 
 	sdl.pixels = sdl.surface8->pixels;
 
@@ -653,6 +666,7 @@ int main(int argc, char **argv)
 	SDL_DestroyRenderer(sdl.renderer);
 	SDL_DestroyTexture(sdl.texture);
 	free_walls();
+	SDL_FreeSurface(colormap);
 	SDL_FreeSurface(sky_texture);
 	SDL_FreeSurface(sdl.surface8);
 	SDL_FreeSurface(sdl.surface32);
