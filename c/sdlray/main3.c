@@ -43,6 +43,9 @@
 #define RAD2DEG(a) ((a) * 180.0f / M_PI)
 #endif
 
+#define LIGHT_SCALE (-2)
+#define LIGHT_LEVEL (-16)
+
 static struct {
 	SDL_Window *window;
 	SDL_Renderer *renderer;
@@ -326,6 +329,7 @@ void ray_draw_column(int x)
 			SDL_Surface *tex;
 			vec2f_t floorpos;
 			uint8_t c;
+			vec2i_t floor_i;
 			int tex_x, tex_y;
 			float rowdist;
 
@@ -346,7 +350,7 @@ void ray_draw_column(int x)
 
 					c = ((Uint8 *)tex->pixels)[tex_y * tex->w + tex_x];
 
-					sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * -2);
+					sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * LIGHT_SCALE + LIGHT_LEVEL);
 				}
 			}
 
@@ -360,12 +364,15 @@ void ray_draw_column(int x)
 					floorpos.x = camera.x + rowdist * ray_dir.x;
 					floorpos.y = camera.y + rowdist * ray_dir.y;
 
+					floor_i.x = (int)floorpos.x;
+					floor_i.y = (int)floorpos.y;
+
 					tex_x = wrap(floorpos.x * tex->w, tex->w);
 					tex_y = wrap(floorpos.y * tex->h, tex->h);
 
 					c = ((Uint8 *)tex->pixels)[tex_y * tex->w + tex_x];
 
-					sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * -2);
+					sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * LIGHT_SCALE + LIGHT_LEVEL);
 				}
 			}
 		}
@@ -436,13 +443,13 @@ void ray_draw_column(int x)
 					if (hit == HIT_MASK && c != 255)
 					{
 						/* draw masked texture */
-						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * -2);
+						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * LIGHT_SCALE + LIGHT_LEVEL);
 						stencil[y] = 1;
 					}
 					else
 					{
 						/* draw wall texture */
-						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * -2);
+						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * LIGHT_SCALE + LIGHT_LEVEL);
 					}
 				}
 			}
@@ -698,7 +705,7 @@ int main(int argc, char **argv)
 	load_walls("gfx/palette.dat");
 	load_masks("gfx/palette.dat");
 	load_floors("gfx/palette.dat");
-	sky_texture = IMG_Load("gfx/sky.png");
+	sky_texture = IMG_Load("gfx/sky_night.png");
 	colormap = IMG_Load("gfx/colormap.png");
 	install_palette("gfx/palette.dat", sky_texture);
 	install_palette("gfx/palette.dat", sdl.surface8);
