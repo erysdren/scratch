@@ -62,7 +62,7 @@ static struct {
 
 typedef struct tile_t {
 	uint8_t height;
-	uint8_t texture;
+	int8_t texture;
 } tile_t;
 
 #define MAP_WIDTH 24
@@ -101,7 +101,8 @@ static struct {
 	vec2i_t selected;
 } ray;
 
-SDL_Surface *wall_textures[256];
+SDL_Surface *wall_textures[64];
+SDL_Surface *mask_textures[64];
 SDL_Surface *sky_texture;
 SDL_Surface *colormap;
 
@@ -162,8 +163,13 @@ int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t 
 			return HIT_DONE;
 
 		/* hit */
-		else if (tilemap[map_pos->y][map_pos->x].height > 0)
-			return HIT_WALL;
+		if (tilemap[map_pos->y][map_pos->x].height > 0)
+		{
+			if (tilemap[map_pos->y][map_pos->x].texture < 0)
+				return HIT_MASK;
+			else
+				return HIT_WALL;
+		}
 	}
 
 	return HIT_DONE;
@@ -249,10 +255,7 @@ void ray_draw_column(int x)
 		}
 
 		/* line heights */
-		if (hit == HIT_MASK)
-			block_top = camera.z - 1;
-		else
-			block_top = camera.z - tilemap[map_pos.y][map_pos.x].height * 0.125f;
+		block_top = camera.z - tilemap[map_pos.y][map_pos.x].height * 0.125f;
 		block_bottom = camera.z;
 
 		/* line start and end */
@@ -301,10 +304,13 @@ void ray_draw_column(int x)
 		{
 			float wall_x;
 			int tex_x;
-			SDL_Surface *wall_texture;
+			SDL_Surface *tex;
 
 			/* get texture */
-			wall_texture = wall_textures[tilemap[map_pos.y][map_pos.x].texture - 1];
+			if (hit == HIT_MASK)
+				tex = mask_textures[(tilemap[map_pos.y][map_pos.x].texture * -1) - 1];
+			else
+				tex = wall_textures[tilemap[map_pos.y][map_pos.x].texture - 1];
 
 			/* get wall impact point */
 			if (!side)
@@ -315,9 +321,9 @@ void ray_draw_column(int x)
 			wall_x -= floorf(wall_x);
 
 			/* get texture x coord */
-			tex_x = wall_x * wall_texture->w;
+			tex_x = wall_x * tex->w;
 			if ((side == 0 && ray_dir.x > 0) || (side == 1 && ray_dir.y < 0))
-				tex_x = wall_texture->w - tex_x - 1;
+				tex_x = tex->w - tex_x - 1;
 
 			/* draw textured line */
 			for (y = line_start_c; y < line_end_c; y++)
@@ -327,16 +333,16 @@ void ray_draw_column(int x)
 
 				if (r_texture_stretch || hit == HIT_MASK)
 				{
-					tex_y = remap(y, line_start, line_end, 0, wall_texture->h);
+					tex_y = remap(y, line_start, line_end, 0, tex->h);
 				}
 				else
 				{
-					tex_y = remap(y, line_start, line_end, 0, wall_texture->h * tilemap[map_pos.y][map_pos.x].height * 0.125f);
-					tex_y = wrap(tex_y, wall_texture->h);
+					tex_y = remap(y, line_start, line_end, 0, tex->h * tilemap[map_pos.y][map_pos.x].height * 0.125f);
+					tex_y = wrap(tex_y, tex->h);
 				}
 
 				/* texture color at pixel */
-				c = ((Uint8 *)wall_texture->pixels)[tex_y * wall_texture->w + tex_x];
+				c = ((Uint8 *)tex->pixels)[tex_y * tex->w + tex_x];
 
 				if (!stencil[y])
 				{
@@ -474,17 +480,14 @@ void load_walls(char *palette)
 
 	memset(wall_textures, 0, sizeof(wall_textures));
 
-	for (i = 0; i < 256; i++)
+	for (i = 0; i < 64; i++)
 	{
 		snprintf(str, 128, "gfx/wall%d.png", i + 1);
 
 		wall_textures[i] = IMG_Load(str);
 
 		if (wall_textures[i] == NULL)
-		{
-			printf("Couldn't load %s\n", str);
 			break;
-		}
 
 		install_palette(palette, wall_textures[i]);
 	}
@@ -492,14 +495,47 @@ void load_walls(char *palette)
 	printf("Loaded %d wall textures.\n", i + 1);
 }
 
+void load_masks(char *palette)
+{
+	int i;
+	char str[128];
+
+	memset(mask_textures, 0, sizeof(mask_textures));
+
+	for (i = 0; i < 64; i++)
+	{
+		snprintf(str, 128, "gfx/mask%d.png", i + 1);
+
+		mask_textures[i] = IMG_Load(str);
+
+		if (mask_textures[i] == NULL)
+			break;
+
+		install_palette(palette, mask_textures[i]);
+	}
+
+	printf("Loaded %d mask textures.\n", i + 1);
+}
+
 void free_walls(void)
 {
 	int i;
 
-	for (i = 0; i < 256; i++)
+	for (i = 0; i < 64; i++)
 	{
 		if (wall_textures[i] != NULL)
 			SDL_FreeSurface(wall_textures[i]);
+	}
+}
+
+void free_masks(void)
+{
+	int i;
+
+	for (i = 0; i < 64; i++)
+	{
+		if (mask_textures[i] != NULL)
+			SDL_FreeSurface(mask_textures[i]);
 	}
 }
 
@@ -545,6 +581,7 @@ int main(int argc, char **argv)
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	load_walls("gfx/palette.dat");
+	load_masks("gfx/palette.dat");
 	sky_texture = IMG_Load("gfx/sky.png");
 	colormap = IMG_Load("gfx/colormap.png");
 	install_palette("gfx/palette.dat", sky_texture);
@@ -566,10 +603,19 @@ int main(int argc, char **argv)
 			if (x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1)
 			{
 				tilemap[y][x].height = 16;
-				tilemap[y][x].texture = 5;
+				tilemap[y][x].texture = 6;
 			}
 		}
 	}
+
+	tilemap[14][10].height = 8;
+	tilemap[14][10].texture = 6;
+	tilemap[14][11].height = 8;
+	tilemap[14][11].texture = -1;
+	tilemap[14][12].height = 8;
+	tilemap[14][12].texture = -1;
+	tilemap[14][13].height = 8;
+	tilemap[14][13].texture = 6;
 
 	/* setup raycaster */
 	camera.x = MAP_WIDTH / 2;
@@ -666,6 +712,7 @@ int main(int argc, char **argv)
 	SDL_DestroyRenderer(sdl.renderer);
 	SDL_DestroyTexture(sdl.texture);
 	free_walls();
+	free_masks();
 	SDL_FreeSurface(colormap);
 	SDL_FreeSurface(sky_texture);
 	SDL_FreeSurface(sdl.surface8);
