@@ -584,13 +584,6 @@ static void ray_editor_draw_tile(ray_t *ray, tile_t *tile, int x, int y)
 	rect.h = tex->h;
 
 	SDL_BlitSurface(tex, NULL, ray->dest, &rect);
-
-	if (ray->editor.cursor.x > x && ray->editor.cursor.x < x + tex->w &&
-		ray->editor.cursor.y > y && ray->editor.cursor.y < y + tex->h)
-	{
-		ray_fill(ray, x, y, 8 + 1, 8 + 1, 142);
-		ray_printf(ray, x + 1, y + 1, "%d", tile->height);
-	}
 }
 
 /* draw ray editor */
@@ -598,6 +591,9 @@ void ray_draw_editor(ray_t *ray)
 {
 	int tilex, tiley;
 	tile_t *tile;
+	tile_t *selected_tile;
+	vec2i_t selected_pos;
+	bool selected = false;
 	int x, y;
 	SDL_Rect rect;
 
@@ -615,6 +611,16 @@ void ray_draw_editor(ray_t *ray)
 		{
 			tile = &RAY_TILE_AT(ray, tilex, tiley);
 			ray_editor_draw_tile(ray, tile, x, y);
+
+			if (ray->editor.cursor.x >= x && ray->editor.cursor.x <= x + 64 &&
+				ray->editor.cursor.y >= y && ray->editor.cursor.y <= y + 64)
+			{
+				selected_tile = tile;
+				selected_pos.x = tilex;
+				selected_pos.y = tiley;
+				selected = true;
+			}
+
 			x += 64;
 		}
 
@@ -626,8 +632,13 @@ void ray_draw_editor(ray_t *ray)
 	rect.y = ray->editor.cursor.y - ray->crosshair->h / 2;
 	rect.w = ray->crosshair->w;
 	rect.h = ray->crosshair->h;
-
 	SDL_BlitSurface(ray->crosshair, NULL, ray->dest, &rect);
+
+	/* draw selected text */
+	if (selected)
+	{
+		ray_printf(ray, rect.x + 32, rect.y, "x=%d y=%d\nheight=%d", selected_pos.x, selected_pos.y, selected_tile->height);
+	}
 }
 
 /* init ray structure */

@@ -63,7 +63,7 @@ static struct {
 #define MAP_HEIGHT 32
 tile_t tiles[MAP_WIDTH * MAP_HEIGHT];
 ray_t ray;
-bool ineditor = true;
+bool ineditor = false;
 
 /* install palette to SDL_Surface */
 SDL_bool install_palette(const char *filename, SDL_Surface *surface)
@@ -267,6 +267,9 @@ int main(int argc, char **argv)
 			}
 		}
 	}
+
+	tiles[3 * MAP_WIDTH + 3].height = 8;
+	tiles[3 * MAP_WIDTH + 3].texture = 6;
 
 	/* setup tilemap */
 	ray.tilemap.width = MAP_WIDTH;
