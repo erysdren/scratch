@@ -110,7 +110,7 @@ void load_walls(char *palette)
 	}
 
 	ray.textures.num_walls = i;
-	printf("Loaded %d mask textures.\n", i);
+	printf("Loaded %d wall textures.\n", i);
 }
 
 /* load all maskwalls */
