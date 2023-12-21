@@ -36,6 +36,8 @@ SOFTWARE.
 #include <string.h>
 #include <stdlib.h>
 
+#include "rlew.h"
+
 /* compress data from SRC and write into DEST */
 /* returns the number of bytes written to DEST */
 size_t rlew_compress(uint16_t *src, size_t src_len, uint16_t tag, uint16_t *dest, size_t dest_len)

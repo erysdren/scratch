@@ -40,6 +40,7 @@ SOFTWARE.
 #include <stdlib.h>
 
 #include "ted5.h"
+#include "rlew.h"
 
 /* ted5 format constants */
 static const char ted5_magic[8] = "TED5v1.0";
@@ -213,15 +214,21 @@ bool ted5_read_plane(ted5_t *ted5, int map, int plane, void *buffer)
 	if (plane_is_carmackized(ted5, map, plane))
 		return false;
 
+	/* allocate and read plane */
+	void *planebuf = calloc(1, ted5->maps[map].len_planes[plane]);
+	fseek(ted5->files.maptemp, ted5->maps[map].ofs_planes[plane], SEEK_SET);
+	fread(planebuf, ted5->maps[map].len_planes[plane], 1, ted5->files.maptemp);
+
 	/* do plane reading */
-	read_plane_rlew(
-		ted5->files.maptemp,
-		ted5->maps[map].ofs_planes[plane],
+	rlew_uncompress(
+		planebuf,
 		ted5->maps[map].len_planes[plane],
 		ted5->tag,
 		buffer,
 		ted5_get_plane_size(ted5, map, plane)
 	);
+
+	free(planebuf);
 
 	return true;
 }
