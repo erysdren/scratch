@@ -22,43 +22,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include <math.h>
-#include <float.h>
+/*
+ *
+ * MAIN.C
+ *
+ */
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
+#include <math.h>
+#include <float.h>
+
 #include "SDL.h"
 #include "SDL_image.h"
 
+#include "ray.h"
+
 #define WIDTH 640
 #define HEIGHT 480
-
-#define TILE_SELECTION 0
-
-#ifndef MIN
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#endif
-
-#ifndef MAX
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef CLAMP
-#define CLAMP(a, min, max) MIN(MAX(a, min), max)
-#endif
-
-#ifndef DEG2RAD
-#define DEG2RAD(a) ((a) * M_PI / 180.0f)
-#endif
-
-#ifndef RAD2DEG
-#define RAD2DEG(a) ((a) * 180.0f / M_PI)
-#endif
-
-#define LIGHT_SCALE (-2)
-#define LIGHT_LEVEL (-16)
 
 static struct {
 	SDL_Window *window;
@@ -69,521 +52,19 @@ static struct {
 	SDL_Rect rect;
 	SDL_Event event;
 	SDL_bool running;
-	Uint8 *pixels;
 	const Uint8 *keys;
 	Uint64 now;
 	Uint64 last;
 	double dt;
 } sdl;
 
-/*
- *
- * RAYCASTER
- *
- */
-
-typedef struct tile_t {
-	uint8_t height;
-	int8_t texture;
-	int8_t floor_texture;
-	int8_t light;
-	int8_t side;
-} tile_t;
-
-#define MAP_WIDTH 24
-#define MAP_HEIGHT 24
-tile_t tilemap[MAP_HEIGHT][MAP_WIDTH];
-
-typedef struct vec2i_t {
-	int x, y;
-} vec2i_t;
-
-typedef struct vec2f_t {
-	float x, y;
-} vec2f_t;
-
-typedef struct vec3f_t {
-	float x, y, z;
-} vec3f_t;
-
-static struct {
-	vec3f_t origin;
-	float yaw;
-	float draw_distance;
-	int shear;
-	vec2f_t dir;
-} camera;
-
-static struct {
-	float viewsin;
-	float viewcos;
-	int horizon;
-	vec2i_t selected;
-} ray;
-
-SDL_Surface *floor_textures[64];
-SDL_Surface *wall_textures[64];
-SDL_Surface *mask_textures[64];
-SDL_Surface *sky_texture;
-SDL_Surface *colormap;
-
-bool r_sky = true;
-bool r_textures = true;
-bool r_texture_stretch = false;
-bool r_floors = true;
-bool r_collide = true;
-
-int remap(int value, int a1, int a2, int b1, int b2)
-{
-	return b1 + (value - a1) * (b2 - b1) / (a2 - a1);
-}
-
-int wrap(int value, int mod)
-{
-	int cmp = value < 0;
-	return cmp * mod + (value % mod) - cmp;
-}
-
-uint8_t colormap_lookup(uint8_t color, int brightness)
-{
-	int x, y;
-
-	x = color;
-	y = CLAMP(-brightness + 31, 0, 63);
-
-	return ((uint8_t *)colormap->pixels)[y * colormap->pitch + x];
-}
-
-/* ray hit result enum */
-enum {
-	HIT_DONE = 0,
-	HIT_WALL = 1,
-	HIT_MASK = 2
-};
-
-int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t *step, int *side)
-{
-	tile_t *tile = NULL;
-
-	while (1)
-	{
-		if (side_dist->x < side_dist->y)
-		{
-			side_dist->x += delta_dist->x;
-			map_pos->x += step->x;
-			*side = 0;
-		}
-		else
-		{
-			side_dist->y += delta_dist->y;
-			map_pos->y += step->y;
-			*side = 1;
-		}
-
-		/* out of bounds */
-		if (map_pos->y < 0 || map_pos->y >= MAP_HEIGHT)
-			return HIT_DONE;
-		if (map_pos->x < 0 || map_pos->x >= MAP_WIDTH)
-			return HIT_DONE;
-
-		tile = &tilemap[map_pos->y][map_pos->x];
-
-		/* hit */
-		if (tile->height > 0)
-		{
-			if (tile->texture < 0)
-			{
-				*side = tile->side;
-
-				return HIT_MASK;
-			}
-			else
-			{
-				return HIT_WALL;
-			}
-		}
-	}
-
-	return HIT_DONE;
-}
-
-void ray_draw_floor(vec3f_t *origin, vec2f_t *ray_dir, int x, int y, int pixel_height_scale)
-{
-	float rowdist;
-	vec2f_t floorpos;
-	tile_t *tile;
-	vec2i_t texpos;
-	uint8_t c;
-	int8_t light;
-	SDL_Surface *texture;
-
-	rowdist = (origin->z * pixel_height_scale) / (y - ray.horizon);
-
-	floorpos.x = origin->x + rowdist * ray_dir->x;
-	floorpos.y = origin->y + rowdist * ray_dir->y;
-
-	if (floorpos.y < 0 || floorpos.y >= MAP_HEIGHT || floorpos.x < 0 || floorpos.x >= MAP_WIDTH)
-		return;
-
-	tile = &tilemap[(int)floorpos.y][(int)floorpos.x];
-
-#if TILE_SELECTION
-	/* select tile */
-	if (x == WIDTH / 2 && y == HEIGHT / 2)
-	{
-		ray.selected.x = floorpos.x;
-		ray.selected.y = floorpos.y;
-	}
-
-	/* act on selected */
-	if (ray.selected.x == (int)floorpos.x && ray.selected.y == (int)floorpos.y)
-	{
-		light = 32;
-	}
-	else
-	{
-		light = tile->light;
-	}
-#else
-	light = tile->light;
-#endif /* TILE_SELECTION */
-
-	texture = floor_textures[tile->floor_texture];
-
-	texpos.x = wrap(floorpos.x * texture->w, texture->w);
-	texpos.y = wrap(floorpos.y * texture->h, texture->h);
-
-	c = ((Uint8 *)texture->pixels)[texpos.y * texture->pitch + texpos.x];
-
-	sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * LIGHT_SCALE + LIGHT_LEVEL + light);
-}
-
-void ray_draw_column(int x)
-{
-	vec2f_t ray_dir, delta_dist, side_dist, temp;
-	vec2i_t step, map_pos;
-	int side;
-	float dist, dist2;
-	int line_start, line_end;
-	int line_start_c, line_end_c;
-	int y;
-	float block_top, block_bottom;
-	float pixel_height_scale = HEIGHT / 1.5;
-	int ystart = HEIGHT;
-	int floorstart = 0;
-	int hit;
-	uint8_t stencil[HEIGHT];
-	int8_t light;
-
-	/* reset stencil buffer */
-	memset(stencil, 0, sizeof(stencil));
-
-	/* get map pos */
-	map_pos.x = (int)camera.origin.x;
-	map_pos.y = (int)camera.origin.y;
-
-	/* get ray direction */
-	ray_dir.x = ((2.0f / (float)WIDTH) * (float)x) - 1.0f;
-	ray_dir.y = 1.0f;
-
-	/* rotate around (0, 0) by camera yaw */
-	temp = ray_dir;
-	ray_dir.x = (-temp.x * ray.viewcos) - (-temp.y * ray.viewsin);
-	ray_dir.y = (temp.x * ray.viewsin) + (temp.y * ray.viewcos);
-
-	/* get delta of ray (prevent divide by 0) */
-	delta_dist.x = (ray_dir.x == 0.0f) ? FLT_MAX : fabs(1.0f / ray_dir.x);
-	delta_dist.y = (ray_dir.y == 0.0f) ? FLT_MAX : fabs(1.0f / ray_dir.y);
-
-	/* get step and initial side_dist */
-	if (ray_dir.x < 0)
-	{
-		step.x = -1;
-		side_dist.x = (camera.origin.x - (float)map_pos.x) * delta_dist.x;
-	}
-	else
-	{
-		step.x = 1;
-		side_dist.x = ((float)map_pos.x + 1.0f - camera.origin.x) * delta_dist.x;
-	}
-
-	if (ray_dir.y < 0)
-	{
-		step.y = -1;
-		side_dist.y = (camera.origin.y - (float)map_pos.y) * delta_dist.y;
-	}
-	else
-	{
-		step.y = 1;
-		side_dist.y = ((float)map_pos.y + 1.0f - camera.origin.y) * delta_dist.y;
-	}
-
-	/* do cast */
-	while ((hit = ray_cast(&side_dist, &delta_dist, &map_pos, &step, &side)) != HIT_DONE)
-	{
-		/* early out */
-		if (!ystart)
-			break;
-
-		/* get dist */
-		if (!side)
-		{
-			dist = side_dist.x - delta_dist.x;
-			dist2 = CLAMP(side_dist.y, dist, dist + delta_dist.x);
-
-			if (hit == HIT_MASK)
-			{
-				if (dist + (delta_dist.x / 2) < side_dist.y - delta_dist.y)
-					continue;
-				else if (dist + (delta_dist.x / 2) > dist2)
-					continue;
-				else
-					dist += delta_dist.x / 2;
-			}
-		}
-		else
-		{
-			dist = side_dist.y - delta_dist.y;
-			dist2 = CLAMP(side_dist.x, dist, dist + delta_dist.y);
-
-			if (hit == HIT_MASK)
-			{
-				if (dist + (delta_dist.y / 2) < side_dist.x - delta_dist.x)
-					continue;
-				else if (dist + (delta_dist.y / 2) > dist2)
-					continue;
-				else
-					dist += delta_dist.y / 2;
-			}
-		}
-
-		/* line heights */
-		block_top = camera.origin.z - tilemap[map_pos.y][map_pos.x].height * 0.125f;
-		block_bottom = camera.origin.z;
-
-		/* line start and end */
-		line_start = ((block_top / dist) * pixel_height_scale) + ray.horizon;
-		line_end = ((block_bottom / dist) * pixel_height_scale) + ray.horizon;
-
-		/* clamp to screen resolution */
-		line_start_c = CLAMP(line_start, 0, ystart);
-		line_end_c = CLAMP(line_end, 0, ystart);
-
-		/* set floorstart */
-		if (floorstart < line_end_c && hit == HIT_WALL)
-			floorstart = line_end_c;
-
-		/* draw floors */
-		if (r_floors)
-		{
-			/* upper floor */
-			for (y = line_end_c; y < ystart; y++)
-			{
-				if (!stencil[y])
-				{
-					ray_draw_floor(&camera.origin, &ray_dir, x, y, pixel_height_scale);
-				}
-			}
-
-			/* lower floor */
-			for (y = floorstart; y < HEIGHT; y++)
-			{
-				if (!stencil[y])
-				{
-					ray_draw_floor(&camera.origin, &ray_dir, x, y, pixel_height_scale);
-				}
-			}
-		}
-		else
-		{
-			/* upper floor */
-			for (y = line_end_c; y < ystart; y++)
-			{
-				if (!stencil[y])
-					sdl.pixels[y * WIDTH + x] = 0;
-			}
-
-			/* lower floor */
-			for (y = floorstart; y < HEIGHT; y++)
-			{
-				if (!stencil[y])
-					sdl.pixels[y * WIDTH + x] = 0;
-			}
-		}
-
-		/* draw walls */
-		if (r_textures)
-		{
-			float wall_x;
-			int tex_x;
-			SDL_Surface *tex;
-
-			/* get texture */
-			if (hit == HIT_MASK)
-				tex = mask_textures[(tilemap[map_pos.y][map_pos.x].texture * -1) - 1];
-			else
-				tex = wall_textures[tilemap[map_pos.y][map_pos.x].texture - 1];
-
-			/* get wall impact point */
-			if (!side)
-				wall_x = camera.origin.y + dist * ray_dir.y;
-			else
-				wall_x = camera.origin.x + dist * ray_dir.x;
-
-			wall_x -= floorf(wall_x);
-
-			/* get texture x coord */
-			tex_x = wall_x * tex->w;
-			if ((side == 0 && ray_dir.x > 0) || (side == 1 && ray_dir.y < 0))
-				tex_x = tex->w - tex_x - 1;
-
-#if TILE_SELECTION
-			/* get light level */
-			if (ray.selected.x == map_pos.x && ray.selected.y == map_pos.y)
-				light = 32;
-			else
-				light = tilemap[map_pos.y][map_pos.x].light;
-#else
-			light = tilemap[map_pos.y][map_pos.x].light;
-#endif /* TILE_SELECTION */
-
-			/* draw textured line */
-			for (y = line_start_c; y < line_end_c; y++)
-			{
-				int tex_y;
-				uint8_t c;
-
-				if (r_texture_stretch)
-				{
-					tex_y = remap(y, line_start, line_end, 0, tex->h);
-				}
-				else
-				{
-					tex_y = remap(y, line_start, line_end, 0, tex->h * tilemap[map_pos.y][map_pos.x].height * 0.125f);
-					tex_y = wrap(tex_y, tex->h);
-				}
-
-				/* texture color at pixel */
-				c = ((Uint8 *)tex->pixels)[tex_y * tex->w + tex_x];
-
-#if TILE_SELECTION
-				/* select tile */
-				if (x == WIDTH / 2 && y == HEIGHT / 2)
-					ray.selected = map_pos;
-#endif /* TILE_SELECTION */
-
-				if (!stencil[y])
-				{
-					if (hit == HIT_MASK && c != 255)
-					{
-						/* draw masked texture */
-						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * LIGHT_SCALE + LIGHT_LEVEL + light);
-						stencil[y] = 1;
-					}
-					else
-					{
-						/* draw wall texture */
-						sdl.pixels[y * WIDTH + x] = colormap_lookup(c, dist * LIGHT_SCALE + LIGHT_LEVEL + light);
-					}
-				}
-			}
-
-			/* set ystart for next cast */
-			if (hit == HIT_WALL)
-				ystart = line_start_c;
-		}
-		else
-		{
-			/* draw colored line */
-			for (y = line_start_c; y < line_end_c; y++)
-			{
-				sdl.pixels[y * WIDTH + x] = 255;
-			}
-
-			/* set ystart for next cast */
-			ystart = line_start_c;
-		}
-
-		/* draw top slab */
-		if (hit == HIT_WALL)
-		{
-			/* line start and end */
-			line_start = ((block_top / dist2) * pixel_height_scale) + ray.horizon;
-			line_end = ystart;
-
-			/* clamp to screen resolution */
-			line_start_c = CLAMP(line_start, 0, ystart);
-			line_end_c = CLAMP(line_end, 0, ystart);
-
-			/* draw colored line */
-			for (y = line_start_c; y < line_end_c; y++)
-			{
-				if (!stencil[y])
-				{
-					if (r_floors)
-					{
-						vec3f_t org;
-						org = camera.origin;
-						org.z = block_top;
-						ray_draw_floor(&org, &ray_dir, x, y, pixel_height_scale);
-					}
-					else
-					{
-						sdl.pixels[y * WIDTH + x] = 95;
-					}
-				}
-			}
-
-			/* set ystart for next cast */
-			ystart = line_start_c;
-		}
-
-		/* draw sky */
-		if (r_sky)
-		{
-			int tex_x;
-			int tex_y;
-
-			tex_x = x - camera.yaw * 4;
-			tex_x = wrap(tex_x / 2, sky_texture->w);
-
-			for (y = 0; y < line_start_c; y++)
-			{
-				tex_y = y - ray.horizon + (sky_texture->h / 2) * 2;
-
-				tex_y = wrap(tex_y / 2, sky_texture->h);
-
-				if (!stencil[y])
-					sdl.pixels[y * WIDTH + x] = ((Uint8 *)sky_texture->pixels)[tex_y * sky_texture->w + tex_x];
-			}
-		}
-	}
-}
-
-void ray_draw(void)
-{
-	int x, y;
-
-	/* get sin and cos of camera yaw */
-	ray.viewsin = sinf(DEG2RAD(camera.yaw));
-	ray.viewcos = cosf(DEG2RAD(camera.yaw));
-
-	/* calculate camera horizon */
-	ray.horizon = -camera.shear + (HEIGHT / 2);
-
-	/* draw walls, floors, and sky */
-	for (x = 0; x < WIDTH; x++)
-	{
-		ray_draw_column(x);
-	}
-}
-
-/*
- *
- * MAIN
- *
- */
-
+/* ray structure */
+#define MAP_WIDTH 32
+#define MAP_HEIGHT 32
+tile_t tiles[MAP_WIDTH * MAP_HEIGHT];
+ray_t ray;
+
+/* install palette to SDL_Surface */
 SDL_bool install_palette(const char *filename, SDL_Surface *surface)
 {
 	FILE *file;
@@ -608,112 +89,122 @@ SDL_bool install_palette(const char *filename, SDL_Surface *surface)
 	return SDL_TRUE;
 }
 
+/* load all walls */
 void load_walls(char *palette)
 {
 	int i;
 	char str[128];
 
-	memset(wall_textures, 0, sizeof(wall_textures));
+	ray.textures.walls = calloc(64, sizeof(SDL_Surface *));
 
 	for (i = 0; i < 64; i++)
 	{
 		snprintf(str, 128, "gfx/wall%d.png", i + 1);
 
-		wall_textures[i] = IMG_Load(str);
+		ray.textures.walls[i] = IMG_Load(str);
 
-		if (wall_textures[i] == NULL)
+		if (ray.textures.walls[i] == NULL)
 			break;
 
-		install_palette(palette, wall_textures[i]);
+		install_palette(palette, ray.textures.walls[i]);
 	}
 
-	printf("Loaded %d wall textures.\n", i);
+	ray.textures.num_walls = i;
+	printf("Loaded %d mask textures.\n", i);
 }
 
-void load_masks(char *palette)
+/* load all maskwalls */
+void load_maskwalls(char *palette)
 {
 	int i;
 	char str[128];
 
-	memset(mask_textures, 0, sizeof(mask_textures));
+	ray.textures.maskwalls = calloc(64, sizeof(SDL_Surface *));
 
 	for (i = 0; i < 64; i++)
 	{
 		snprintf(str, 128, "gfx/mask%d.png", i + 1);
 
-		mask_textures[i] = IMG_Load(str);
+		ray.textures.maskwalls[i] = IMG_Load(str);
 
-		if (mask_textures[i] == NULL)
+		if (ray.textures.maskwalls[i] == NULL)
 			break;
 
-		install_palette(palette, mask_textures[i]);
+		install_palette(palette, ray.textures.maskwalls[i]);
 	}
 
+	ray.textures.num_maskwalls = i;
 	printf("Loaded %d mask textures.\n", i);
 }
 
+/* load all floors */
 void load_floors(char *palette)
 {
 	int i;
 	char str[128];
 
-	memset(floor_textures, 0, sizeof(floor_textures));
+	ray.textures.floors = calloc(64, sizeof(SDL_Surface *));
 
 	for (i = 0; i < 64; i++)
 	{
 		snprintf(str, 128, "gfx/floor%d.png", i + 1);
 
-		floor_textures[i] = IMG_Load(str);
+		ray.textures.floors[i] = IMG_Load(str);
 
-		if (floor_textures[i] == NULL)
+		if (ray.textures.floors[i] == NULL)
 			break;
 
-		install_palette(palette, floor_textures[i]);
+		install_palette(palette, ray.textures.floors[i]);
 	}
 
+	ray.textures.num_floors = i;
 	printf("Loaded %d floor textures.\n", i);
 }
 
+/* free all walls */
 void free_walls(void)
 {
 	int i;
 
 	for (i = 0; i < 64; i++)
 	{
-		if (wall_textures[i] != NULL)
-			SDL_FreeSurface(wall_textures[i]);
+		if (ray.textures.walls[i] != NULL)
+			SDL_FreeSurface(ray.textures.walls[i]);
 	}
 }
 
-void free_masks(void)
+/* free all maskwalls */
+void free_maskwalls(void)
 {
 	int i;
 
 	for (i = 0; i < 64; i++)
 	{
-		if (mask_textures[i] != NULL)
-			SDL_FreeSurface(mask_textures[i]);
+		if (ray.textures.maskwalls[i] != NULL)
+			SDL_FreeSurface(ray.textures.maskwalls[i]);
 	}
 }
 
+/* free all floors */
 void free_floors(void)
 {
 	int i;
 
 	for (i = 0; i < 64; i++)
 	{
-		if (floor_textures[i] != NULL)
-			SDL_FreeSurface(floor_textures[i]);
+		if (ray.textures.floors[i] != NULL)
+			SDL_FreeSurface(ray.textures.floors[i]);
 	}
 }
 
+/* main */
 int main(int argc, char **argv)
 {
 	uint32_t pixel_format;
 	unsigned int rmask, gmask, bmask, amask;
 	int bpp;
 	int x, y;
-	vec3f_t temporigin;
+	vec2f_t dir;
 
 	SDL_Init(SDL_INIT_VIDEO);
 	IMG_Init(IMG_INIT_PNG);
@@ -749,82 +240,61 @@ int main(int argc, char **argv)
 
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	load_walls("gfx/palette.dat");
-	load_masks("gfx/palette.dat");
-	load_floors("gfx/palette.dat");
-	sky_texture = IMG_Load("gfx/sky_night.png");
-	colormap = IMG_Load("gfx/colormap.png");
-	install_palette("gfx/palette.dat", sky_texture);
-	install_palette("gfx/palette.dat", sdl.surface8);
-	install_palette("gfx/palette.dat", colormap);
-
-	sdl.pixels = sdl.surface8->pixels;
-
 	sdl.now = SDL_GetPerformanceCounter();
 	sdl.last = 0;
 	sdl.dt = 0;
 
-	/* setup tilemap */
-	memset(tilemap, 0, sizeof(tilemap));
+	/* init raycaster */
+	ray_init(&ray);
+
+	/* setup tiles */
+	memset(tiles, 0, sizeof(tiles));
 	for (y = 0; y < MAP_HEIGHT; y++)
 	{
 		for (x = 0; x < MAP_WIDTH; x++)
 		{
 			if (x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1)
 			{
-				tilemap[y][x].height = 8;
-				tilemap[y][x].texture = 6;
+				tiles[y * MAP_WIDTH + x].height = 8;
+				tiles[y * MAP_WIDTH + x].texture = 6;
 			}
 		}
 	}
 
-	tilemap[10][10].height = 12;
-	tilemap[10][10].texture = 6;
-	tilemap[10][10].floor_texture = 2;
+	/* setup tilemap */
+	ray.tilemap.width = MAP_WIDTH;
+	ray.tilemap.height = MAP_HEIGHT;
+	ray.tilemap.tiles = tiles;
+	ray.tilemap.light_scale = -2;
+	ray.tilemap.light_level = -16;
 
-	tilemap[10][11].height = 8;
-	tilemap[10][11].texture = -2;
-	tilemap[10][11].side = 1;
+	/* setup camera */
+	ray.camera.origin.x = MAP_WIDTH / 2;
+	ray.camera.origin.y = MAP_HEIGHT / 2;
+	ray.camera.origin.z = 0.5;
+	ray.camera.yaw = 0;
+	ray.camera.pitch = 0;
 
-	tilemap[10][12].height = 8;
-	tilemap[10][12].texture = -2;
-	tilemap[10][12].side = 1;
+	/* setup config */
+	ray.config.draw_sky = true;
+	ray.config.draw_wall_textures = true;
+	ray.config.stretch_wall_textures = false;
+	ray.config.draw_floor_textures = true;
 
-	tilemap[10][13].height = 12;
-	tilemap[10][13].texture = 6;
-	tilemap[10][13].floor_texture = 2;
+	/* load textures */
+	load_walls("gfx/palette.dat");
+	load_maskwalls("gfx/palette.dat");
+	load_floors("gfx/palette.dat");
+	ray.textures.sky = IMG_Load("gfx/sky_night.png");
+	ray.colormap = IMG_Load("gfx/colormap.png");
 
-	tilemap[11][10].height = 8;
-	tilemap[11][10].texture = -2;
+	/* install palettes */
+	install_palette("gfx/palette.dat", ray.textures.sky);
+	install_palette("gfx/palette.dat", sdl.surface8);
+	install_palette("gfx/palette.dat", ray.colormap);
 
-	tilemap[12][10].height = 8;
-	tilemap[12][10].texture = -2;
-
-	tilemap[13][10].height = 8;
-	tilemap[13][10].texture = -2;
-
-	tilemap[14][10].height = 12;
-	tilemap[14][10].texture = 6;
-	tilemap[14][10].floor_texture = 2;
-
-	tilemap[14][11].height = 8;
-	tilemap[14][11].texture = -2;
-	tilemap[14][11].side = 1;
-
-	tilemap[14][12].height = 8;
-	tilemap[14][12].texture = -2;
-	tilemap[14][12].side = 1;
-
-	tilemap[14][13].height = 12;
-	tilemap[14][13].texture = 6;
-	tilemap[14][13].floor_texture = 2;
-
-	/* setup raycaster */
-	camera.origin.x = MAP_WIDTH / 2;
-	camera.origin.y = MAP_HEIGHT / 2;
-	camera.origin.z = 0.5;
-	camera.shear = 0;
-	camera.draw_distance = MAP_WIDTH * 2;
+	/* set render destination */
+	ray.dest = sdl.surface8;
 
 	/* main loop */
 	sdl.running = SDL_TRUE;
@@ -841,8 +311,8 @@ int main(int argc, char **argv)
 					break;
 
 				case SDL_MOUSEMOTION:
-					camera.shear += sdl.event.motion.yrel;
-					camera.yaw -= sdl.event.motion.xrel;
+					ray.camera.pitch += sdl.event.motion.yrel;
+					ray.camera.yaw -= sdl.event.motion.xrel;
 					break;
 
 				default:
@@ -859,82 +329,55 @@ int main(int argc, char **argv)
 		sdl.dt = ((double)(sdl.now - sdl.last) / (double)SDL_GetPerformanceFrequency());
 
 		/* get look direction */
-		camera.dir.x = ray.viewsin * sdl.dt * 2;
-		camera.dir.y = ray.viewcos * sdl.dt * 2;
+		dir.x = sinf(DEG2RAD(ray.camera.yaw)) * sdl.dt * 2;
+		dir.y = cosf(DEG2RAD(ray.camera.yaw)) * sdl.dt * 2;
 
 		/* movement controls */
-		temporigin = camera.origin;
 		if (sdl.keys[SDL_SCANCODE_W] || sdl.keys[SDL_SCANCODE_UP])
 		{
-			temporigin.x += camera.dir.x;
-			temporigin.y += camera.dir.y;
+			ray.camera.origin.x += dir.x;
+			ray.camera.origin.y += dir.y;
 		}
 		if (sdl.keys[SDL_SCANCODE_S] || sdl.keys[SDL_SCANCODE_DOWN])
 		{
-			temporigin.x -= camera.dir.x;
-			temporigin.y -= camera.dir.y;
+			ray.camera.origin.x -= dir.x;
+			ray.camera.origin.y -= dir.y;
 		}
 		if (sdl.keys[SDL_SCANCODE_A])
 		{
-			temporigin.x += camera.dir.y;
-			temporigin.y -= camera.dir.x;
+			ray.camera.origin.x += dir.y;
+			ray.camera.origin.y -= dir.x;
 		}
 		if (sdl.keys[SDL_SCANCODE_D])
 		{
-			temporigin.x -= camera.dir.y;
-			temporigin.y += camera.dir.x;
+			ray.camera.origin.x -= dir.y;
+			ray.camera.origin.y += dir.x;
 		}
-
-		/* move camera with collision */
-		if (r_collide)
-		{
-			tile_t *curtile, *nexttile;
-
-			curtile = &tilemap[(int)camera.origin.y][(int)camera.origin.x];
-
-			/* determine x movement */
-			nexttile = &tilemap[(int)camera.origin.y][(int)temporigin.x];
-			if (nexttile->height <= curtile->height)
-				camera.origin.x = temporigin.x;
-
-			/* determine y movement */
-			nexttile = &tilemap[(int)temporigin.y][(int)camera.origin.x];
-			if (nexttile->height <= curtile->height)
-				camera.origin.y = temporigin.y;
-		}
-		else
-		{
-			camera.origin = temporigin;
-		}
-
 
 		/* look controls */
 		if (sdl.keys[SDL_SCANCODE_LEFT])
 		{
-			camera.yaw += 1;
+			ray.camera.yaw += 1;
 		}
 		if (sdl.keys[SDL_SCANCODE_RIGHT])
 		{
-			camera.yaw -= 1;
+			ray.camera.yaw -= 1;
 		}
 		if (sdl.keys[SDL_SCANCODE_PAGEUP])
 		{
-			camera.shear -= 2;
+			ray.camera.pitch -= 2;
 		}
 		if (sdl.keys[SDL_SCANCODE_PAGEDOWN])
 		{
-			camera.shear += 2;
+			ray.camera.pitch += 2;
 		}
 		if (sdl.keys[SDL_SCANCODE_HOME])
 		{
-			camera.shear = 0;
+			ray.camera.pitch = 0;
 		}
 
-		/* clamp camera shear */
-		camera.shear = CLAMP(camera.shear, -sky_texture->h / 4, sky_texture->h / 4);
-
 		/* draw */
-		ray_draw();
+		ray_draw(&ray);
 
 		/* blit to screen */
 		SDL_BlitSurface(sdl.surface8, &sdl.rect, sdl.surface32, &sdl.rect);
@@ -952,10 +395,10 @@ int main(int argc, char **argv)
 	SDL_DestroyRenderer(sdl.renderer);
 	SDL_DestroyTexture(sdl.texture);
 	free_walls();
-	free_masks();
+	free_maskwalls();
 	free_floors();
-	SDL_FreeSurface(colormap);
-	SDL_FreeSurface(sky_texture);
+	SDL_FreeSurface(ray.colormap);
+	SDL_FreeSurface(ray.textures.sky);
 	SDL_FreeSurface(sdl.surface8);
 	SDL_FreeSurface(sdl.surface32);
 	IMG_Quit();

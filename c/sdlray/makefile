@@ -12,7 +12,7 @@ LDFLAGS += -lm $(shell $(PKGCONFIG) sdl2 SDL2_image --libs)
 EXEC ?= sdlray
 
 # objects
-OBJECTS = main.o
+OBJECTS = main.o ray.o
 
 # clean and build execs
 all: clean $(EXEC)
