@@ -131,6 +131,7 @@ bool r_sky = true;
 bool r_textures = true;
 bool r_texture_stretch = false;
 bool r_floors = true;
+bool r_collide = true;
 
 int remap(int value, int a1, int a2, int b1, int b2)
 {
@@ -357,7 +358,7 @@ void ray_draw_column(int x)
 		}
 
 		/* line heights */
-		block_top = camera.origin.z - tilemap[map_pos.y][map_pos.x].height * 0.125;
+		block_top = camera.origin.z - tilemap[map_pos.y][map_pos.x].height * 0.125f;
 		block_bottom = camera.origin.z;
 
 		/* line start and end */
@@ -458,7 +459,7 @@ void ray_draw_column(int x)
 				}
 				else
 				{
-					tex_y = remap(y, line_start, line_end, 0, tex->h * tilemap[map_pos.y][map_pos.x].height * 0.125);
+					tex_y = remap(y, line_start, line_end, 0, tex->h * tilemap[map_pos.y][map_pos.x].height * 0.125f);
 					tex_y = wrap(tex_y, tex->h);
 				}
 
@@ -712,6 +713,7 @@ int main(int argc, char **argv)
 	unsigned int rmask, gmask, bmask, amask;
 	int bpp;
 	int x, y;
+	vec3f_t temporigin;
 
 	SDL_Init(SDL_INIT_VIDEO);
 	IMG_Init(IMG_INIT_PNG);
@@ -861,26 +863,50 @@ int main(int argc, char **argv)
 		camera.dir.y = ray.viewcos * sdl.dt * 2;
 
 		/* movement controls */
+		temporigin = camera.origin;
 		if (sdl.keys[SDL_SCANCODE_W] || sdl.keys[SDL_SCANCODE_UP])
 		{
-			camera.origin.x += camera.dir.x;
-			camera.origin.y += camera.dir.y;
+			temporigin.x += camera.dir.x;
+			temporigin.y += camera.dir.y;
 		}
 		if (sdl.keys[SDL_SCANCODE_S] || sdl.keys[SDL_SCANCODE_DOWN])
 		{
-			camera.origin.x -= camera.dir.x;
-			camera.origin.y -= camera.dir.y;
+			temporigin.x -= camera.dir.x;
+			temporigin.y -= camera.dir.y;
 		}
 		if (sdl.keys[SDL_SCANCODE_A])
 		{
-			camera.origin.x += camera.dir.y;
-			camera.origin.y -= camera.dir.x;
+			temporigin.x += camera.dir.y;
+			temporigin.y -= camera.dir.x;
 		}
 		if (sdl.keys[SDL_SCANCODE_D])
 		{
-			camera.origin.x -= camera.dir.y;
-			camera.origin.y += camera.dir.x;
+			temporigin.x -= camera.dir.y;
+			temporigin.y += camera.dir.x;
 		}
+
+		/* move camera with collision */
+		if (r_collide)
+		{
+			tile_t *curtile, *nexttile;
+
+			curtile = &tilemap[(int)camera.origin.y][(int)camera.origin.x];
+
+			/* determine x movement */
+			nexttile = &tilemap[(int)camera.origin.y][(int)temporigin.x];
+			if (nexttile->height <= curtile->height)
+				camera.origin.x = temporigin.x;
+
+			/* determine y movement */
+			nexttile = &tilemap[(int)temporigin.y][(int)camera.origin.x];
+			if (nexttile->height <= curtile->height)
+				camera.origin.y = temporigin.y;
+		}
+		else
+		{
+			camera.origin = temporigin;
+		}
+
 
 		/* look controls */
 		if (sdl.keys[SDL_SCANCODE_LEFT])
