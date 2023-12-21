@@ -171,7 +171,7 @@ void ted5_close(ted5_t *ted5)
 
 /* get size (in bytes) of a given map's plane, for memory allocation */
 /* returns 0 on error */
-uint32_t ted5_get_plane_size(ted5_t *ted5, int map, int plane)
+size_t ted5_get_plane_size(ted5_t *ted5, int map, int plane)
 {
 	uint16_t read;
 
