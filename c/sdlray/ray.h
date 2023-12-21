@@ -109,6 +109,7 @@ typedef struct ray_t {
 	struct {
 		float scale;
 		vec2i_t offset;
+		vec2i_t cursor;
 	} editor;
 	SDL_Surface *dest;
 	SDL_Surface *colormap;

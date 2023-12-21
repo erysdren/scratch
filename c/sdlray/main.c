@@ -326,6 +326,8 @@ int main(int argc, char **argv)
 					break;
 
 				case SDL_MOUSEMOTION:
+					ray.editor.cursor.x = sdl.event.motion.x;
+					ray.editor.cursor.y = sdl.event.motion.y;
 					ray.camera.pitch += sdl.event.motion.yrel;
 					ray.camera.yaw -= sdl.event.motion.xrel;
 					break;

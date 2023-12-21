@@ -585,8 +585,12 @@ static void ray_editor_draw_tile(ray_t *ray, tile_t *tile, int x, int y)
 
 	SDL_BlitSurface(tex, NULL, ray->dest, &rect);
 
-	ray_fill(ray, x, y, 8 + 1, 8 + 1, 142);
-	ray_printf(ray, x + 1, y + 1, "%d", tile->height);
+	if (ray->editor.cursor.x > x && ray->editor.cursor.x < x + tex->w &&
+		ray->editor.cursor.y > y && ray->editor.cursor.y < y + tex->h)
+	{
+		ray_fill(ray, x, y, 8 + 1, 8 + 1, 142);
+		ray_printf(ray, x + 1, y + 1, "%d", tile->height);
+	}
 }
 
 /* draw ray editor */
