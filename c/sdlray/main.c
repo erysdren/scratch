@@ -376,6 +376,16 @@ int main(int argc, char **argv)
 			ray.camera.pitch = 0;
 		}
 
+		/* light controls */
+		if (sdl.keys[SDL_SCANCODE_KP_PLUS])
+		{
+			ray.tilemap.light_level += 1;
+		}
+		if (sdl.keys[SDL_SCANCODE_KP_MINUS])
+		{
+			ray.tilemap.light_level -= 1;
+		}
+
 		/* draw */
 		ray_draw(&ray);
 
