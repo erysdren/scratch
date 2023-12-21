@@ -63,7 +63,7 @@ static struct {
 #define MAP_HEIGHT 32
 tile_t tiles[MAP_WIDTH * MAP_HEIGHT];
 ray_t ray;
-bool ineditor = false;
+bool ineditor = true;
 
 /* install palette to SDL_Surface */
 SDL_bool install_palette(const char *filename, SDL_Surface *surface)
@@ -245,8 +245,6 @@ int main(int argc, char **argv)
 	sdl.rect.w = WIDTH;
 	sdl.rect.h = HEIGHT;
 
-	SDL_SetRelativeMouseMode(SDL_TRUE);
-
 	sdl.now = SDL_GetPerformanceCounter();
 	sdl.last = 0;
 	sdl.dt = 0;
@@ -352,6 +350,8 @@ int main(int argc, char **argv)
 
 		if (ineditor)
 		{
+			SDL_SetRelativeMouseMode(SDL_FALSE);
+
 			/* look controls */
 			if (sdl.keys[SDL_SCANCODE_LEFT])
 			{
@@ -375,6 +375,8 @@ int main(int argc, char **argv)
 		}
 		else
 		{
+			SDL_SetRelativeMouseMode(SDL_TRUE);
+
 			/* get look direction */
 			dir.x = sinf(DEG2RAD(ray.camera.yaw)) * sdl.dt * 2;
 			dir.y = cosf(DEG2RAD(ray.camera.yaw)) * sdl.dt * 2;
