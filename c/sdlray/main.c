@@ -860,13 +860,13 @@ int main(int argc, char **argv)
 		camera.dir.x = ray.viewsin * sdl.dt * 2;
 		camera.dir.y = ray.viewcos * sdl.dt * 2;
 
-		/* process player inputs */
-		if (sdl.keys[SDL_SCANCODE_W])
+		/* movement controls */
+		if (sdl.keys[SDL_SCANCODE_W] || sdl.keys[SDL_SCANCODE_UP])
 		{
 			camera.origin.x += camera.dir.x;
 			camera.origin.y += camera.dir.y;
 		}
-		if (sdl.keys[SDL_SCANCODE_S])
+		if (sdl.keys[SDL_SCANCODE_S] || sdl.keys[SDL_SCANCODE_DOWN])
 		{
 			camera.origin.x -= camera.dir.x;
 			camera.origin.y -= camera.dir.y;
@@ -881,13 +881,27 @@ int main(int argc, char **argv)
 			camera.origin.x -= camera.dir.y;
 			camera.origin.y += camera.dir.x;
 		}
+
+		/* look controls */
+		if (sdl.keys[SDL_SCANCODE_LEFT])
+		{
+			camera.yaw += 1;
+		}
+		if (sdl.keys[SDL_SCANCODE_RIGHT])
+		{
+			camera.yaw -= 1;
+		}
 		if (sdl.keys[SDL_SCANCODE_PAGEUP])
 		{
-			camera.origin.z += sdl.dt * 2;
+			camera.shear -= 2;
 		}
 		if (sdl.keys[SDL_SCANCODE_PAGEDOWN])
 		{
-			camera.origin.z -= sdl.dt * 2;
+			camera.shear += 2;
+		}
+		if (sdl.keys[SDL_SCANCODE_HOME])
+		{
+			camera.shear = 0;
 		}
 
 		/* clamp camera shear */
