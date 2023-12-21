@@ -114,6 +114,7 @@ typedef struct ray_t {
 	SDL_Surface *dest;
 	SDL_Surface *colormap;
 	SDL_Surface *font;
+	SDL_Surface *crosshair;
 } ray_t;
 
 /* get tile at x,y */

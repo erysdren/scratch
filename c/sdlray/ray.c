@@ -599,6 +599,7 @@ void ray_draw_editor(ray_t *ray)
 	int tilex, tiley;
 	tile_t *tile;
 	int x, y;
+	SDL_Rect rect;
 
 	/* clear screen */
 	memset(ray->dest->pixels, 0, ray->dest->h * ray->dest->pitch);
@@ -619,6 +620,14 @@ void ray_draw_editor(ray_t *ray)
 
 		y += 64;
 	}
+
+	/* draw crosshair */
+	rect.x = ray->editor.cursor.x - ray->crosshair->w / 2;
+	rect.y = ray->editor.cursor.y - ray->crosshair->h / 2;
+	rect.w = ray->crosshair->w;
+	rect.h = ray->crosshair->h;
+
+	SDL_BlitSurface(ray->crosshair, NULL, ray->dest, &rect);
 }
 
 /* init ray structure */

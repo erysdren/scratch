@@ -298,6 +298,8 @@ int main(int argc, char **argv)
 	ray.colormap = IMG_Load("gfx/colormap.png");
 	ray.font = IMG_Load("gfx/font8x8.png");
 	SDL_SetColorKey(ray.font, SDL_TRUE, 0xFF);
+	ray.crosshair = IMG_Load("gfx/crosshair.png");
+	SDL_SetColorKey(ray.crosshair, SDL_TRUE, 0xFF);
 
 	/* install palettes */
 	install_palette("gfx/palette.dat", ray.textures.sky);
