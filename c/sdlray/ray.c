@@ -506,8 +506,62 @@ void ray_draw(ray_t *ray)
 	}
 }
 
+/* print text to screen */
+void ray_print(ray_t *ray, char *text, int x, int y)
+{
+
+}
+
+/* draw tile on screen */
+static void ray_editor_draw_tile(ray_t *ray, tile_t *tile, int x, int y)
+{
+	SDL_Rect rect;
+	SDL_Surface *tex;
+
+	if (!tile->height)
+		tex = ray->textures.floors[tile->floor_texture];
+	else
+		tex = ray->textures.walls[tile->texture - 1];
+
+	rect.x = x;
+	rect.y = y;
+	rect.w = tex->w;
+	rect.h = tex->h;
+
+	SDL_BlitSurface(tex, NULL, ray->dest, &rect);
+}
+
+/* draw ray editor */
+void ray_draw_editor(ray_t *ray)
+{
+	int tilex, tiley;
+	tile_t *tile;
+	int x, y;
+
+	/* clear screen */
+	memset(ray->dest->pixels, 0, ray->dest->h * ray->dest->pitch);
+
+	/* draw tiles */
+	x = ray->editor.offset.x;
+	y = ray->editor.offset.y;
+	for (tiley = 0; tiley < ray->tilemap.height; tiley++)
+	{
+		x = ray->editor.offset.x;
+
+		for (tilex = 0; tilex < ray->tilemap.width; tilex++)
+		{
+			tile = &RAY_TILE_AT(ray, tilex, tiley);
+			ray_editor_draw_tile(ray, tile, x, y);
+			x += 64;
+		}
+
+		y += 64;
+	}
+}
+
 /* init ray structure */
 void ray_init(ray_t *ray)
 {
 	memset(ray, 0, sizeof(ray_t));
+	ray->editor.scale = 1;
 }
