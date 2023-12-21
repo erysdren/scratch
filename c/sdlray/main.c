@@ -85,7 +85,9 @@ static struct {
 typedef struct tile_t {
 	uint8_t height;
 	int8_t texture;
+	int8_t floor_texture;
 	int8_t light;
+	int8_t side;
 } tile_t;
 
 #define MAP_WIDTH 24
@@ -160,6 +162,8 @@ enum {
 
 int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t *step, int *side)
 {
+	tile_t *tile = NULL;
+
 	while (1)
 	{
 		if (side_dist->x < side_dist->y)
@@ -181,12 +185,15 @@ int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t 
 		if (map_pos->x < 0 || map_pos->x >= MAP_WIDTH)
 			return HIT_DONE;
 
+		tile = &tilemap[map_pos->y][map_pos->x];
+
 		/* hit */
-		if (tilemap[map_pos->y][map_pos->x].height > 0)
+		if (tile->height > 0)
 		{
-			if (tilemap[map_pos->y][map_pos->x].texture < 0)
+			if (tile->texture < 0)
 			{
-				*side = 1;
+				*side = tile->side;
+
 				return HIT_MASK;
 			}
 			else
@@ -199,7 +206,7 @@ int ray_cast(vec2f_t *side_dist, vec2f_t *delta_dist, vec2i_t *map_pos, vec2i_t 
 	return HIT_DONE;
 }
 
-void ray_draw_floor(vec3f_t *origin, vec2f_t *ray_dir, int x, int y, int pixel_height_scale, SDL_Surface *tex)
+void ray_draw_floor(vec3f_t *origin, vec2f_t *ray_dir, int x, int y, int pixel_height_scale)
 {
 	float rowdist;
 	vec2f_t floorpos;
@@ -207,6 +214,7 @@ void ray_draw_floor(vec3f_t *origin, vec2f_t *ray_dir, int x, int y, int pixel_h
 	vec2i_t texpos;
 	uint8_t c;
 	int8_t light;
+	SDL_Surface *texture;
 
 	rowdist = (origin->z * pixel_height_scale) / (y - ray.horizon);
 
@@ -239,10 +247,12 @@ void ray_draw_floor(vec3f_t *origin, vec2f_t *ray_dir, int x, int y, int pixel_h
 	light = tile->light;
 #endif /* TILE_SELECTION */
 
-	texpos.x = wrap(floorpos.x * tex->w, tex->w);
-	texpos.y = wrap(floorpos.y * tex->h, tex->h);
+	texture = floor_textures[tile->floor_texture];
 
-	c = ((Uint8 *)tex->pixels)[texpos.y * tex->w + texpos.x];
+	texpos.x = wrap(floorpos.x * texture->w, texture->w);
+	texpos.y = wrap(floorpos.y * texture->h, texture->h);
+
+	c = ((Uint8 *)texture->pixels)[texpos.y * texture->pitch + texpos.x];
 
 	sdl.pixels[y * WIDTH + x] = colormap_lookup(c, rowdist * LIGHT_SCALE + LIGHT_LEVEL + light);
 }
@@ -319,6 +329,16 @@ void ray_draw_column(int x)
 		{
 			dist = side_dist.x - delta_dist.x;
 			dist2 = CLAMP(side_dist.y, dist, dist + delta_dist.x);
+
+			if (hit == HIT_MASK)
+			{
+				if (dist + (delta_dist.x / 2) < side_dist.y - delta_dist.y)
+					continue;
+				else if (dist + (delta_dist.x / 2) > dist2)
+					continue;
+				else
+					dist += delta_dist.x / 2;
+			}
 		}
 		else
 		{
@@ -355,21 +375,12 @@ void ray_draw_column(int x)
 		/* draw floors */
 		if (r_floors)
 		{
-			SDL_Surface *tex;
-			vec2f_t floorpos;
-			uint8_t c;
-			vec2i_t floor_i;
-			int tex_x, tex_y;
-			float rowdist;
-
-			tex = floor_textures[0];
-
 			/* upper floor */
 			for (y = line_end_c; y < ystart; y++)
 			{
 				if (!stencil[y])
 				{
-					ray_draw_floor(&camera.origin, &ray_dir, x, y, pixel_height_scale, tex);
+					ray_draw_floor(&camera.origin, &ray_dir, x, y, pixel_height_scale);
 				}
 			}
 
@@ -378,7 +389,7 @@ void ray_draw_column(int x)
 			{
 				if (!stencil[y])
 				{
-					ray_draw_floor(&camera.origin, &ray_dir, x, y, pixel_height_scale, tex);
+					ray_draw_floor(&camera.origin, &ray_dir, x, y, pixel_height_scale);
 				}
 			}
 		}
@@ -513,7 +524,7 @@ void ray_draw_column(int x)
 						vec3f_t org;
 						org = camera.origin;
 						org.z = block_top;
-						ray_draw_floor(&org, &ray_dir, x, y, pixel_height_scale, floor_textures[0]);
+						ray_draw_floor(&org, &ray_dir, x, y, pixel_height_scale);
 					}
 					else
 					{
@@ -767,21 +778,44 @@ int main(int argc, char **argv)
 
 	tilemap[10][10].height = 12;
 	tilemap[10][10].texture = 6;
+	tilemap[10][10].floor_texture = 2;
+
 	tilemap[10][11].height = 8;
 	tilemap[10][11].texture = -2;
+	tilemap[10][11].side = 1;
+
 	tilemap[10][12].height = 8;
 	tilemap[10][12].texture = -2;
+	tilemap[10][12].side = 1;
+
 	tilemap[10][13].height = 12;
 	tilemap[10][13].texture = 6;
+	tilemap[10][13].floor_texture = 2;
+
+	tilemap[11][10].height = 8;
+	tilemap[11][10].texture = -2;
+
+	tilemap[12][10].height = 8;
+	tilemap[12][10].texture = -2;
+
+	tilemap[13][10].height = 8;
+	tilemap[13][10].texture = -2;
 
 	tilemap[14][10].height = 12;
 	tilemap[14][10].texture = 6;
+	tilemap[14][10].floor_texture = 2;
+
 	tilemap[14][11].height = 8;
 	tilemap[14][11].texture = -2;
+	tilemap[14][11].side = 1;
+
 	tilemap[14][12].height = 8;
 	tilemap[14][12].texture = -2;
+	tilemap[14][12].side = 1;
+
 	tilemap[14][13].height = 12;
 	tilemap[14][13].texture = 6;
+	tilemap[14][13].floor_texture = 2;
 
 	/* setup raycaster */
 	camera.origin.x = MAP_WIDTH / 2;
