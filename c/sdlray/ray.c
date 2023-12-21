@@ -171,6 +171,7 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 	int hittype;
 	uint8_t stencil[ray->dest->h];
 	int light;
+	tile_t *tile;
 
 	/* reset stencil buffer */
 	memset(stencil, 0, sizeof(stencil));
@@ -254,8 +255,11 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 			}
 		}
 
+		/* get tile */
+		tile = &RAY_TILE_AT(ray, hit->map_pos.x, hit->map_pos.y);
+
 		/* line heights */
-		block_top = ray->camera.origin.z - RAY_TILE_AT(ray, hit->map_pos.x, hit->map_pos.y).height * 0.125f;
+		block_top = ray->camera.origin.z - tile->height * 0.125f;
 		block_bottom = ray->camera.origin.z;
 
 		/* line start and end */
@@ -314,7 +318,6 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 			float wall_x;
 			int tex_x;
 			SDL_Surface *tex;
-			tile_t *tile = &RAY_TILE_AT(ray, hit->map_pos.x, hit->map_pos.y);
 
 			/* get texture */
 			if (hittype == HIT_MASK)
@@ -444,6 +447,38 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 				if (!stencil[y])
 					((Uint8 *)ray->dest->pixels)[y * ray->dest->pitch + x] = ((Uint8 *)ray->textures.sky->pixels)[tex_y * ray->textures.sky->pitch + tex_x];
 			}
+		}
+		else
+		{
+			/* draw ceiling */
+			float oldz;
+			float ceilingz;
+
+			ceilingz = ray->camera.origin.z - ray->tilemap.ceiling * 0.125f;
+
+			oldz = ray->camera.origin.z;
+			ray->camera.origin.z = ceilingz;
+
+			/* draw colored line */
+			for (y = 0; y < line_start_c; y++)
+			{
+				if (!stencil[y])
+				{
+					if (ray->config.draw_ceiling_textures)
+					{
+						ray_draw_floor(ray, hit, x, y, pixel_height_scale);
+					}
+					else
+					{
+						((Uint8 *)ray->dest->pixels)[y * ray->dest->pitch + x] = 0;
+					}
+				}
+			}
+
+			ray->camera.origin.z = oldz;
+
+			/* set ystart for next cast */
+			ystart = line_start_c;
 		}
 	}
 }

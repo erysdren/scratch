@@ -267,12 +267,16 @@ int main(int argc, char **argv)
 		}
 	}
 
+	tiles[8 * MAP_WIDTH + 8].height = 8;
+	tiles[8 * MAP_WIDTH + 8].texture = 6;
+
 	/* setup tilemap */
 	ray.tilemap.width = MAP_WIDTH;
 	ray.tilemap.height = MAP_HEIGHT;
 	ray.tilemap.tiles = tiles;
 	ray.tilemap.light_scale = -2;
 	ray.tilemap.light_level = -16;
+	ray.tilemap.ceiling = 8;
 
 	/* setup camera */
 	ray.camera.origin.x = MAP_WIDTH / 2;
@@ -286,6 +290,7 @@ int main(int argc, char **argv)
 	ray.config.draw_wall_textures = true;
 	ray.config.stretch_wall_textures = false;
 	ray.config.draw_floor_textures = true;
+	ray.config.draw_ceiling_textures = true;
 
 	/* load textures */
 	load_walls("gfx/palette.dat");

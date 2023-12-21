@@ -82,6 +82,7 @@ typedef struct ray_t {
 		bool draw_wall_textures;
 		bool stretch_wall_textures;
 		bool draw_floor_textures;
+		bool draw_ceiling_textures;
 	} config;
 	struct {
 		uint8_t width;
@@ -89,6 +90,7 @@ typedef struct ray_t {
 		tile_t *tiles;
 		int8_t light_scale;
 		int8_t light_level;
+		uint8_t ceiling;
 	} tilemap;
 	struct {
 		vec3f_t origin;
