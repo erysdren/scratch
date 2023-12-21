@@ -474,4 +474,3 @@ void ray_init(ray_t *ray)
 {
 	memset(ray, 0, sizeof(ray_t));
 }
-

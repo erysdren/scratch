@@ -171,6 +171,8 @@ void free_walls(void)
 		if (ray.textures.walls[i] != NULL)
 			SDL_FreeSurface(ray.textures.walls[i]);
 	}
+
+	free(ray.textures.walls);
 }
 
 /* free all maskwalls */
@@ -183,6 +185,8 @@ void free_maskwalls(void)
 		if (ray.textures.maskwalls[i] != NULL)
 			SDL_FreeSurface(ray.textures.maskwalls[i]);
 	}
+
+	free(ray.textures.maskwalls);
 }
 
 /* free all floors */
@@ -195,6 +199,8 @@ void free_floors(void)
 		if (ray.textures.floors[i] != NULL)
 			SDL_FreeSurface(ray.textures.floors[i]);
 	}
+
+	free(ray.textures.floors);
 }
 
 /* main */
