@@ -122,7 +122,13 @@ typedef struct ray_t {
 void ray_draw(ray_t *ray);
 
 /* print text to screen */
-void ray_print(ray_t *ray, char *text, int x, int y);
+void ray_print(ray_t *ray, int x, int y, char *s);
+
+/* print formatted text to screen */
+void ray_printf(ray_t *ray, int x, int y, char *s, ...);
+
+/* fill area with color */
+void ray_fill(ray_t *ray, int x, int y, int w, int h, uint8_t c);
 
 /* draw ray editor */
 void ray_draw_editor(ray_t *ray);

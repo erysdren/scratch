@@ -31,6 +31,7 @@ SOFTWARE.
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include <math.h>
 #include <float.h>
@@ -507,9 +508,63 @@ void ray_draw(ray_t *ray)
 }
 
 /* print text to screen */
-void ray_print(ray_t *ray, char *text, int x, int y)
+void ray_print(ray_t *ray, int x, int y, char *s)
 {
+	SDL_Rect srcrect, dstrect;
+	char c;
+	int startx, starty;
 
+	startx = x;
+	starty = y;
+	while ((c = *s++))
+	{
+		if (c == '\n')
+		{
+			y += 8;
+			x = startx;
+			continue;
+		}
+
+		srcrect.x = c * 8;
+		srcrect.y = 0;
+		srcrect.w = 8;
+		srcrect.h = 8;
+
+		dstrect.x = x;
+		dstrect.y = y;
+		dstrect.w = 8;
+		dstrect.h = 8;
+
+		SDL_BlitSurface(ray->font, &srcrect, ray->dest, &dstrect);
+
+		x += 8;
+	}
+}
+
+/* print formatted text to screen */
+void ray_printf(ray_t *ray, int x, int y, char *s, ...)
+{
+	static char strbuf[1024];
+	va_list args;
+
+	va_start(args, s);
+	vsnprintf(strbuf, sizeof(strbuf), s, args);
+	va_end(args);
+
+	ray_print(ray, x, y, strbuf);
+}
+
+/* fill area with color */
+void ray_fill(ray_t *ray, int x, int y, int w, int h, uint8_t c)
+{
+	SDL_Rect rect;
+
+	rect.x = x;
+	rect.y = y;
+	rect.w = w;
+	rect.h = h;
+
+	SDL_FillRect(ray->dest, &rect, c);
 }
 
 /* draw tile on screen */
@@ -529,6 +584,9 @@ static void ray_editor_draw_tile(ray_t *ray, tile_t *tile, int x, int y)
 	rect.h = tex->h;
 
 	SDL_BlitSurface(tex, NULL, ray->dest, &rect);
+
+	ray_fill(ray, x, y, 8 + 1, 8 + 1, 142);
+	ray_printf(ray, x + 1, y + 1, "%d", tile->height);
 }
 
 /* draw ray editor */
