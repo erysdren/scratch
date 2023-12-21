@@ -391,6 +391,8 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 		/* draw top slab */
 		if (hittype == HIT_WALL)
 		{
+			float oldz;
+
 			/* line start and end */
 			line_start = ((block_top / dist2) * pixel_height_scale) + hit->horizon;
 			line_end = ystart;
@@ -399,6 +401,9 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 			line_start_c = CLAMP(line_start, 0, ystart);
 			line_end_c = CLAMP(line_end, 0, ystart);
 
+			oldz = ray->camera.origin.z;
+			ray->camera.origin.z = block_top;
+
 			/* draw colored line */
 			for (y = line_start_c; y < line_end_c; y++)
 			{
@@ -406,12 +411,7 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 				{
 					if (ray->config.draw_floor_textures)
 					{
-#if 0
-						vec3f_t org;
-						org = camera.origin;
-						org.z = block_top;
-						ray_draw_floor(&org, &ray_dir, x, y, pixel_height_scale);
-#endif
+						ray_draw_floor(ray, hit, x, y, pixel_height_scale);
 					}
 					else
 					{
@@ -419,6 +419,8 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 					}
 				}
 			}
+
+			ray->camera.origin.z = oldz;
 
 			/* set ystart for next cast */
 			ystart = line_start_c;
