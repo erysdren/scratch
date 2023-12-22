@@ -402,28 +402,21 @@ int main(int argc, char **argv)
 				/* update cursor */
 				eui_set_cursor(EUI_VEC2(ray.editor.cursor.x, ray.editor.cursor.y));
 
-				/* configure */
-				eui_set_bg_color(31);
-				eui_set_fg_color(31);
-				eui_set_border_color(0);
-				eui_set_text_color(0);
-				eui_set_border_width(2);
-				eui_set_window_padding(4);
-
 				/* window */
-				if (eui_window_begin(EUI_VEC2(32, 32), EUI_VEC2(320, 200), "Title"))
-				{
-					eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
-					eui_text(EUI_VEC2(0, 0), 0, "upper left aligned text");
+				eui_filled_box(EUI_VEC2(32, 32), EUI_VEC2(320, 200), 31);
+				eui_border_box(EUI_VEC2(32, 32), EUI_VEC2(320, 200), 2, 15);
+				eui_push_frame(EUI_VEC2(32 + 8, 32 + 8), EUI_VEC2(320 - 16, 200 - 16));
 
-					eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
-					eui_text(EUI_VEC2(0, 0), 0, "center aligned text");
+				eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
+				eui_text(EUI_VEC2(0, 0), 0, "upper left aligned text\nwith newline");
 
-					eui_set_align(EUI_ALIGN_END, EUI_ALIGN_END);
-					eui_text(EUI_VEC2(0, 0), 0, "lower right aligned text");
+				eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
+				eui_text(EUI_VEC2(0, 0), 0, "center aligned text\nwith newline");
 
-					eui_window_end();
-				}
+				eui_set_align(EUI_ALIGN_END, EUI_ALIGN_END);
+				eui_text(EUI_VEC2(0, 0), 0, "lower right aligned text\nwith newline");
+
+				eui_pop_frame();
 
 				/* end eui */
 				eui_end();

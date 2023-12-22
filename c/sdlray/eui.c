@@ -363,6 +363,14 @@ void eui_reset_frame(void)
 	frame_index = 0;
 }
 
+void eui_set_align(int xalign, int yalign)
+{
+	if (xalign != EUI_UNSET)
+		frames[frame_index].align.x = xalign;
+	if (yalign != EUI_UNSET)
+		frames[frame_index].align.y = yalign;
+}
+
 /*
  *
  * input handling
@@ -423,48 +431,6 @@ void eui_end(void)
 
 /*
  *
- * configuration
- *
- */
-
-void eui_set_bg_color(uint8_t color)
-{
-	bg_color = color;
-}
-
-void eui_set_fg_color(uint8_t color)
-{
-	fg_color = color;
-}
-
-void eui_set_text_color(uint8_t color)
-{
-	text_color = color;
-}
-
-void eui_set_border_color(uint8_t color)
-{
-	border_color = color;
-}
-
-void eui_set_border_width(int width)
-{
-	border_width = width;
-}
-
-void eui_set_window_padding(int padding)
-{
-	window_padding = padding;
-}
-
-void eui_set_align(int xalign, int yalign)
-{
-	frames[frame_index].align.x = xalign;
-	frames[frame_index].align.y = yalign;
-}
-
-/*
- *
  * primitives
  *
  */
@@ -518,20 +484,88 @@ static void eui_font8x8(eui_vec2_t pos, unsigned char *bitmap, uint8_t color)
 	}
 }
 
+static void eui_text_size(eui_vec2_t *size, char *s)
+{
+	int c;
+	eui_vec2_t pos;
+	int lastx = 0;
+
+	pos.x = 0;
+	pos.y = 0;
+
+	/* find newlines in string */
+	while ((c = *s++))
+	{
+		if (c == '\n')
+		{
+			pos.y += 1;
+			lastx = pos.x;
+			pos.x = 0;
+		}
+		else
+		{
+			pos.x += 1;
+		}
+	}
+
+	size->x = lastx > pos.x ? lastx * 8 : pos.x * 8;
+	size->y = (pos.y + 1) * 8;
+}
+
 void eui_text(eui_vec2_t pos, uint8_t color, char *s)
 {
 	eui_vec2_t size;
 	int c;
+	int start_x;
+	size_t len = 0;
+	char *ptr;
 
-	size.x = strlen(s) * 8;
-	size.y = 8;
+	/* get text size */
+	eui_text_size(&size, s);
 
+	/* transform to size */
 	eui_transform_box(&pos, size);
 
+	/* draw string */
+	start_x = pos.x;
 	while ((c = *s++))
 	{
-		eui_font8x8(pos, font8x8_basic[c], color);
-		pos.x += 8;
+		if (c == '\n')
+		{
+			switch (frames[frame_index].align.x)
+			{
+				case EUI_ALIGN_START:
+					/* set next string position */
+					pos.x = start_x;
+					pos.y += 8;
+					break;
+
+				case EUI_ALIGN_MIDDLE:
+					/* get length of next string chunk */
+					ptr = s;
+					while (*ptr && *ptr != '\n') ptr++;
+					len = ptr - s;
+					/* set next string position */
+					pos.x = start_x + (size.x / 2) - ((len * 8) / 2);
+					pos.y += 8;
+					break;
+
+				case EUI_ALIGN_END:
+					/* get length of next string chunk */
+					ptr = s;
+					while (*ptr && *ptr != '\n') ptr++;
+					len = ptr - s;
+					/* set next string position */
+					pos.x = start_x + size.x - (len * 8);
+					pos.y += 8;
+					break;
+			}
+		}
+		else
+		{
+			eui_font8x8(pos, font8x8_basic[c], color);
+			pos.x += 8;
+		}
 	}
 }
 
@@ -545,38 +579,4 @@ void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...)
 	va_end(args);
 
 	eui_text(pos, color, text);
-}
-
-/*
- *
- * widgets
- *
- */
-
-bool eui_window_begin(eui_vec2_t pos, eui_vec2_t size, char *title)
-{
-	/* window base and border */
-	eui_filled_box(pos, size, bg_color);
-	eui_border_box(pos, size, border_width, border_color);
-
-	/* window title */
-	eui_border_box(pos, EUI_VEC2(size.x, 16), border_width, border_color);
-	eui_push_frame(pos, EUI_VEC2(size.x, 16));
-	eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
-	eui_text(EUI_VEC2(0, 0), text_color, title);
-	eui_pop_frame();
-
-	/* window draw area */
-	pos.x += window_padding;
-	pos.y += window_padding + 16;
-	size.x -= window_padding * 2;
-	size.y -= window_padding * 2 + 16;
-	eui_push_frame(pos, size);
-
-	return true;
-}
-
-void eui_window_end(void)
-{
-	eui_pop_frame();
 }
