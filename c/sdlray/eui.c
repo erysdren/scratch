@@ -932,6 +932,35 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, eui_color_t color)
 	}
 }
 
+/* draw xbm graphic, transformed */
+void eui_xbm(eui_vec2_t pos, eui_color_t color, int w, int h, char *bitmap)
+{
+	int x, y, xx, yy;
+
+	/* transform pos */
+	eui_transform_box(&pos, EUI_VEC2(w, h));
+
+	/* draw graphic */
+	for (y = 0; y < h; y++)
+	{
+		for (x = 0; x < w; x++)
+		{
+			int b = (y * w + x) / 8;
+
+			if (bitmap[b] & 1 << (x % 8))
+			{
+				xx = pos.x + x;
+				yy = pos.y + y;
+
+				if (xx < 0 || xx >= drawdest.w || yy < 0 || yy >= drawdest.h)
+					continue;
+
+				PIXEL(xx, yy) = color;
+			}
+		}
+	}
+}
+
 /*
  *
  * widgets

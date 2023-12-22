@@ -42,6 +42,8 @@ SOFTWARE.
 #include "eui.h"
 #include "eui_sdl2.h"
 
+#include "X11/bitmaps/terminal"
+
 #define WIDTH 640
 #define HEIGHT 480
 
@@ -411,6 +413,9 @@ int main(int argc, char **argv)
 				eui_push_frame(EUI_VEC2(64, 64), EUI_VEC2(320 - 16, 200 - 16));
 				eui_text(EUI_VEC2(0, 0), 0, "hello world!");
 				eui_pop_frame();
+
+				/* draw xbm */
+				eui_xbm(EUI_VEC2(64, 64), 0, xterm_width, xterm_height, xterm_bits);;
 
 				/* end eui */
 				eui_end();
