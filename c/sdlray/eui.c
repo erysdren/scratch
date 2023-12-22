@@ -254,6 +254,36 @@ static int key_buffer_widx = 0;
 
 /*
  *
+ * local functions
+ *
+ */
+
+/* draw font8x8 bitmap at pos */
+static void eui_font8x8(eui_vec2_t pos, const unsigned char *bitmap, eui_color_t color)
+{
+	int x, y;
+	int xx, yy;
+
+	for (x = 0; x < 8; x++)
+	{
+		for (y = 0; y < 8; y++)
+		{
+			if (bitmap[x] & 1 << y)
+			{
+				xx = pos.x + y;
+				yy = pos.y + x;
+
+				if (xx < 0 || xx >= drawdest.w || yy < 0 || yy >= drawdest.h)
+					continue;
+
+				PIXEL(xx, yy) = color;
+			}
+		}
+	}
+}
+
+/*
+ *
  * basic transforms
  *
  */
@@ -587,6 +617,18 @@ bool eui_is_hovered(eui_vec2_t pos, eui_vec2_t size)
 	return true;
 }
 
+/* clear screen with color */
+void eui_clear(eui_color_t color)
+{
+	memset(drawdest.pixels, color, drawdest.h * drawdest.pitch);
+}
+
+/* draw built-in cursor */
+void eui_cursor(void)
+{
+	eui_font8x8(EUI_VEC2(mouse.x - 3, mouse.y - 3), font8x8_basic['x'], 0);
+}
+
 /*
  *
  * drawing primitives
@@ -629,30 +671,6 @@ void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, eui_color_t colo
 
 	/* right line */
 	eui_filled_box_clipped(EUI_VEC2(pos.x + size.x - width, pos.y + width), EUI_VEC2(width, size.y - width * 2), color);
-}
-
-/* draw font8x8 bitmap at pos */
-static void eui_font8x8(eui_vec2_t pos, const unsigned char *bitmap, eui_color_t color)
-{
-	int x, y;
-	int xx, yy;
-
-	for (x = 0; x < 8; x++)
-	{
-		for (y = 0; y < 8; y++)
-		{
-			if (bitmap[x] & 1 << y)
-			{
-				xx = pos.x + y;
-				yy = pos.y + x;
-
-				if (xx < 0 || xx >= drawdest.w || yy < 0 || yy >= drawdest.h)
-					continue;
-
-				PIXEL(xx, yy) = color;
-			}
-		}
-	}
 }
 
 /* draw text at pos, transformed */

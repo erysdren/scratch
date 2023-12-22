@@ -380,12 +380,12 @@ int main(int argc, char **argv)
 				ray.editor.offset.y -= 1;
 			}
 
-			/* draw editor */
-			ray_draw_editor(&ray);
-
 			/* begin eui */
 			if (eui_begin_sdl2(sdl.surface8));
 			{
+				/* clear */
+				eui_clear(3);
+
 				/* top bar */
 				eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 16), 31);
 				eui_filled_box(EUI_VEC2(0, 16), EUI_VEC2(WIDTH, 1), 7);
@@ -411,6 +411,9 @@ int main(int argc, char **argv)
 				eui_push_frame(EUI_VEC2(64, 64), EUI_VEC2(320 - 16, 200 - 16));
 				eui_text(EUI_VEC2(0, 0), 0, "hello world!");
 				eui_pop_frame();
+
+				/* draw builtin cursor */
+				eui_cursor();
 
 				/* end eui */
 				eui_end();

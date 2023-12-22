@@ -276,6 +276,12 @@ eui_vec2_t eui_get_text_size(char *s);
 /* returns true if the mouse cursor is hovering over the given area */
 bool eui_is_hovered(eui_vec2_t pos, eui_vec2_t size);
 
+/* clear screen with color */
+void eui_clear(eui_color_t color);
+
+/* draw built-in cursor */
+void eui_cursor(void);
+
 /*
  *
  * drawing primitives
