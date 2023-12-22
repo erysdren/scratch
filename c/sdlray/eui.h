@@ -93,7 +93,7 @@ typedef struct eui_vec2_t {
 typedef union eui_event_t {
 	int type;
 	struct { int type; uint32_t scancode; } key;
-	struct { int type; int x; int y; } mouse;
+	struct { int type; int x; int y; int xrel; int yrel; } mouse;
 	struct { int type; int x; int y; int button; } button;
 } eui_event_t;
 

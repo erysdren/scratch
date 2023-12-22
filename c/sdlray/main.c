@@ -382,6 +382,8 @@ int main(int argc, char **argv)
 					eui_event.type = EUI_EVENT_MOUSE;
 					eui_event.mouse.x = sdl.event.motion.x;
 					eui_event.mouse.y = sdl.event.motion.y;
+					eui_event.mouse.xrel = sdl.event.motion.xrel;
+					eui_event.mouse.yrel = sdl.event.motion.yrel;
 					eui_push_event(eui_event);
 
 					ray.editor.cursor.x = sdl.event.motion.x;
