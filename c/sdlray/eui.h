@@ -39,6 +39,13 @@ enum {
 	EUI_ALIGN_END
 };
 
+/* true/false/unset */
+enum {
+	EUI_UNSET = -1,
+	EUI_FALSE = 0,
+	EUI_TRUE = 1
+};
+
 /*
  *
  * eui types

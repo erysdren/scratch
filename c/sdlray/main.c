@@ -333,10 +333,10 @@ int main(int argc, char **argv)
 					switch (sdl.event.button.button)
 					{
 						case SDL_BUTTON_LEFT:
-							eui_set_button(1, -1);
+							eui_set_button(EUI_TRUE, EUI_UNSET);
 
 						case SDL_BUTTON_RIGHT:
-							eui_set_button(-1, 1);
+							eui_set_button(EUI_UNSET, EUI_TRUE);
 					}
 					break;
 
@@ -344,10 +344,10 @@ int main(int argc, char **argv)
 					switch (sdl.event.button.button)
 					{
 						case SDL_BUTTON_LEFT:
-							eui_set_button(0, -1);
+							eui_set_button(EUI_FALSE, EUI_UNSET);
 
 						case SDL_BUTTON_RIGHT:
-							eui_set_button(-1, 0);
+							eui_set_button(EUI_UNSET, EUI_FALSE);
 					}
 					break;
 

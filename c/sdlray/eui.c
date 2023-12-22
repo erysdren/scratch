@@ -362,9 +362,9 @@ void eui_move_cursor(eui_vec2_t move)
 
 void eui_set_button(int left, int right)
 {
-	if (left > -1)
+	if (left != EUI_UNSET)
 		button.x = left;
-	if (right > -1)
+	if (right != EUI_UNSET)
 		button.y = right;
 }
 
