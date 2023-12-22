@@ -193,7 +193,7 @@ typedef struct pixelmap_t {
 	int w;
 	int h;
 	int pitch;
-	uint8_t *pixels;
+	eui_color_t *pixels;
 } pixelmap_t;
 
 /*
@@ -421,7 +421,7 @@ int eui_pop_event(eui_event_t *out)
  */
 
 /* begin eui with given draw buffer context */
-bool eui_begin(int w, int h, int pitch, uint8_t *pixels)
+bool eui_begin(int w, int h, int pitch, eui_color_t *pixels)
 {
 	eui_event_t event;
 
@@ -528,19 +528,19 @@ bool eui_is_hovered(eui_vec2_t pos, eui_vec2_t size)
  */
 
 /* draw filled box at pos, transformed */
-void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, uint8_t color)
+void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, eui_color_t color)
 {
 	eui_transform_box(&pos, size);
 	eui_clip_box(&pos, &size);
 
 	for (int y = pos.y; y < pos.y + size.y; y++)
 	{
-		memset(&PIXEL(pos.x, y), color, size.x);
+		memset(&PIXEL(pos.x, y), color, size.x * sizeof(eui_color_t));
 	}
 }
 
 /* draw hollow box at pos, transformed */
-void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, uint8_t color)
+void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, eui_color_t color)
 {
 	/* top line */
 	eui_filled_box(pos, EUI_VEC2(size.x, width), color);
@@ -556,7 +556,7 @@ void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, uint8_t color)
 }
 
 /* draw font8x8 bitmap at pos */
-static void eui_font8x8(eui_vec2_t pos, unsigned char *bitmap, uint8_t color)
+static void eui_font8x8(eui_vec2_t pos, unsigned char *bitmap, eui_color_t color)
 {
 	int x, y;
 	int xx, yy;
@@ -580,7 +580,7 @@ static void eui_font8x8(eui_vec2_t pos, unsigned char *bitmap, uint8_t color)
 }
 
 /* draw text at pos, transformed */
-void eui_text(eui_vec2_t pos, uint8_t color, char *s)
+void eui_text(eui_vec2_t pos, eui_color_t color, char *s)
 {
 	eui_vec2_t size;
 	int c;
@@ -638,7 +638,7 @@ void eui_text(eui_vec2_t pos, uint8_t color, char *s)
 }
 
 /* draw formatted text at pos, transformed */
-void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...)
+void eui_textf(eui_vec2_t pos, eui_color_t color, char *s, ...)
 {
 	static char text[1024];
 	va_list args;
@@ -717,7 +717,7 @@ static void eui_triangle_scan_edge(eui_vec2_t p0, eui_vec2_t p1, int edge_table[
 }
 
 /* draw filled triangle with provided points, transformed */
-void eui_filled_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color)
+void eui_filled_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, eui_color_t color)
 {
 	int x, y, len;
 	int edge_table[dest.h][2];
@@ -755,7 +755,7 @@ void eui_filled_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t co
 }
 
 /* draw line from p0 to p1, transformed */
-void eui_line(eui_vec2_t p0, eui_vec2_t p1, uint8_t color)
+void eui_line(eui_vec2_t p0, eui_vec2_t p1, eui_color_t color)
 {
 	int i, dx, dy, sdx, sdy, dxabs, dyabs, x, y, px, py;
 
@@ -839,7 +839,7 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, uint8_t color)
  */
 
 /* fires callback function if pressed and returns true if hovered */
-bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_button_callback callback)
+bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_callback callback, void *user)
 {
 	static bool clicked;
 	bool hovered;
@@ -854,7 +854,7 @@ bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_button_callback
 
 	if (hovered && button && !clicked)
 	{
-		callback();
+		callback(user);
 		clicked = true;
 	}
 

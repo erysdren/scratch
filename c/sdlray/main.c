@@ -205,7 +205,7 @@ void free_floors(void)
 	free(ray.textures.floors);
 }
 
-void my_cool_button(void)
+void my_cool_button(void *user)
 {
 	printf("button pressed!\n");
 }
@@ -438,7 +438,7 @@ int main(int argc, char **argv)
 
 				eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
 
-				if (eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 16), "File", my_cool_button))
+				if (eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 16), "File", my_cool_button, NULL))
 				{
 					eui_filled_box(EUI_VEC2(0, 16), EUI_VEC2(48, 96), 15);
 				}

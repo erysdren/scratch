@@ -68,6 +68,22 @@ enum {
  *
  */
 
+/* default pixel depth is 8bpp */
+#ifndef EUI_PIXEL_DEPTH
+#define EUI_PIXEL_DEPTH (8)
+#endif
+
+/* pixel color type */
+#if (EUI_PIXEL_DEPTH == 8)
+typedef uint8_t eui_color_t;
+#elif (EUI_PIXEL_DEPTH == 16)
+typedef uint16_t eui_color_t;
+#elif (EUI_PIXEL_DEPTH == 32)
+typedef uint32_t eui_color_t;
+#else
+#error Unsupported pixel depth!
+#endif
+
 /* vec2 */
 typedef struct eui_vec2_t {
 	int x, y;
@@ -81,8 +97,8 @@ typedef union eui_event_t {
 	struct { int type; int x; int y; int button; } button;
 } eui_event_t;
 
-/* button callback function */
-typedef void eui_button_callback(void);
+/* general callback function */
+typedef void eui_callback(void *user);
 
 /*
  *
@@ -92,12 +108,6 @@ typedef void eui_button_callback(void);
 
 /* create vec2 */
 #define EUI_VEC2(x, y) (eui_vec2_t){(x), (y)}
-
-/*
- *
- * function prototypes
- *
- */
 
 /*
  *
@@ -151,7 +161,7 @@ int eui_pop_event(eui_event_t *out);
  */
 
 /* begin eui with given draw buffer context */
-bool eui_begin(int w, int h, int pitch, uint8_t *pixels);
+bool eui_begin(int w, int h, int pitch, eui_color_t *pixels);
 
 /* end eui */
 void eui_end(void);
@@ -175,22 +185,22 @@ bool eui_is_hovered(eui_vec2_t pos, eui_vec2_t size);
  */
 
 /* draw filled box at pos, transformed */
-void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, uint8_t color);
+void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, eui_color_t color);
 
 /* draw hollow box at pos, transformed */
-void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, uint8_t color);
+void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, eui_color_t color);
 
 /* draw text at pos, transformed */
-void eui_text(eui_vec2_t pos, uint8_t color, char *s);
+void eui_text(eui_vec2_t pos, eui_color_t color, char *s);
 
 /* draw formatted text at pos, transformed */
-void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...);
+void eui_textf(eui_vec2_t pos, eui_color_t color, char *s, ...);
 
 /* draw filled triangle with provided points, transformed */
-void eui_filled_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color);
+void eui_filled_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, eui_color_t color);
 
 /* draw line from p0 to p1, transformed */
-void eui_line(eui_vec2_t p0, eui_vec2_t p1, uint8_t color);
+void eui_line(eui_vec2_t p0, eui_vec2_t p1, eui_color_t color);
 
 /*
  *
@@ -199,7 +209,7 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, uint8_t color);
  */
 
 /* fires callback function if pressed and returns true if hovered */
-bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_button_callback callback);
+bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_callback callback, void *user);
 
 #ifdef __cplusplus
 }
