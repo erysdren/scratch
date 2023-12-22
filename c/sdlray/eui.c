@@ -34,6 +34,7 @@ SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "eui.h"
 
@@ -579,4 +580,101 @@ void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...)
 	va_end(args);
 
 	eui_text(pos, color, text);
+}
+
+static void triangle_scan_edge(eui_vec2_t p0, eui_vec2_t p1, int edge_table[dest.h][2])
+{
+	int sx, sy, dx1, dy1, dx2, dy2, x, y, m, n, k, cnt;
+
+	sx = p1.x - p0.x;
+	sy = p1.y - p0.y;
+
+	if (sx > 0)
+		dx1 = 1;
+	else if (sx < 0)
+		dx1 = -1;
+	else
+		dx1 = 0;
+
+	if (sy > 0)
+		dy1 = 1;
+	else if (sy < 0)
+		dy1 = -1;
+	else
+		dy1 = 0;
+
+	m = abs(sx);
+	n = abs(sy);
+	dx2 = dx1;
+	dy2 = 0;
+
+	if (m < n)
+	{
+		m = abs(sy);
+		n = abs(sx);
+		dx2 = 0;
+		dy2 = dy1;
+	}
+
+	x = p0.x;
+	y = p0.y;
+	cnt = m + 1;
+	k = n / 2;
+
+	while (cnt--)
+	{
+		if (y >= 0 && y < dest.h)
+		{
+			if (x < edge_table[y][0])
+				edge_table[y][0] = x;
+			if (x > edge_table[y][1])
+				edge_table[y][1] = x;
+		}
+
+		k += n;
+
+		if (k < m)
+		{
+			x += dx2;
+			y += dy2;
+		}
+		else
+		{
+			k -= m;
+			x += dx1;
+			y += dy1;
+		}
+	}
+}
+
+void eui_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color)
+{
+	int x, y, len;
+	int edge_table[dest.h][2];
+
+	/* init edge table */
+	for (y = 0; y < dest.h; y++)
+	{
+		edge_table[y][0] = INT32_MAX;
+		edge_table[y][1] = INT32_MIN;
+	}
+
+	/* scan triangle edges */
+	triangle_scan_edge(p0, p1, edge_table);
+	triangle_scan_edge(p1, p2, edge_table);
+	triangle_scan_edge(p2, p0, edge_table);
+
+	for (y = 0; y < dest.h; y++)
+	{
+		if (edge_table[y][1] >= edge_table[y][0])
+		{
+			x = edge_table[y][0];
+			len = 1 + edge_table[y][1] - edge_table[y][0];
+
+			while (len--)
+			{
+				PIXEL(x++, y) = color;
+			}
+		}
+	}
 }
