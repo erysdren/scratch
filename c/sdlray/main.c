@@ -431,19 +431,19 @@ int main(int argc, char **argv)
 			/* begin eui */
 			if (eui_begin(sdl.surface8->w, sdl.surface8->h, sdl.surface8->pitch, sdl.surface8->pixels))
 			{
-				/* window */
-				eui_filled_box(EUI_VEC2(32, 32), EUI_VEC2(320, 200), 31);
-				eui_border_box(EUI_VEC2(32, 32), EUI_VEC2(320, 200), 2, 15);
-				eui_push_frame(EUI_VEC2(32 + 8, 32 + 8), EUI_VEC2(320 - 16, 200 - 16));
+				/* top bar */
+				eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 16), 31);
+				eui_filled_box(EUI_VEC2(0, 16), EUI_VEC2(WIDTH, 1), 7);
 
-				eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
+				/* top bar buttons */
+				eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 16), "File", my_cool_button, NULL);
+				eui_button(EUI_VEC2(48, 0), EUI_VEC2(48, 16), "Edit", my_cool_button, NULL);
+				eui_button(EUI_VEC2(96, 0), EUI_VEC2(48, 16), "Help", my_cool_button, NULL);
 
-				if (eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 16), "File", my_cool_button, NULL))
-				{
-					eui_filled_box(EUI_VEC2(0, 16), EUI_VEC2(48, 96), 15);
-				}
-
-				eui_pop_frame();
+				/* example window */
+				eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
+				eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(320, 200), 31);
+				eui_border_box(EUI_VEC2(0, 0), EUI_VEC2(320, 200), 2, 15);
 
 				/* end eui */
 				eui_end();

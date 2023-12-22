@@ -299,18 +299,18 @@ void eui_transform_box(eui_vec2_t *pos, eui_vec2_t size)
 	}
 }
 
-/* clip box to current frame */
-void eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size)
+/* clip box to screen size, returns false if the shape will never be visible */
+bool eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size)
 {
 	/* it will never become visible */
 	if (pos->x >= dest.w)
-		return;
+		return false;
 	if (pos->y >= dest.h)
-		return;
+		return false;
 	if (pos->x + size->x < 0)
-		return;
+		return false;
 	if (pos->y + size->y < 0)
-		return;
+		return false;
 
 	/* clip to top edge */
 	if (pos->y < 0)
@@ -337,6 +337,8 @@ void eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size)
 	{
 		size->x = dest.w - pos->x;
 	}
+
+	return true;
 }
 
 /*
@@ -527,11 +529,11 @@ bool eui_is_hovered(eui_vec2_t pos, eui_vec2_t size)
  *
  */
 
-/* draw filled box at pos, transformed */
-void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, eui_color_t color)
+/* draw filled box at box, clipped but not transformed */
+static void eui_filled_box_clipped(eui_vec2_t pos, eui_vec2_t size, eui_color_t color)
 {
-	eui_transform_box(&pos, size);
-	eui_clip_box(&pos, &size);
+	if (!eui_clip_box(&pos, &size))
+		return;
 
 	for (int y = pos.y; y < pos.y + size.y; y++)
 	{
@@ -539,20 +541,30 @@ void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, eui_color_t color)
 	}
 }
 
+/* draw filled box at pos, transformed */
+void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, eui_color_t color)
+{
+	eui_transform_box(&pos, size);
+
+	eui_filled_box_clipped(pos, size, color);
+}
+
 /* draw hollow box at pos, transformed */
 void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, eui_color_t color)
 {
+	eui_transform_box(&pos, size);
+
 	/* top line */
-	eui_filled_box(pos, EUI_VEC2(size.x, width), color);
+	eui_filled_box_clipped(pos, EUI_VEC2(size.x, width), color);
 
 	/* bottom line */
-	eui_filled_box(EUI_VEC2(pos.x, pos.y + size.y - width), EUI_VEC2(size.x, width), color);
+	eui_filled_box_clipped(EUI_VEC2(pos.x, pos.y + size.y - width), EUI_VEC2(size.x, width), color);
 
 	/* left line */
-	eui_filled_box(EUI_VEC2(pos.x, pos.y + width), EUI_VEC2(width, size.y - width * 2), color);
+	eui_filled_box_clipped(EUI_VEC2(pos.x, pos.y + width), EUI_VEC2(width, size.y - width * 2), color);
 
 	/* right line */
-	eui_filled_box(EUI_VEC2(pos.x + size.x - width, pos.y + width), EUI_VEC2(width, size.y - width * 2), color);
+	eui_filled_box_clipped(EUI_VEC2(pos.x + size.x - width, pos.y + width), EUI_VEC2(width, size.y - width * 2), color);
 }
 
 /* draw font8x8 bitmap at pos */
@@ -844,10 +856,10 @@ bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_callback callba
 	static bool clicked;
 	bool hovered;
 
-	eui_filled_box(pos, size, 15);
+	eui_filled_box(pos, size, 31);
 	eui_push_frame(pos, size);
 	eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
-	eui_text(EUI_VEC2(0, 0), 31, text);
+	eui_text(EUI_VEC2(0, 0), 0, text);
 	eui_pop_frame();
 
 	hovered = eui_is_hovered(pos, size);

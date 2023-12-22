@@ -121,8 +121,8 @@ void eui_transform_point(eui_vec2_t *pos);
 /* transform box to current frame, with alignment */
 void eui_transform_box(eui_vec2_t *pos, eui_vec2_t size);
 
-/* clip box to current frame */
-void eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size);
+/* clip box to screen size, returns false if the shape will never be visible */
+bool eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size);
 
 /*
  *
