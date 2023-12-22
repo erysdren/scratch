@@ -419,6 +419,9 @@ void eui_set_button(int left, int right)
 
 bool eui_begin(int w, int h, int pitch, uint8_t *pixels)
 {
+	if (!w || !h || !pitch || !pixels)
+		return false;
+
 	dest.w = w;
 	dest.h = h;
 	dest.pitch = pitch;
