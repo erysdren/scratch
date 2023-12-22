@@ -566,11 +566,11 @@ bool eui_window_begin(eui_vec2_t pos, eui_vec2_t size, char *title)
 	eui_text(EUI_VEC2(0, 0), text_color, title);
 	eui_pop_frame();
 
+	/* window draw area */
 	pos.x += window_padding;
 	pos.y += window_padding + 16;
 	size.x -= window_padding * 2;
 	size.y -= window_padding * 2 + 16;
-
 	eui_push_frame(pos, size);
 
 	return true;

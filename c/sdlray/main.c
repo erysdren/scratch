@@ -405,17 +405,23 @@ int main(int argc, char **argv)
 				/* configure */
 				eui_set_bg_color(31);
 				eui_set_fg_color(31);
+				eui_set_border_color(0);
 				eui_set_text_color(0);
 				eui_set_border_width(2);
 				eui_set_window_padding(4);
 
 				/* window */
-				if (eui_window_begin(EUI_VEC2(32, 32), EUI_VEC2(320, 200), "Editor"))
+				if (eui_window_begin(EUI_VEC2(32, 32), EUI_VEC2(320, 200), "Title"))
 				{
 					eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
 					eui_text(EUI_VEC2(0, 0), 0, "upper left aligned text");
+
+					eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
+					eui_text(EUI_VEC2(0, 0), 0, "center aligned text");
+
 					eui_set_align(EUI_ALIGN_END, EUI_ALIGN_END);
 					eui_text(EUI_VEC2(0, 0), 0, "lower right aligned text");
+
 					eui_window_end();
 				}
 
