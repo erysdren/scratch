@@ -227,10 +227,11 @@ static int button;
 
 /*
  *
- * transforms
+ * basic transforms
  *
  */
 
+/* transform point to current frame, with alignment */
 void eui_transform_point(eui_vec2_t *pos)
 {
 	switch (frames[frame_index].align.x)
@@ -264,6 +265,7 @@ void eui_transform_point(eui_vec2_t *pos)
 	}
 }
 
+/* transform box to current frame, with alignment */
 void eui_transform_box(eui_vec2_t *pos, eui_vec2_t size)
 {
 	switch (frames[frame_index].align.x)
@@ -297,6 +299,7 @@ void eui_transform_box(eui_vec2_t *pos, eui_vec2_t size)
 	}
 }
 
+/* clip box to current frame */
 void eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size)
 {
 	/* it will never become visible */
@@ -342,6 +345,7 @@ void eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size)
  *
  */
 
+/* go to subframe, transformed from current frame */
 void eui_push_frame(eui_vec2_t pos, eui_vec2_t size)
 {
 	eui_transform_box(&pos, size);
@@ -354,18 +358,20 @@ void eui_push_frame(eui_vec2_t pos, eui_vec2_t size)
 	frames[frame_index].align.y = EUI_ALIGN_START;
 }
 
-
+/* return to parent frame */
 void eui_pop_frame(void)
 {
 	if (frame_index)
 		frame_index--;
 }
 
+/* reset all frame transforms */
 void eui_reset_frame(void)
 {
 	frame_index = 0;
 }
 
+/* set current frame alignment */
 void eui_set_align(int xalign, int yalign)
 {
 	if (xalign != EUI_UNSET)
@@ -380,6 +386,7 @@ void eui_set_align(int xalign, int yalign)
  *
  */
 
+/* push event to the queue */
 void eui_push_event(eui_event_t event)
 {
 	if (num_events == MAX_EVENTS - 1)
@@ -391,6 +398,7 @@ void eui_push_event(eui_event_t event)
 	events[++num_events] = event;
 }
 
+/* pop event from the top of the queue */
 int eui_pop_event(eui_event_t *out)
 {
 	if (!num_events)
@@ -412,6 +420,7 @@ int eui_pop_event(eui_event_t *out)
  *
  */
 
+/* begin eui with given draw buffer context */
 bool eui_begin(int w, int h, int pitch, uint8_t *pixels)
 {
 	eui_event_t event;
@@ -456,6 +465,7 @@ bool eui_begin(int w, int h, int pitch, uint8_t *pixels)
 	return true;
 }
 
+/* end eui */
 void eui_end(void)
 {
 
@@ -463,10 +473,61 @@ void eui_end(void)
 
 /*
  *
- * primitives
+ * utilities
  *
  */
 
+/* get dimensions of text string, with newlines */
+eui_vec2_t eui_get_text_size(char *s)
+{
+	int c;
+	eui_vec2_t pos;
+	eui_vec2_t size;
+	int lastx = 0;
+
+	pos.x = 0;
+	pos.y = 0;
+
+	/* find newlines in string */
+	while ((c = *s++))
+	{
+		if (c == '\n')
+		{
+			pos.y += 1;
+			lastx = pos.x;
+			pos.x = 0;
+		}
+		else
+		{
+			pos.x += 1;
+		}
+	}
+
+	size.x = lastx > pos.x ? lastx * 8 : pos.x * 8;
+	size.y = (pos.y + 1) * 8;
+
+	return size;
+}
+
+/* returns true if the mouse cursor is hovering over the given area */
+bool eui_is_hovered(eui_vec2_t pos, eui_vec2_t size)
+{
+	eui_transform_box(&pos, size);
+
+	if (mouse.x < pos.x || mouse.x > pos.x + size.x)
+		return false;
+	if (mouse.y < pos.y || mouse.y > pos.y + size.y)
+		return false;
+	return true;
+}
+
+/*
+ *
+ * drawing primitives
+ *
+ */
+
+/* draw filled box at pos, transformed */
 void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, uint8_t color)
 {
 	eui_transform_box(&pos, size);
@@ -478,6 +539,7 @@ void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, uint8_t color)
 	}
 }
 
+/* draw hollow box at pos, transformed */
 void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, uint8_t color)
 {
 	/* top line */
@@ -493,6 +555,7 @@ void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, uint8_t color)
 	eui_filled_box(EUI_VEC2(pos.x + size.x - width, pos.y + width), EUI_VEC2(width, size.y - width * 2), color);
 }
 
+/* draw font8x8 bitmap at pos */
 static void eui_font8x8(eui_vec2_t pos, unsigned char *bitmap, uint8_t color)
 {
 	int x, y;
@@ -516,34 +579,7 @@ static void eui_font8x8(eui_vec2_t pos, unsigned char *bitmap, uint8_t color)
 	}
 }
 
-static void eui_text_size(eui_vec2_t *size, char *s)
-{
-	int c;
-	eui_vec2_t pos;
-	int lastx = 0;
-
-	pos.x = 0;
-	pos.y = 0;
-
-	/* find newlines in string */
-	while ((c = *s++))
-	{
-		if (c == '\n')
-		{
-			pos.y += 1;
-			lastx = pos.x;
-			pos.x = 0;
-		}
-		else
-		{
-			pos.x += 1;
-		}
-	}
-
-	size->x = lastx > pos.x ? lastx * 8 : pos.x * 8;
-	size->y = (pos.y + 1) * 8;
-}
-
+/* draw text at pos, transformed */
 void eui_text(eui_vec2_t pos, uint8_t color, char *s)
 {
 	eui_vec2_t size;
@@ -553,7 +589,7 @@ void eui_text(eui_vec2_t pos, uint8_t color, char *s)
 	char *ptr;
 
 	/* get text size */
-	eui_text_size(&size, s);
+	size = eui_get_text_size(s);
 
 	/* transform to size */
 	eui_transform_box(&pos, size);
@@ -601,6 +637,7 @@ void eui_text(eui_vec2_t pos, uint8_t color, char *s)
 	}
 }
 
+/* draw formatted text at pos, transformed */
 void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...)
 {
 	static char text[1024];
@@ -613,7 +650,8 @@ void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...)
 	eui_text(pos, color, text);
 }
 
-static void triangle_scan_edge(eui_vec2_t p0, eui_vec2_t p1, int edge_table[dest.h][2])
+/* scan triangle edge and add to edge table */
+static void eui_triangle_scan_edge(eui_vec2_t p0, eui_vec2_t p1, int edge_table[dest.h][2])
 {
 	int sx, sy, dx1, dy1, dx2, dy2, x, y, m, n, k, cnt;
 
@@ -678,7 +716,8 @@ static void triangle_scan_edge(eui_vec2_t p0, eui_vec2_t p1, int edge_table[dest
 	}
 }
 
-void eui_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color)
+/* draw filled triangle with provided points, transformed */
+void eui_filled_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color)
 {
 	int x, y, len;
 	int edge_table[dest.h][2];
@@ -696,9 +735,9 @@ void eui_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color)
 	eui_transform_point(&p2);
 
 	/* scan triangle edges */
-	triangle_scan_edge(p0, p1, edge_table);
-	triangle_scan_edge(p1, p2, edge_table);
-	triangle_scan_edge(p2, p0, edge_table);
+	eui_triangle_scan_edge(p0, p1, edge_table);
+	eui_triangle_scan_edge(p1, p2, edge_table);
+	eui_triangle_scan_edge(p2, p0, edge_table);
 
 	for (y = 0; y < dest.h; y++)
 	{
@@ -715,6 +754,7 @@ void eui_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color)
 	}
 }
 
+/* draw line from p0 to p1, transformed */
 void eui_line(eui_vec2_t p0, eui_vec2_t p1, uint8_t color)
 {
 	int i, dx, dy, sdx, sdy, dxabs, dyabs, x, y, px, py;
@@ -798,18 +838,11 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, uint8_t color)
  *
  */
 
-static bool eui_is_hovered(eui_vec2_t pos, eui_vec2_t size)
-{
-	if (mouse.x < pos.x || mouse.x > pos.x + size.x)
-		return false;
-	if (mouse.y < pos.y || mouse.y > pos.y + size.y)
-		return false;
-	return true;
-}
-
-void eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_button_callback callback)
+/* fires callback function if pressed and returns true if hovered */
+bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_button_callback callback)
 {
 	static bool clicked;
+	bool hovered;
 
 	eui_filled_box(pos, size, 15);
 	eui_push_frame(pos, size);
@@ -817,9 +850,9 @@ void eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_button_callback
 	eui_text(EUI_VEC2(0, 0), 31, text);
 	eui_pop_frame();
 
-	eui_transform_box(&pos, size);
+	hovered = eui_is_hovered(pos, size);
 
-	if (eui_is_hovered(pos, size) && button && !clicked)
+	if (hovered && button && !clicked)
 	{
 		callback();
 		clicked = true;
@@ -827,4 +860,6 @@ void eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_button_callback
 
 	if (!button)
 		clicked = false;
+
+	return hovered;
 }

@@ -90,7 +90,7 @@ typedef void eui_button_callback(void);
  *
  */
 
-/* vec2 */
+/* create vec2 */
 #define EUI_VEC2(x, y) (eui_vec2_t){(x), (y)}
 
 /*
@@ -99,35 +99,107 @@ typedef void eui_button_callback(void);
  *
  */
 
-/* transforms */
+/*
+ *
+ * basic transforms
+ *
+ */
+
+/* transform point to current frame, with alignment */
 void eui_transform_point(eui_vec2_t *pos);
+
+/* transform box to current frame, with alignment */
 void eui_transform_box(eui_vec2_t *pos, eui_vec2_t size);
+
+/* clip box to current frame */
 void eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size);
 
-/* frame handling */
+/*
+ *
+ * frame handling
+ *
+ */
+
+/* go to subframe, transformed from current frame */
 void eui_push_frame(eui_vec2_t pos, eui_vec2_t size);
+
+/* return to parent frame */
 void eui_pop_frame(void);
+
+/* reset all frame transforms */
 void eui_reset_frame(void);
+
+/* set current frame alignment */
 void eui_set_align(int xalign, int yalign);
 
-/* event handling */
+/*
+ *
+ * event handling
+ *
+ */
+
+/* push event to the queue */
 void eui_push_event(eui_event_t event);
+
+/* pop event from the top of the queue */
 int eui_pop_event(eui_event_t *out);
 
-/* begin/end */
+/*
+ *
+ * begin/end
+ *
+ */
+
+/* begin eui with given draw buffer context */
 bool eui_begin(int w, int h, int pitch, uint8_t *pixels);
+
+/* end eui */
 void eui_end(void);
 
-/* primitives */
+/*
+ *
+ * utilities
+ *
+ */
+
+/* get dimensions of text string, with newlines */
+eui_vec2_t eui_get_text_size(char *s);
+
+/* returns true if the mouse cursor is hovering over the given area */
+bool eui_is_hovered(eui_vec2_t pos, eui_vec2_t size);
+
+/*
+ *
+ * drawing primitives
+ *
+ */
+
+/* draw filled box at pos, transformed */
 void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, uint8_t color);
+
+/* draw hollow box at pos, transformed */
 void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, uint8_t color);
+
+/* draw text at pos, transformed */
 void eui_text(eui_vec2_t pos, uint8_t color, char *s);
+
+/* draw formatted text at pos, transformed */
 void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...);
-void eui_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color);
+
+/* draw filled triangle with provided points, transformed */
+void eui_filled_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color);
+
+/* draw line from p0 to p1, transformed */
 void eui_line(eui_vec2_t p0, eui_vec2_t p1, uint8_t color);
 
-/* widgets */
-void eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_button_callback callback);
+/*
+ *
+ * widgets
+ *
+ */
+
+/* fires callback function if pressed and returns true if hovered */
+bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_button_callback callback);
 
 #ifdef __cplusplus
 }

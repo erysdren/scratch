@@ -437,7 +437,11 @@ int main(int argc, char **argv)
 				eui_push_frame(EUI_VEC2(32 + 8, 32 + 8), EUI_VEC2(320 - 16, 200 - 16));
 
 				eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
-				eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 16), "File", my_cool_button);
+
+				if (eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 16), "File", my_cool_button))
+				{
+					eui_filled_box(EUI_VEC2(0, 16), EUI_VEC2(48, 96), 15);
+				}
 
 				eui_pop_frame();
 
