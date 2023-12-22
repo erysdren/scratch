@@ -374,12 +374,24 @@ int main(int argc, char **argv)
 			/* draw editor */
 			ray_draw_editor(&ray);
 
-			/* draw ui */
+			/* start frame */
 			eui_push_frame(EUI_VEC2(0, 0), EUI_VEC2(sdl.surface8->w, sdl.surface8->h));
 			eui_set_dest(sdl.surface8->w, sdl.surface8->h, sdl.surface8->pitch, sdl.surface8->pixels);
 			eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
-			eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 10), 15);
-			eui_text(EUI_VEC2(1, 1), 31, "File");
+
+			/* background */
+			eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 12), 15);
+
+			/* File */
+			eui_text(EUI_VEC2(2, 2), 31, "File");
+
+			/* Edit */
+			eui_text(EUI_VEC2(48, 2), 31, "Edit");
+
+			/* Help */
+			eui_text(EUI_VEC2(96, 2), 31, "Help");
+
+			/* end frame */
 			eui_pop_frame();
 		}
 		else
