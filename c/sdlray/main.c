@@ -402,19 +402,22 @@ int main(int argc, char **argv)
 				/* update cursor */
 				eui_set_cursor(EUI_VEC2(ray.editor.cursor.x, ray.editor.cursor.y));
 
-				/* background */
-				eui_set_bg_color(15);
+				/* configure */
+				eui_set_bg_color(31);
 				eui_set_fg_color(31);
-				eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 12), 15);
+				eui_set_text_color(0);
+				eui_set_border_width(2);
+				eui_set_window_padding(4);
 
-				/* File */
-				eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 12), "File");
-
-				/* Edit */
-				eui_button(EUI_VEC2(48, 0), EUI_VEC2(48, 12), "Edit");
-
-				/* Help */
-				eui_button(EUI_VEC2(96, 0), EUI_VEC2(48, 12), "Help");
+				/* window */
+				if (eui_window_begin(EUI_VEC2(32, 32), EUI_VEC2(320, 200), "Editor"))
+				{
+					eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
+					eui_text(EUI_VEC2(0, 0), 0, "upper left aligned text");
+					eui_set_align(EUI_ALIGN_END, EUI_ALIGN_END);
+					eui_text(EUI_VEC2(0, 0), 0, "lower right aligned text");
+					eui_window_end();
+				}
 
 				/* end eui */
 				eui_end();

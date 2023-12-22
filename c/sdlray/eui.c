@@ -37,6 +37,12 @@ SOFTWARE.
 
 #include "eui.h"
 
+/*
+ *
+ * font8x8
+ *
+ */
+
 unsigned char font8x8_basic[128][8] = {
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0000 (nul)
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0001
@@ -168,6 +174,12 @@ unsigned char font8x8_basic[128][8] = {
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} // U+007F
 };
 
+/*
+ *
+ * local types
+ *
+ */
+
 /* frame */
 typedef struct frame_t {
 	eui_vec2_t pos;
@@ -183,16 +195,32 @@ typedef struct pixelmap_t {
 	uint8_t *pixels;
 } pixelmap_t;
 
+/*
+ *
+ * local variables
+ *
+ */
+
+/* frames */
 #define MAX_FRAMES (64)
 static frame_t frames[MAX_FRAMES] = {0};
 static int frame_index = 0;
+
+/* destination pixelmap */
 static pixelmap_t dest = {0};
 #define PIXEL(x, y) dest.pixels[y * dest.pitch + x]
+
+/* configuration */
 static uint8_t fg_color = 0;
 static uint8_t bg_color = 0;
+static uint8_t text_color = 0;
+static uint8_t border_color = 0;
+static int border_width = 1;
+static int window_padding = 0;
+
+/* input handling */
 static eui_vec2_t cursor = {-1, -1};
 static eui_vec2_t button = {0, 0};
-static eui_vec2_t list_pos = {0, 0};
 
 /*
  *
@@ -207,7 +235,7 @@ void eui_transform_point(eui_vec2_t *pos)
 		case EUI_ALIGN_START:
 			pos->x += frames[frame_index].pos.x;
 			break;
-		case EUI_ALIGN_CENTER:
+		case EUI_ALIGN_MIDDLE:
 			pos->x += frames[frame_index].pos.x + frames[frame_index].size.x / 2;
 			break;
 		case EUI_ALIGN_END:
@@ -222,7 +250,7 @@ void eui_transform_point(eui_vec2_t *pos)
 		case EUI_ALIGN_START:
 			pos->y += frames[frame_index].pos.y;
 			break;
-		case EUI_ALIGN_CENTER:
+		case EUI_ALIGN_MIDDLE:
 			pos->y += frames[frame_index].pos.y + frames[frame_index].size.y / 2;
 			break;
 		case EUI_ALIGN_END:
@@ -240,7 +268,7 @@ void eui_transform_box(eui_vec2_t *pos, eui_vec2_t size)
 		case EUI_ALIGN_START:
 			pos->x += frames[frame_index].pos.x;
 			break;
-		case EUI_ALIGN_CENTER:
+		case EUI_ALIGN_MIDDLE:
 			pos->x += frames[frame_index].pos.x + frames[frame_index].size.x / 2 - size.x / 2;
 			break;
 		case EUI_ALIGN_END:
@@ -255,7 +283,7 @@ void eui_transform_box(eui_vec2_t *pos, eui_vec2_t size)
 		case EUI_ALIGN_START:
 			pos->y += frames[frame_index].pos.y;
 			break;
-		case EUI_ALIGN_CENTER:
+		case EUI_ALIGN_MIDDLE:
 			pos->y += frames[frame_index].pos.y + frames[frame_index].size.y / 2 - size.y / 2;
 			break;
 		case EUI_ALIGN_END:
@@ -335,12 +363,6 @@ void eui_reset_frame(void)
 	frame_index = 0;
 }
 
-void eui_set_align(int x, int y)
-{
-	frames[frame_index].align.x = x;
-	frames[frame_index].align.y = y;
-}
-
 /*
  *
  * input handling
@@ -401,7 +423,7 @@ void eui_end(void)
 
 /*
  *
- * draw handling
+ * configuration
  *
  */
 
@@ -415,9 +437,35 @@ void eui_set_fg_color(uint8_t color)
 	fg_color = color;
 }
 
+void eui_set_text_color(uint8_t color)
+{
+	text_color = color;
+}
+
+void eui_set_border_color(uint8_t color)
+{
+	border_color = color;
+}
+
+void eui_set_border_width(int width)
+{
+	border_width = width;
+}
+
+void eui_set_window_padding(int padding)
+{
+	window_padding = padding;
+}
+
+void eui_set_align(int xalign, int yalign)
+{
+	frames[frame_index].align.x = xalign;
+	frames[frame_index].align.y = yalign;
+}
+
 /*
  *
- * draw primitives
+ * primitives
  *
  */
 
@@ -447,7 +495,7 @@ void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, uint8_t color)
 	eui_filled_box(EUI_VEC2(pos.x + size.x - width, pos.y + width), EUI_VEC2(width, size.y - width * 2), color);
 }
 
-static void eui_char_bitmap(eui_vec2_t pos, unsigned char *bitmap, uint8_t color)
+static void eui_font8x8(eui_vec2_t pos, unsigned char *bitmap, uint8_t color)
 {
 	int x, y;
 	int xx, yy;
@@ -482,7 +530,7 @@ void eui_text(eui_vec2_t pos, uint8_t color, char *s)
 
 	while ((c = *s++))
 	{
-		eui_char_bitmap(pos, font8x8_basic[c], color);
+		eui_font8x8(pos, font8x8_basic[c], color);
 		pos.x += 8;
 	}
 }
@@ -505,28 +553,30 @@ void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...)
  *
  */
 
-bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text)
+bool eui_window_begin(eui_vec2_t pos, eui_vec2_t size, char *title)
 {
-	eui_push_frame(pos, size);
+	/* window base and border */
+	eui_filled_box(pos, size, bg_color);
+	eui_border_box(pos, size, border_width, border_color);
 
-	if (is_cursor_above(pos, size) && !button.x)
-	{
-		eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
-		eui_filled_box(EUI_VEC2(0, 0), size, fg_color);
-
-		eui_set_align(EUI_ALIGN_CENTER, EUI_ALIGN_CENTER);
-		eui_text(EUI_VEC2(0, 0), bg_color, text);
-	}
-	else
-	{
-		eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
-		eui_filled_box(EUI_VEC2(0, 0), size, bg_color);
-
-		eui_set_align(EUI_ALIGN_CENTER, EUI_ALIGN_CENTER);
-		eui_text(EUI_VEC2(0, 0), fg_color, text);
-	}
-
+	/* window title */
+	eui_border_box(pos, EUI_VEC2(size.x, 16), border_width, border_color);
+	eui_push_frame(pos, EUI_VEC2(size.x, 16));
+	eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
+	eui_text(EUI_VEC2(0, 0), text_color, title);
 	eui_pop_frame();
 
-	return is_cursor_above(pos, size) && button.x;
+	pos.x += window_padding;
+	pos.y += window_padding + 16;
+	size.x -= window_padding * 2;
+	size.y -= window_padding * 2 + 16;
+
+	eui_push_frame(pos, size);
+
+	return true;
+}
+
+void eui_window_end(void)
+{
+	eui_pop_frame();
 }

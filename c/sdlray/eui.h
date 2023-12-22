@@ -35,7 +35,7 @@ extern "C" {
 /* element alignment */
 enum {
 	EUI_ALIGN_START,
-	EUI_ALIGN_CENTER,
+	EUI_ALIGN_MIDDLE,
 	EUI_ALIGN_END
 };
 
@@ -81,7 +81,6 @@ void eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size);
 void eui_push_frame(eui_vec2_t pos, eui_vec2_t size);
 void eui_pop_frame(void);
 void eui_reset_frame(void);
-void eui_set_align(int x, int y);
 
 /* input handling */
 void eui_set_cursor(eui_vec2_t pos);
@@ -92,18 +91,24 @@ void eui_set_button(int left, int right);
 bool eui_begin(int w, int h, int pitch, uint8_t *pixels);
 void eui_end(void);
 
-/* draw handling */
+/* configuration */
 void eui_set_bg_color(uint8_t color);
 void eui_set_fg_color(uint8_t color);
+void eui_set_text_color(uint8_t color);
+void eui_set_border_color(uint8_t color);
+void eui_set_border_width(int width);
+void eui_set_window_padding(int padding);
+void eui_set_align(int xalign, int yalign);
 
-/* draw primitives */
+/* primitives */
 void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, uint8_t color);
 void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, uint8_t color);
 void eui_text(eui_vec2_t pos, uint8_t color, char *s);
 void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...);
 
 /* widgets */
-bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text);
+bool eui_window_begin(eui_vec2_t pos, eui_vec2_t size, char *title);
+void eui_window_end(void);
 
 #ifdef __cplusplus
 }
