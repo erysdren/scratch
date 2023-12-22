@@ -407,15 +407,16 @@ int main(int argc, char **argv)
 			/* background */
 			eui_set_bg_color(15);
 			eui_set_fg_color(31);
+			eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 12), 15);
 
 			/* File */
-			eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 16), "File");
+			eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 12), "File");
 
 			/* Edit */
-			eui_button(EUI_VEC2(48, 0), EUI_VEC2(48, 16), "Edit");
+			eui_button(EUI_VEC2(48, 0), EUI_VEC2(48, 12), "Edit");
 
 			/* Help */
-			eui_button(EUI_VEC2(96, 0), EUI_VEC2(48, 16), "Help");
+			eui_button(EUI_VEC2(96, 0), EUI_VEC2(48, 12), "Help");
 
 			/* end frame */
 			eui_pop_frame();
