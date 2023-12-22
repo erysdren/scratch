@@ -186,8 +186,10 @@ typedef struct pixelmap_t {
 #define MAX_FRAMES (64)
 static frame_t frames[MAX_FRAMES] = {0};
 static int frame_index = 0;
-pixelmap_t dest = {0};
+static pixelmap_t dest = {0};
 #define PIXEL(x, y) dest.pixels[y * dest.pitch + x]
+static uint8_t fg_color = 0;
+static uint8_t bg_color = 0;
 
 /*
  *
@@ -332,7 +334,7 @@ void eui_set_align(int x, int y)
 
 /*
  *
- * set draw destination
+ * draw control
  *
  */
 
@@ -342,6 +344,16 @@ void eui_set_dest(int w, int h, int pitch, uint8_t *pixels)
 	dest.h = h;
 	dest.pitch = pitch;
 	dest.pixels = pixels;
+}
+
+void eui_set_bg_color(uint8_t color)
+{
+	bg_color = color;
+}
+
+void eui_set_fg_color(uint8_t color)
+{
+	fg_color = color;
 }
 
 /*
@@ -426,4 +438,23 @@ void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...)
 	va_end(args);
 
 	eui_text(pos, color, text);
+}
+
+/*
+ *
+ * widgets
+ *
+ */
+
+bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text)
+{
+	eui_push_frame(pos, size);
+
+	eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
+	eui_filled_box(EUI_VEC2(0, 0), size, bg_color);
+
+	eui_set_align(EUI_ALIGN_CENTER, EUI_ALIGN_CENTER);
+	eui_text(EUI_VEC2(0, 0), fg_color, text);
+
+	eui_pop_frame();
 }

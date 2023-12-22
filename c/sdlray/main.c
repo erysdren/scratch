@@ -380,17 +380,17 @@ int main(int argc, char **argv)
 			eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
 
 			/* background */
-			eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 12), 15);
-			eui_border_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, HEIGHT), 4, 255);
+			eui_set_bg_color(15);
+			eui_set_fg_color(31);
 
 			/* File */
-			eui_text(EUI_VEC2(2, 2), 31, "File");
+			eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 16), "File");
 
 			/* Edit */
-			eui_text(EUI_VEC2(48, 2), 31, "Edit");
+			eui_button(EUI_VEC2(64, 0), EUI_VEC2(48, 16), "Edit");
 
 			/* Help */
-			eui_text(EUI_VEC2(96, 2), 31, "Help");
+			eui_button(EUI_VEC2(128, 0), EUI_VEC2(48, 16), "Help");
 
 			/* end frame */
 			eui_pop_frame();

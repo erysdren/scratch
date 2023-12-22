@@ -75,14 +75,19 @@ void eui_push_frame(eui_vec2_t pos, eui_vec2_t size);
 void eui_pop_frame(void);
 void eui_set_align(int x, int y);
 
-/* set draw destination */
+/* draw control */
 void eui_set_dest(int w, int h, int pitch, uint8_t *pixels);
+void eui_set_bg_color(uint8_t color);
+void eui_set_fg_color(uint8_t color);
 
 /* draw primitives */
 void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, uint8_t color);
 void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, uint8_t color);
 void eui_text(eui_vec2_t pos, uint8_t color, char *s);
 void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...);
+
+/* widgets */
+bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text);
 
 #ifdef __cplusplus
 }
