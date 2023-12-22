@@ -412,9 +412,6 @@ int main(int argc, char **argv)
 				eui_text(EUI_VEC2(0, 0), 0, "hello world!");
 				eui_pop_frame();
 
-				/* draw builtin cursor */
-				eui_cursor();
-
 				/* end eui */
 				eui_end();
 			}

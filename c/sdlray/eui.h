@@ -280,7 +280,7 @@ bool eui_is_hovered(eui_vec2_t pos, eui_vec2_t size);
 void eui_clear(eui_color_t color);
 
 /* draw built-in cursor */
-void eui_cursor(void);
+void eui_cursor(eui_color_t color);
 
 /*
  *
