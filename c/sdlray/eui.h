@@ -70,12 +70,17 @@ void eui_transform_point(eui_vec2_t *pos);
 void eui_transform_box(eui_vec2_t *pos, eui_vec2_t size);
 void eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size);
 
-/* frame control */
+/* frame handling */
 void eui_push_frame(eui_vec2_t pos, eui_vec2_t size);
 void eui_pop_frame(void);
 void eui_set_align(int x, int y);
 
-/* draw control */
+/* input handling */
+void eui_set_cursor(eui_vec2_t pos);
+void eui_move_cursor(eui_vec2_t move);
+void eui_set_button(int left, int right);
+
+/* draw handling */
 void eui_set_dest(int w, int h, int pitch, uint8_t *pixels);
 void eui_set_bg_color(uint8_t color);
 void eui_set_fg_color(uint8_t color);

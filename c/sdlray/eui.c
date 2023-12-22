@@ -190,6 +190,8 @@ static pixelmap_t dest = {0};
 #define PIXEL(x, y) dest.pixels[y * dest.pitch + x]
 static uint8_t fg_color = 0;
 static uint8_t bg_color = 0;
+static eui_vec2_t cursor = {-1, -1};
+static eui_vec2_t button = {0, 0};
 
 /*
  *
@@ -304,7 +306,7 @@ void eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size)
 
 /*
  *
- * frame control
+ * frame handling
  *
  */
 
@@ -334,7 +336,41 @@ void eui_set_align(int x, int y)
 
 /*
  *
- * draw control
+ * input handling
+ *
+ */
+
+static bool is_cursor_above(eui_vec2_t pos, eui_vec2_t size)
+{
+	if (cursor.x < pos.x || cursor.x > pos.x + size.x)
+		return false;
+	if (cursor.y < pos.y || cursor.y > pos.y + size.y)
+		return false;
+	return true;
+}
+
+void eui_set_cursor(eui_vec2_t pos)
+{
+	cursor = pos;
+}
+
+void eui_move_cursor(eui_vec2_t move)
+{
+	cursor.x += move.x;
+	cursor.y += move.y;
+}
+
+void eui_set_button(int left, int right)
+{
+	if (left > -1)
+		button.x = left;
+	if (right > -1)
+		button.y = right;
+}
+
+/*
+ *
+ * draw handling
  *
  */
 
@@ -450,11 +486,22 @@ bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text)
 {
 	eui_push_frame(pos, size);
 
-	eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
-	eui_filled_box(EUI_VEC2(0, 0), size, bg_color);
+	if (is_cursor_above(pos, size) && !button.x)
+	{
+		eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
+		eui_filled_box(EUI_VEC2(0, 0), size, fg_color);
 
-	eui_set_align(EUI_ALIGN_CENTER, EUI_ALIGN_CENTER);
-	eui_text(EUI_VEC2(0, 0), fg_color, text);
+		eui_set_align(EUI_ALIGN_CENTER, EUI_ALIGN_CENTER);
+		eui_text(EUI_VEC2(0, 0), bg_color, text);
+	}
+	else
+	{
+		eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
+		eui_filled_box(EUI_VEC2(0, 0), size, bg_color);
+
+		eui_set_align(EUI_ALIGN_CENTER, EUI_ALIGN_CENTER);
+		eui_text(EUI_VEC2(0, 0), fg_color, text);
+	}
 
 	eui_pop_frame();
 }

@@ -329,6 +329,28 @@ int main(int argc, char **argv)
 					sdl.running = SDL_FALSE;
 					break;
 
+				case SDL_MOUSEBUTTONDOWN:
+					switch (sdl.event.button.button)
+					{
+						case SDL_BUTTON_LEFT:
+							eui_set_button(1, -1);
+
+						case SDL_BUTTON_RIGHT:
+							eui_set_button(-1, 1);
+					}
+					break;
+
+				case SDL_MOUSEBUTTONUP:
+					switch (sdl.event.button.button)
+					{
+						case SDL_BUTTON_LEFT:
+							eui_set_button(0, -1);
+
+						case SDL_BUTTON_RIGHT:
+							eui_set_button(-1, 0);
+					}
+					break;
+
 				case SDL_MOUSEMOTION:
 					ray.editor.cursor.x = sdl.event.motion.x;
 					ray.editor.cursor.y = sdl.event.motion.y;
@@ -379,6 +401,9 @@ int main(int argc, char **argv)
 			eui_set_dest(sdl.surface8->w, sdl.surface8->h, sdl.surface8->pitch, sdl.surface8->pixels);
 			eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
 
+			/* update cursor */
+			eui_set_cursor(EUI_VEC2(ray.editor.cursor.x, ray.editor.cursor.y));
+
 			/* background */
 			eui_set_bg_color(15);
 			eui_set_fg_color(31);
@@ -387,10 +412,10 @@ int main(int argc, char **argv)
 			eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 16), "File");
 
 			/* Edit */
-			eui_button(EUI_VEC2(64, 0), EUI_VEC2(48, 16), "Edit");
+			eui_button(EUI_VEC2(48, 0), EUI_VEC2(48, 16), "Edit");
 
 			/* Help */
-			eui_button(EUI_VEC2(128, 0), EUI_VEC2(48, 16), "Help");
+			eui_button(EUI_VEC2(96, 0), EUI_VEC2(48, 16), "Help");
 
 			/* end frame */
 			eui_pop_frame();
