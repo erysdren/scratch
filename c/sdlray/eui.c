@@ -380,7 +380,6 @@ static void eui_char_bitmap(eui_vec2_t pos, unsigned char *bitmap, uint8_t color
 {
 	int x, y;
 	int xx, yy;
-	eui_vec2_t size = {8, 8};
 
 	for (x = 0; x < 8; x++)
 	{
