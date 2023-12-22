@@ -46,16 +46,40 @@ enum {
 	EUI_TRUE = 1
 };
 
+/* button type */
+enum {
+	EUI_BUTTON_LEFT,
+	EUI_BUTTON_RIGHT
+};
+
+/* event type */
+enum {
+	EUI_EVENT_NONE,
+	EUI_EVENT_KEY_DOWN,
+	EUI_EVENT_KEY_UP,
+	EUI_EVENT_MOUSE,
+	EUI_EVENT_BUTTON_DOWN,
+	EUI_EVENT_BUTTON_UP
+};
+
 /*
  *
  * eui types
  *
  */
 
-/* vector */
+/* vec2 */
 typedef struct eui_vec2_t {
 	int x, y;
 } eui_vec2_t;
+
+/* event */
+typedef union eui_event_t {
+	int type;
+	struct { int type; uint32_t scancode; } key;
+	struct { int type; int x; int y; } mouse;
+	struct { int type; int x; int y; int button; } button;
+} eui_event_t;
 
 /*
  *
@@ -83,10 +107,9 @@ void eui_pop_frame(void);
 void eui_reset_frame(void);
 void eui_set_align(int xalign, int yalign);
 
-/* input handling */
-void eui_set_cursor(eui_vec2_t pos);
-void eui_move_cursor(eui_vec2_t move);
-void eui_set_button(int left, int right);
+/* event handling */
+void eui_push_event(eui_event_t event);
+int eui_pop_event(eui_event_t *out);
 
 /* begin/end */
 bool eui_begin(int w, int h, int pitch, uint8_t *pixels);

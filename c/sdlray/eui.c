@@ -216,17 +216,10 @@ static int frame_index = 0;
 static pixelmap_t dest = {0};
 #define PIXEL(x, y) dest.pixels[y * dest.pitch + x]
 
-/* configuration */
-static uint8_t fg_color = 0;
-static uint8_t bg_color = 0;
-static uint8_t text_color = 0;
-static uint8_t border_color = 0;
-static int border_width = 1;
-static int window_padding = 0;
-
-/* input handling */
-static eui_vec2_t cursor = {-1, -1};
-static eui_vec2_t button = {0, 0};
+/* event handling */
+#define MAX_EVENTS (32)
+static eui_event_t events[MAX_EVENTS] = {0};
+static int num_events = 0;
 
 /*
  *
@@ -349,7 +342,7 @@ void eui_push_frame(eui_vec2_t pos, eui_vec2_t size)
 {
 	eui_transform_box(&pos, size);
 
-	frame_index += 1;
+	frame_index++;
 
 	frames[frame_index].pos = pos;
 	frames[frame_index].size = size;
@@ -361,7 +354,7 @@ void eui_push_frame(eui_vec2_t pos, eui_vec2_t size)
 void eui_pop_frame(void)
 {
 	if (frame_index)
-		frame_index -= 1;
+		frame_index--;
 }
 
 void eui_reset_frame(void)
@@ -379,36 +372,34 @@ void eui_set_align(int xalign, int yalign)
 
 /*
  *
- * input handling
+ * event handling
  *
  */
 
-static bool is_cursor_above(eui_vec2_t pos, eui_vec2_t size)
+void eui_push_event(eui_event_t event)
 {
-	if (cursor.x < pos.x || cursor.x > pos.x + size.x)
-		return false;
-	if (cursor.y < pos.y || cursor.y > pos.y + size.y)
-		return false;
-	return true;
+	if (num_events == MAX_EVENTS - 1)
+	{
+		printf("EUI WARNING: Event queue exhausted!\n");
+		return;
+	}
+
+	events[++num_events] = event;
 }
 
-void eui_set_cursor(eui_vec2_t pos)
+int eui_pop_event(eui_event_t *out)
 {
-	cursor = pos;
-}
+	if (!num_events)
+	{
+		*out = (eui_event_t){};
+		return 0;
+	}
 
-void eui_move_cursor(eui_vec2_t move)
-{
-	cursor.x += move.x;
-	cursor.y += move.y;
-}
+	*out = events[num_events];
+	events[num_events] = (eui_event_t){};
+	num_events--;
 
-void eui_set_button(int left, int right)
-{
-	if (left != EUI_UNSET)
-		button.x = left;
-	if (right != EUI_UNSET)
-		button.y = right;
+	return num_events + 1;
 }
 
 /*
@@ -419,6 +410,8 @@ void eui_set_button(int left, int right)
 
 bool eui_begin(int w, int h, int pitch, uint8_t *pixels)
 {
+	eui_event_t event;
+
 	if (!w || !h || !pitch || !pixels)
 		return false;
 
@@ -426,6 +419,16 @@ bool eui_begin(int w, int h, int pitch, uint8_t *pixels)
 	dest.h = h;
 	dest.pitch = pitch;
 	dest.pixels = pixels;
+
+	/* process event queue */
+	while (eui_pop_event(&event))
+	{
+		switch (event.type)
+		{
+			case EUI_EVENT_MOUSE:
+				break;
+		}
+	}
 
 	eui_reset_frame();
 	eui_push_frame(EUI_VEC2(0, 0), EUI_VEC2(w, h));

@@ -323,6 +323,8 @@ int main(int argc, char **argv)
 
 		while (SDL_PollEvent(&sdl.event))
 		{
+			eui_event_t eui_event;
+
 			switch (sdl.event.type)
 			{
 				case SDL_QUIT:
@@ -333,10 +335,20 @@ int main(int argc, char **argv)
 					switch (sdl.event.button.button)
 					{
 						case SDL_BUTTON_LEFT:
-							eui_set_button(EUI_TRUE, EUI_UNSET);
+							eui_event.type = EUI_EVENT_BUTTON_DOWN;
+							eui_event.button.x = sdl.event.button.x;
+							eui_event.button.y = sdl.event.button.y;
+							eui_event.button.button = EUI_BUTTON_LEFT;
+							eui_push_event(eui_event);
+							break;
 
 						case SDL_BUTTON_RIGHT:
-							eui_set_button(EUI_UNSET, EUI_TRUE);
+							eui_event.type = EUI_EVENT_BUTTON_DOWN;
+							eui_event.button.x = sdl.event.button.x;
+							eui_event.button.y = sdl.event.button.y;
+							eui_event.button.button = EUI_BUTTON_RIGHT;
+							eui_push_event(eui_event);
+							break;
 					}
 					break;
 
@@ -344,14 +356,29 @@ int main(int argc, char **argv)
 					switch (sdl.event.button.button)
 					{
 						case SDL_BUTTON_LEFT:
-							eui_set_button(EUI_FALSE, EUI_UNSET);
+							eui_event.type = EUI_EVENT_BUTTON_UP;
+							eui_event.button.x = sdl.event.button.x;
+							eui_event.button.y = sdl.event.button.y;
+							eui_event.button.button = EUI_BUTTON_LEFT;
+							eui_push_event(eui_event);
+							break;
 
 						case SDL_BUTTON_RIGHT:
-							eui_set_button(EUI_UNSET, EUI_FALSE);
+							eui_event.type = EUI_EVENT_BUTTON_UP;
+							eui_event.button.x = sdl.event.button.x;
+							eui_event.button.y = sdl.event.button.y;
+							eui_event.button.button = EUI_BUTTON_RIGHT;
+							eui_push_event(eui_event);
+							break;
 					}
 					break;
 
 				case SDL_MOUSEMOTION:
+					eui_event.type = EUI_EVENT_MOUSE;
+					eui_event.mouse.x = sdl.event.motion.x;
+					eui_event.mouse.y = sdl.event.motion.y;
+					eui_push_event(eui_event);
+
 					ray.editor.cursor.x = sdl.event.motion.x;
 					ray.editor.cursor.y = sdl.event.motion.y;
 					ray.camera.pitch += sdl.event.motion.yrel;
@@ -399,9 +426,6 @@ int main(int argc, char **argv)
 			/* begin eui */
 			if (eui_begin(sdl.surface8->w, sdl.surface8->h, sdl.surface8->pitch, sdl.surface8->pixels))
 			{
-				/* update cursor */
-				eui_set_cursor(EUI_VEC2(ray.editor.cursor.x, ray.editor.cursor.y));
-
 				/* window */
 				eui_filled_box(EUI_VEC2(32, 32), EUI_VEC2(320, 200), 31);
 				eui_border_box(EUI_VEC2(32, 32), EUI_VEC2(320, 200), 2, 15);
