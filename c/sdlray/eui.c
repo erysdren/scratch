@@ -221,6 +221,10 @@ static pixelmap_t dest = {0};
 static eui_event_t events[MAX_EVENTS] = {0};
 static int num_events = 0;
 
+/* input state */
+static eui_vec2_t mouse;
+static int button;
+
 /*
  *
  * transforms
@@ -425,7 +429,23 @@ bool eui_begin(int w, int h, int pitch, uint8_t *pixels)
 	{
 		switch (event.type)
 		{
+			case EUI_EVENT_KEY_DOWN:
+				break;
+
+			case EUI_EVENT_KEY_UP:
+				break;
+
 			case EUI_EVENT_MOUSE:
+				mouse.x = event.mouse.x;
+				mouse.y = event.mouse.y;
+				break;
+
+			case EUI_EVENT_BUTTON_DOWN:
+				button = 1;
+				break;
+
+			case EUI_EVENT_BUTTON_UP:
+				button = 0;
 				break;
 		}
 	}
@@ -770,4 +790,41 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, uint8_t color)
 			PIXEL(px, py) = color;
 		}
 	}
+}
+
+/*
+ *
+ * widgets
+ *
+ */
+
+static bool eui_is_hovered(eui_vec2_t pos, eui_vec2_t size)
+{
+	if (mouse.x < pos.x || mouse.x > pos.x + size.x)
+		return false;
+	if (mouse.y < pos.y || mouse.y > pos.y + size.y)
+		return false;
+	return true;
+}
+
+void eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_button_callback callback)
+{
+	static bool clicked;
+
+	eui_filled_box(pos, size, 15);
+	eui_push_frame(pos, size);
+	eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
+	eui_text(EUI_VEC2(0, 0), 31, text);
+	eui_pop_frame();
+
+	eui_transform_box(&pos, size);
+
+	if (eui_is_hovered(pos, size) && button && !clicked)
+	{
+		callback();
+		clicked = true;
+	}
+
+	if (!button)
+		clicked = false;
 }

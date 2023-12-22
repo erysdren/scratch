@@ -627,6 +627,7 @@ void ray_draw_editor(ray_t *ray)
 		y += 64;
 	}
 
+#if 0
 	/* draw crosshair */
 	rect.x = ray->editor.cursor.x - ray->crosshair->w / 2;
 	rect.y = ray->editor.cursor.y - ray->crosshair->h / 2;
@@ -639,6 +640,7 @@ void ray_draw_editor(ray_t *ray)
 	{
 		ray_printf(ray, rect.x + 32, rect.y, "x=%d y=%d\nheight=%d", selected_pos.x, selected_pos.y, selected_tile->height);
 	}
+#endif
 }
 
 /* init ray structure */

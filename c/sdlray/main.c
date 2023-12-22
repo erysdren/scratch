@@ -205,6 +205,11 @@ void free_floors(void)
 	free(ray.textures.floors);
 }
 
+void my_cool_button(void)
+{
+	printf("button pressed!\n");
+}
+
 /* main */
 int main(int argc, char **argv)
 {
@@ -432,13 +437,7 @@ int main(int argc, char **argv)
 				eui_push_frame(EUI_VEC2(32 + 8, 32 + 8), EUI_VEC2(320 - 16, 200 - 16));
 
 				eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
-				eui_text(EUI_VEC2(0, 0), 0, "upper left aligned text\nwith newline");
-
-				eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
-				eui_text(EUI_VEC2(0, 0), 0, "center aligned text\nwith newline");
-
-				eui_set_align(EUI_ALIGN_END, EUI_ALIGN_END);
-				eui_text(EUI_VEC2(0, 0), 0, "lower right aligned text\nwith newline");
+				eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 16), "File", my_cool_button);
 
 				eui_pop_frame();
 

@@ -81,6 +81,9 @@ typedef union eui_event_t {
 	struct { int type; int x; int y; int button; } button;
 } eui_event_t;
 
+/* button callback function */
+typedef void eui_button_callback(void);
+
 /*
  *
  * helper macros
@@ -122,6 +125,9 @@ void eui_text(eui_vec2_t pos, uint8_t color, char *s);
 void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...);
 void eui_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color);
 void eui_line(eui_vec2_t p0, eui_vec2_t p1, uint8_t color);
+
+/* widgets */
+void eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_button_callback callback);
 
 #ifdef __cplusplus
 }
