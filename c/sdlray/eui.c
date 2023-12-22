@@ -363,7 +363,17 @@ void eui_filled_box(eui_vec2_t pos, eui_vec2_t size, uint8_t color)
 
 void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, uint8_t color)
 {
-	eui_transform_box(&pos, size);
+	/* top line */
+	eui_filled_box(pos, EUI_VEC2(size.x, width), color);
+
+	/* bottom line */
+	eui_filled_box(EUI_VEC2(pos.x, pos.y + size.y - width), EUI_VEC2(size.x, width), color);
+
+	/* left line */
+	eui_filled_box(EUI_VEC2(pos.x, pos.y + width), EUI_VEC2(width, size.y - width * 2), color);
+
+	/* right line */
+	eui_filled_box(EUI_VEC2(pos.x + size.x - width, pos.y + width), EUI_VEC2(width, size.y - width * 2), color);
 }
 
 static void eui_char_bitmap(eui_vec2_t pos, unsigned char *bitmap, uint8_t color)
@@ -418,4 +428,3 @@ void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...)
 
 	eui_text(pos, color, text);
 }
-

@@ -381,6 +381,7 @@ int main(int argc, char **argv)
 
 			/* background */
 			eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 12), 15);
+			eui_border_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, HEIGHT), 4, 255);
 
 			/* File */
 			eui_text(EUI_VEC2(2, 2), 31, "File");
