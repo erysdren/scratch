@@ -632,7 +632,7 @@ void eui_border_box(eui_vec2_t pos, eui_vec2_t size, int width, eui_color_t colo
 }
 
 /* draw font8x8 bitmap at pos */
-static void eui_font8x8(eui_vec2_t pos, unsigned char *bitmap, eui_color_t color)
+static void eui_font8x8(eui_vec2_t pos, const unsigned char *bitmap, eui_color_t color)
 {
 	int x, y;
 	int xx, yy;
