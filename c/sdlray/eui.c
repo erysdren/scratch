@@ -202,6 +202,11 @@ typedef struct pixelmap_t {
  *
  */
 
+/* misc */
+#ifndef sgn
+#define sgn(x) ((x < 0) ? -1 : ((x > 0) ? 1 : 0))
+#endif
+
 /* frames */
 #define MAX_FRAMES (64)
 static frame_t frames[MAX_FRAMES] = {0};
@@ -659,6 +664,11 @@ void eui_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color)
 		edge_table[y][1] = INT32_MIN;
 	}
 
+	/* transform points */
+	eui_transform_point(&p0);
+	eui_transform_point(&p1);
+	eui_transform_point(&p2);
+
 	/* scan triangle edges */
 	triangle_scan_edge(p0, p1, edge_table);
 	triangle_scan_edge(p1, p2, edge_table);
@@ -675,6 +685,83 @@ void eui_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, uint8_t color)
 			{
 				PIXEL(x++, y) = color;
 			}
+		}
+	}
+}
+
+void eui_line(eui_vec2_t p0, eui_vec2_t p1, uint8_t color)
+{
+	int i, dx, dy, sdx, sdy, dxabs, dyabs, x, y, px, py;
+
+	/* transform points */
+	eui_transform_point(&p0);
+	eui_transform_point(&p1);
+
+	/* the horizontal distance of the line */
+	dx = p1.x - p0.x;
+
+	/* the vertical distance of the line */
+	dy = p1.y - p0.y;
+
+	dxabs = abs(dx);
+	dyabs = abs(dy);
+
+	sdx = sgn(dx);
+	sdy = sgn(dy);
+
+	x = dyabs >> 1;
+	y = dxabs >> 1;
+
+	px = p0.x;
+	py = p0.y;
+
+	if (px >= 0 && px < dest.w && py >= 0 && py < dest.h)
+		PIXEL(px, py) = color;
+
+	if (dxabs >= dyabs)
+	{
+		/* the line is more horizontal than vertical */
+		for (i = 0; i < dxabs; i++)
+		{
+			y += dyabs;
+
+			if (y >= dxabs)
+			{
+				y -= dxabs;
+				py += sdy;
+			}
+
+			px += sdx;
+
+			if (px < 0 || px >= dest.w)
+				continue;
+			if (py < 0 || py >= dest.h)
+				continue;
+
+			PIXEL(px, py) = color;
+		}
+	}
+	else
+	{
+		/* the line is more vertical than horizontal */
+		for (i = 0; i < dyabs; i++)
+		{
+			x += dxabs;
+
+			if ( x >= dyabs)
+			{
+				x -= dyabs;
+				px += sdx;
+			}
+
+			py += sdy;
+
+			if (px < 0 || px >= dest.w)
+				continue;
+			if (py < 0 || py >= dest.h)
+				continue;
+
+			PIXEL(px, py) = color;
 		}
 	}
 }
