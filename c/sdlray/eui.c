@@ -323,10 +323,16 @@ void eui_push_frame(eui_vec2_t pos, eui_vec2_t size)
 	frames[frame_index].align.y = EUI_ALIGN_START;
 }
 
+
 void eui_pop_frame(void)
 {
 	if (frame_index)
 		frame_index -= 1;
+}
+
+void eui_reset_frame(void)
+{
+	frame_index = 0;
 }
 
 void eui_set_align(int x, int y)
@@ -371,17 +377,33 @@ void eui_set_button(int left, int right)
 
 /*
  *
- * draw handling
+ * begin/end
  *
  */
 
-void eui_set_dest(int w, int h, int pitch, uint8_t *pixels)
+bool eui_begin(int w, int h, int pitch, uint8_t *pixels)
 {
 	dest.w = w;
 	dest.h = h;
 	dest.pitch = pitch;
 	dest.pixels = pixels;
+
+	eui_reset_frame();
+	eui_push_frame(EUI_VEC2(0, 0), EUI_VEC2(w, h));
+
+	return true;
 }
+
+void eui_end(void)
+{
+
+}
+
+/*
+ *
+ * draw handling
+ *
+ */
 
 void eui_set_bg_color(uint8_t color)
 {
@@ -507,23 +529,4 @@ bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text)
 	eui_pop_frame();
 
 	return is_cursor_above(pos, size) && button.x;
-}
-
-bool eui_list_start(eui_vec2_t pos)
-{
-	list_pos = pos;
-	return true;
-}
-
-bool eui_list_button(eui_vec2_t size, char *text)
-{
-	bool r = eui_button(list_pos, size, text);
-	list_pos.y += size.y;
-	return r;
-}
-
-void eui_list_end(void)
-{
-	list_pos.x = 0;
-	list_pos.y = 0;
 }

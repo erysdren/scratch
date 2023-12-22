@@ -396,37 +396,29 @@ int main(int argc, char **argv)
 			/* draw editor */
 			ray_draw_editor(&ray);
 
-			/* start frame */
-			eui_push_frame(EUI_VEC2(0, 0), EUI_VEC2(sdl.surface8->w, sdl.surface8->h));
-			eui_set_dest(sdl.surface8->w, sdl.surface8->h, sdl.surface8->pitch, sdl.surface8->pixels);
-			eui_set_align(EUI_ALIGN_START, EUI_ALIGN_START);
-
-			/* update cursor */
-			eui_set_cursor(EUI_VEC2(ray.editor.cursor.x, ray.editor.cursor.y));
-
-			/* background */
-			eui_set_bg_color(15);
-			eui_set_fg_color(31);
-			eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 12), 15);
-
-			/* File */
-			if (eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 12), "File"))
+			/* begin eui */
+			if (eui_begin(sdl.surface8->w, sdl.surface8->h, sdl.surface8->pitch, sdl.surface8->pixels))
 			{
-				eui_list_start(EUI_VEC2(0, 12));
-				eui_list_button(EUI_VEC2(48, 12), "Save");
-				eui_list_button(EUI_VEC2(48, 12), "Load");
-				eui_list_button(EUI_VEC2(48, 12), "Quit");
-				eui_list_end();
+				/* update cursor */
+				eui_set_cursor(EUI_VEC2(ray.editor.cursor.x, ray.editor.cursor.y));
+
+				/* background */
+				eui_set_bg_color(15);
+				eui_set_fg_color(31);
+				eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 12), 15);
+
+				/* File */
+				eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 12), "File");
+
+				/* Edit */
+				eui_button(EUI_VEC2(48, 0), EUI_VEC2(48, 12), "Edit");
+
+				/* Help */
+				eui_button(EUI_VEC2(96, 0), EUI_VEC2(48, 12), "Help");
+
+				/* end eui */
+				eui_end();
 			}
-
-			/* Edit */
-			eui_button(EUI_VEC2(48, 0), EUI_VEC2(48, 12), "Edit");
-
-			/* Help */
-			eui_button(EUI_VEC2(96, 0), EUI_VEC2(48, 12), "Help");
-
-			/* end frame */
-			eui_pop_frame();
 		}
 		else
 		{
