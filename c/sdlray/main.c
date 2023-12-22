@@ -431,7 +431,7 @@ int main(int argc, char **argv)
 			ray_draw_editor(&ray);
 
 			/* begin eui */
-			if (eui_begin(sdl.surface8->w, sdl.surface8->h, sdl.surface8->pitch, sdl.surface8->pixels))
+			if (eui_begin(EUI_PIXELMAP(sdl.surface8->w, sdl.surface8->h, sdl.surface8->pitch, sdl.surface8->pixels)));
 			{
 				/* top bar */
 				eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 16), 31);
@@ -442,10 +442,21 @@ int main(int argc, char **argv)
 				eui_button(EUI_VEC2(48, 0), EUI_VEC2(48, 16), "Edit", my_cool_button, NULL);
 				eui_button(EUI_VEC2(96, 0), EUI_VEC2(48, 16), "Help", my_cool_button, NULL);
 
-				/* example window */
+				/* 1st example window */
 				eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
 				eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(320, 200), 31);
 				eui_border_box(EUI_VEC2(0, 0), EUI_VEC2(320, 200), 2, 15);
+				eui_push_frame(EUI_VEC2(0, 0), EUI_VEC2(320 - 16, 200 - 16));
+				eui_text(EUI_VEC2(0, 0), 0, "hello world!");
+				eui_pop_frame();
+
+				/* 2nd example window */
+				eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
+				eui_filled_box(EUI_VEC2(64, 64), EUI_VEC2(320, 200), 31);
+				eui_border_box(EUI_VEC2(64, 64), EUI_VEC2(320, 200), 2, 15);
+				eui_push_frame(EUI_VEC2(64, 64), EUI_VEC2(320 - 16, 200 - 16));
+				eui_text(EUI_VEC2(0, 0), 0, "hello world!");
+				eui_pop_frame();
 
 				/* end eui */
 				eui_end();

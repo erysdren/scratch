@@ -188,14 +188,6 @@ typedef struct frame_t {
 	eui_vec2_t align;
 } frame_t;
 
-/* pixelmap */
-typedef struct pixelmap_t {
-	int w;
-	int h;
-	int pitch;
-	eui_color_t *pixels;
-} pixelmap_t;
-
 /*
  *
  * local variables
@@ -213,8 +205,8 @@ static frame_t frames[MAX_FRAMES] = {0};
 static int frame_index = 0;
 
 /* destination pixelmap */
-static pixelmap_t dest = {0};
-#define PIXEL(x, y) dest.pixels[y * dest.pitch + x]
+static eui_pixelmap_t drawdest = {0};
+#define PIXEL(x, y) drawdest.pixels[y * drawdest.pitch + x]
 
 /* event handling */
 #define MAX_EVENTS (32)
@@ -303,9 +295,9 @@ void eui_transform_box(eui_vec2_t *pos, eui_vec2_t size)
 bool eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size)
 {
 	/* it will never become visible */
-	if (pos->x >= dest.w)
+	if (pos->x >= drawdest.w)
 		return false;
-	if (pos->y >= dest.h)
+	if (pos->y >= drawdest.h)
 		return false;
 	if (pos->x + size->x < 0)
 		return false;
@@ -320,9 +312,9 @@ bool eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size)
 	}
 
 	/* clip to bottom edge */
-	if (pos->y + size->y >= dest.h)
+	if (pos->y + size->y >= drawdest.h)
 	{
-		size->y = dest.h - pos->y;
+		size->y = drawdest.h - pos->y;
 	}
 
 	/* clip to left edge */
@@ -333,9 +325,9 @@ bool eui_clip_box(eui_vec2_t *pos, eui_vec2_t *size)
 	}
 
 	/* clip to right edge */
-	if (pos->x + size->x >= dest.w)
+	if (pos->x + size->x >= drawdest.w)
 	{
-		size->x = dest.w - pos->x;
+		size->x = drawdest.w - pos->x;
 	}
 
 	return true;
@@ -422,18 +414,15 @@ int eui_pop_event(eui_event_t *out)
  *
  */
 
-/* begin eui with given draw buffer context */
-bool eui_begin(int w, int h, int pitch, eui_color_t *pixels)
+/* begin eui with given pixelmap destination */
+bool eui_begin(eui_pixelmap_t dest)
 {
 	eui_event_t event;
 
-	if (!w || !h || !pitch || !pixels)
+	if (!dest.w || !dest.h || !dest.pitch || !dest.pixels)
 		return false;
 
-	dest.w = w;
-	dest.h = h;
-	dest.pitch = pitch;
-	dest.pixels = pixels;
+	drawdest = dest;
 
 	/* process event queue */
 	while (eui_pop_event(&event))
@@ -462,7 +451,7 @@ bool eui_begin(int w, int h, int pitch, eui_color_t *pixels)
 	}
 
 	eui_reset_frame();
-	eui_push_frame(EUI_VEC2(0, 0), EUI_VEC2(w, h));
+	eui_push_frame(EUI_VEC2(0, 0), EUI_VEC2(drawdest.w, drawdest.h));
 
 	return true;
 }
@@ -582,7 +571,7 @@ static void eui_font8x8(eui_vec2_t pos, unsigned char *bitmap, eui_color_t color
 				xx = pos.x + y;
 				yy = pos.y + x;
 
-				if (xx < 0 || xx >= dest.w || yy < 0 || yy >= dest.h)
+				if (xx < 0 || xx >= drawdest.w || yy < 0 || yy >= drawdest.h)
 					continue;
 
 				PIXEL(xx, yy) = color;
@@ -663,7 +652,7 @@ void eui_textf(eui_vec2_t pos, eui_color_t color, char *s, ...)
 }
 
 /* scan triangle edge and add to edge table */
-static void eui_triangle_scan_edge(eui_vec2_t p0, eui_vec2_t p1, int edge_table[dest.h][2])
+static void eui_triangle_scan_edge(eui_vec2_t p0, eui_vec2_t p1, int edge_table[drawdest.h][2])
 {
 	int sx, sy, dx1, dy1, dx2, dy2, x, y, m, n, k, cnt;
 
@@ -704,7 +693,7 @@ static void eui_triangle_scan_edge(eui_vec2_t p0, eui_vec2_t p1, int edge_table[
 
 	while (cnt--)
 	{
-		if (y >= 0 && y < dest.h)
+		if (y >= 0 && y < drawdest.h)
 		{
 			if (x < edge_table[y][0])
 				edge_table[y][0] = x;
@@ -732,10 +721,10 @@ static void eui_triangle_scan_edge(eui_vec2_t p0, eui_vec2_t p1, int edge_table[
 void eui_filled_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, eui_color_t color)
 {
 	int x, y, len;
-	int edge_table[dest.h][2];
+	int edge_table[drawdest.h][2];
 
 	/* init edge table */
-	for (y = 0; y < dest.h; y++)
+	for (y = 0; y < drawdest.h; y++)
 	{
 		edge_table[y][0] = INT32_MAX;
 		edge_table[y][1] = INT32_MIN;
@@ -751,7 +740,7 @@ void eui_filled_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, eui_color_
 	eui_triangle_scan_edge(p1, p2, edge_table);
 	eui_triangle_scan_edge(p2, p0, edge_table);
 
-	for (y = 0; y < dest.h; y++)
+	for (y = 0; y < drawdest.h; y++)
 	{
 		if (edge_table[y][1] >= edge_table[y][0])
 		{
@@ -793,7 +782,7 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, eui_color_t color)
 	px = p0.x;
 	py = p0.y;
 
-	if (px >= 0 && px < dest.w && py >= 0 && py < dest.h)
+	if (px >= 0 && px < drawdest.w && py >= 0 && py < drawdest.h)
 		PIXEL(px, py) = color;
 
 	if (dxabs >= dyabs)
@@ -811,9 +800,9 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, eui_color_t color)
 
 			px += sdx;
 
-			if (px < 0 || px >= dest.w)
+			if (px < 0 || px >= drawdest.w)
 				continue;
-			if (py < 0 || py >= dest.h)
+			if (py < 0 || py >= drawdest.h)
 				continue;
 
 			PIXEL(px, py) = color;
@@ -834,9 +823,9 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, eui_color_t color)
 
 			py += sdy;
 
-			if (px < 0 || px >= dest.w)
+			if (px < 0 || px >= drawdest.w)
 				continue;
-			if (py < 0 || py >= dest.h)
+			if (py < 0 || py >= drawdest.h)
 				continue;
 
 			PIXEL(px, py) = color;

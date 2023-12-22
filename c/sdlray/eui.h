@@ -97,6 +97,14 @@ typedef union eui_event_t {
 	struct { int type; int x; int y; int button; } button;
 } eui_event_t;
 
+/* pixelmap */
+typedef struct eui_pixelmap_t {
+	int w;
+	int h;
+	int pitch;
+	eui_color_t *pixels;
+} eui_pixelmap_t;
+
 /* general callback function */
 typedef void eui_callback(void *user);
 
@@ -108,6 +116,9 @@ typedef void eui_callback(void *user);
 
 /* create vec2 */
 #define EUI_VEC2(x, y) (eui_vec2_t){(x), (y)}
+
+/* create pixelmap */
+#define EUI_PIXELMAP(w, h, pitch, pixels) (eui_pixelmap_t){(w), (h), (pitch), (pixels)}
 
 /*
  *
@@ -160,8 +171,8 @@ int eui_pop_event(eui_event_t *out);
  *
  */
 
-/* begin eui with given draw buffer context */
-bool eui_begin(int w, int h, int pitch, eui_color_t *pixels);
+/* begin eui with given pixelmap destination */
+bool eui_begin(eui_pixelmap_t dest);
 
 /* end eui */
 void eui_end(void);
