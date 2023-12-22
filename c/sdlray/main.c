@@ -219,6 +219,7 @@ int main(int argc, char **argv)
 	int bpp;
 	int x, y;
 	vec2f_t dir;
+	bool test_value = true;
 
 	SDL_Init(SDL_INIT_VIDEO);
 	IMG_Init(IMG_INIT_PNG);
@@ -400,6 +401,7 @@ int main(int argc, char **argv)
 				eui_border_box(EUI_VEC2(0, 0), EUI_VEC2(320, 200), 2, 15);
 				eui_push_frame(EUI_VEC2(0, 0), EUI_VEC2(320 - 16, 200 - 16));
 				eui_text(EUI_VEC2(0, 0), 0, "hello world!");
+				eui_checkbox(EUI_VEC2(0, 12), "checkbox", 0, &test_value);
 				eui_pop_frame();
 
 				/* 2nd example window */

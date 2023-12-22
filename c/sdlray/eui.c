@@ -939,3 +939,35 @@ bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_callback callba
 
 	return hovered;
 }
+
+/* bool checkbox */
+void eui_checkbox(eui_vec2_t pos, char *label, eui_color_t color, bool *value)
+{
+	static bool clicked;
+	bool hovered;
+	eui_vec2_t size;
+
+	if (!value)
+		return;
+
+	/* box border */
+	size = EUI_VEC2(11, 9);
+	eui_border_box(pos, size, 1, color);
+
+	/* toggle on click */
+	hovered = eui_is_hovered(pos, size);
+	if (hovered && button && !clicked)
+	{
+		*value = !*value;
+		clicked = true;
+	}
+	if (!button)
+		clicked = false;
+
+	/* draw x */
+	if (*value)
+		eui_text(EUI_VEC2(pos.x + 2, pos.y), color, "x");
+
+	/* label */
+	eui_text(EUI_VEC2(pos.x + 13, pos.y), color, label);
+}

@@ -309,6 +309,9 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, eui_color_t color);
 /* fires callback function if pressed and returns true if hovered */
 bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text, eui_callback callback, void *user);
 
+/* bool checkbox */
+void eui_checkbox(eui_vec2_t pos, char *label, eui_color_t color, bool *value);
+
 #ifdef __cplusplus
 }
 #endif
