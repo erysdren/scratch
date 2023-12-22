@@ -44,7 +44,7 @@ SOFTWARE.
  *
  */
 
-unsigned char font8x8_basic[128][8] = {
+static const unsigned char font8x8_basic[128][8] = {
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0000 (nul)
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0001
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // U+0002
@@ -175,6 +175,32 @@ unsigned char font8x8_basic[128][8] = {
 	{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} // U+007F
 };
 
+static const int eui_scan_to_ascii[128] = {
+	0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
+	'\t', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
+	0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
+	0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0,
+	0, 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+static const int eui_scan_to_ascii_shifted[128] = {
+	0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b',
+	'\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n',
+	0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~',
+	0, '|', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0,
+	0, 0, ' ', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
 /*
  *
  * local types
@@ -214,8 +240,17 @@ static eui_event_t events[MAX_EVENTS] = {0};
 static int num_events = 0;
 
 /* input state */
-static eui_vec2_t mouse;
-static int button;
+static eui_vec2_t mouse = {0};
+static int button = 0;
+
+/* keyboard state */
+#define MAX_KEYS (256)
+#define KEY_BUFFER_SIZE (64)
+#define KEY_BUFFER_ADVANCE(x) ((x) = ((x) + 1) & (KEY_BUFFER_SIZE - 1))
+static bool keys[MAX_KEYS] = {0};
+static int key_buffer[KEY_BUFFER_SIZE] = {0};
+static int key_buffer_ridx = 0;
+static int key_buffer_widx = 0;
 
 /*
  *
@@ -408,6 +443,35 @@ int eui_pop_event(eui_event_t *out)
 	return num_events + 1;
 }
 
+/* push key to the queue */
+static void eui_push_key(int scancode)
+{
+	key_buffer[key_buffer_widx] = scancode;
+	KEY_BUFFER_ADVANCE(key_buffer_widx);
+	if (key_buffer_widx == key_buffer_ridx)
+		KEY_BUFFER_ADVANCE(key_buffer_ridx);
+}
+
+/* pop key from the top of the queue */
+static int eui_pop_key(void)
+{
+	int res = -1;
+
+	if (key_buffer_ridx == key_buffer_widx)
+		return res;
+
+	res = key_buffer[key_buffer_ridx];
+	KEY_BUFFER_ADVANCE(key_buffer_ridx);
+
+	return res;
+}
+
+/* reset keyboard queue */
+static void eui_reset_key(void)
+{
+	key_buffer_ridx = key_buffer_widx = 0;
+}
+
 /*
  *
  * begin/end
@@ -419,10 +483,15 @@ bool eui_begin(eui_pixelmap_t dest)
 {
 	eui_event_t event;
 
+	/* sanity check */
 	if (!dest.w || !dest.h || !dest.pitch || !dest.pixels)
 		return false;
 
+	/* set draw destination */
 	drawdest = dest;
+
+	/* reset keyboard queue */
+	eui_reset_key();
 
 	/* process event queue */
 	while (eui_pop_event(&event))
@@ -430,9 +499,12 @@ bool eui_begin(eui_pixelmap_t dest)
 		switch (event.type)
 		{
 			case EUI_EVENT_KEY_DOWN:
+				keys[event.key.scancode] = true;
+				eui_push_key(event.key.scancode);
 				break;
 
 			case EUI_EVENT_KEY_UP:
+				keys[event.key.scancode] = false;
 				break;
 
 			case EUI_EVENT_MOUSE:
@@ -450,7 +522,10 @@ bool eui_begin(eui_pixelmap_t dest)
 		}
 	}
 
+	/* reset frame state */
 	eui_reset_frame();
+
+	/* push screen frame */
 	eui_push_frame(EUI_VEC2(0, 0), EUI_VEC2(drawdest.w, drawdest.h));
 
 	return true;
