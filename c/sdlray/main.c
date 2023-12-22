@@ -410,7 +410,14 @@ int main(int argc, char **argv)
 			eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 12), 15);
 
 			/* File */
-			eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 12), "File");
+			if (eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 12), "File"))
+			{
+				eui_list_start(EUI_VEC2(0, 12));
+				eui_list_button(EUI_VEC2(48, 12), "Save");
+				eui_list_button(EUI_VEC2(48, 12), "Load");
+				eui_list_button(EUI_VEC2(48, 12), "Quit");
+				eui_list_end();
+			}
 
 			/* Edit */
 			eui_button(EUI_VEC2(48, 0), EUI_VEC2(48, 12), "Edit");

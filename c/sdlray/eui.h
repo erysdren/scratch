@@ -100,6 +100,9 @@ void eui_textf(eui_vec2_t pos, uint8_t color, char *s, ...);
 
 /* widgets */
 bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text);
+bool eui_list_start(eui_vec2_t pos);
+bool eui_list_button(eui_vec2_t size, char *text);
+void eui_list_end(void);
 
 #ifdef __cplusplus
 }

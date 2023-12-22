@@ -192,6 +192,7 @@ static uint8_t fg_color = 0;
 static uint8_t bg_color = 0;
 static eui_vec2_t cursor = {-1, -1};
 static eui_vec2_t button = {0, 0};
+static eui_vec2_t list_pos = {0, 0};
 
 /*
  *
@@ -504,4 +505,25 @@ bool eui_button(eui_vec2_t pos, eui_vec2_t size, char *text)
 	}
 
 	eui_pop_frame();
+
+	return is_cursor_above(pos, size) && button.x;
+}
+
+bool eui_list_start(eui_vec2_t pos)
+{
+	list_pos = pos;
+	return true;
+}
+
+bool eui_list_button(eui_vec2_t size, char *text)
+{
+	bool r = eui_button(list_pos, size, text);
+	list_pos.y += size.y;
+	return r;
+}
+
+void eui_list_end(void)
+{
+	list_pos.x = 0;
+	list_pos.y = 0;
 }
