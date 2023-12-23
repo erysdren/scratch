@@ -412,10 +412,18 @@ int main(int argc, char **argv)
 				eui_border_box(EUI_VEC2(64, 64), EUI_VEC2(320, 200), 2, 15);
 				eui_push_frame(EUI_VEC2(64, 64), EUI_VEC2(320 - 16, 200 - 16));
 				eui_text(EUI_VEC2(0, 0), 0, "hello world!");
-				eui_pop_frame();
 
-				/* draw xbm */
-				eui_xbm(EUI_VEC2(64, 64), 0, xterm_width, xterm_height, xterm_bits);;
+				/* draw pixelmap */
+				eui_pixelmap_t test;
+				test.w = ray.textures.walls[5]->w;
+				test.h = ray.textures.walls[5]->h;
+				test.pitch = ray.textures.walls[5]->pitch;
+				test.pixels = (eui_color_t *)ray.textures.walls[5]->pixels;
+
+				eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
+				eui_pixelmap(EUI_VEC2(0, 0), test);
+
+				eui_pop_frame();
 
 				/* end eui */
 				eui_end();

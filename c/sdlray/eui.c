@@ -238,7 +238,7 @@ static int frame_index = 0;
 
 /* destination pixelmap */
 static eui_pixelmap_t drawdest = {0};
-#define PIXEL(x, y) drawdest.pixels[y * drawdest.pitch + x]
+#define PIXEL(pm, x, y) (pm).pixels[(y) * (pm).pitch + (x)]
 
 /* event handling */
 #define MAX_EVENTS (32)
@@ -282,7 +282,7 @@ static void eui_font8x8(eui_vec2_t pos, const unsigned char *bitmap, eui_color_t
 				if (xx < 0 || xx >= drawdest.w || yy < 0 || yy >= drawdest.h)
 					continue;
 
-				PIXEL(xx, yy) = color;
+				PIXEL(drawdest, xx, yy) = color;
 			}
 		}
 	}
@@ -649,7 +649,7 @@ static void eui_filled_box_clipped(eui_vec2_t pos, eui_vec2_t size, eui_color_t 
 
 	for (int y = pos.y; y < pos.y + size.y; y++)
 	{
-		memset(&PIXEL(pos.x, y), color, size.x * sizeof(eui_color_t));
+		memset(&PIXEL(drawdest, pos.x, y), color, size.x * sizeof(eui_color_t));
 	}
 }
 
@@ -848,7 +848,7 @@ void eui_filled_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, eui_color_
 
 			while (len--)
 			{
-				PIXEL(x++, y) = color;
+				PIXEL(drawdest, x++, y) = color;
 			}
 		}
 	}
@@ -882,7 +882,7 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, eui_color_t color)
 	py = p0.y;
 
 	if (px >= 0 && px < drawdest.w && py >= 0 && py < drawdest.h)
-		PIXEL(px, py) = color;
+		PIXEL(drawdest, px, py) = color;
 
 	if (dxabs >= dyabs)
 	{
@@ -904,7 +904,7 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, eui_color_t color)
 			if (py < 0 || py >= drawdest.h)
 				continue;
 
-			PIXEL(px, py) = color;
+			PIXEL(drawdest, px, py) = color;
 		}
 	}
 	else
@@ -927,8 +927,45 @@ void eui_line(eui_vec2_t p0, eui_vec2_t p1, eui_color_t color)
 			if (py < 0 || py >= drawdest.h)
 				continue;
 
-			PIXEL(px, py) = color;
+			PIXEL(drawdest, px, py) = color;
 		}
+	}
+}
+
+/* draw pixelmap, transformed */
+void eui_pixelmap(eui_vec2_t pos, eui_pixelmap_t pixelmap)
+{
+	int x, y, xx, yy;
+	eui_vec2_t size;
+	eui_vec2_t ofs;
+
+	/* transform */
+	size = EUI_VEC2(pixelmap.w, pixelmap.h);
+	eui_transform_box(&pos, size);
+
+	/* save current pos */
+	ofs = pos;
+
+	/* clip */
+	if (!eui_clip_box(&pos, &size))
+		return;
+
+	/* calculate pixelmap ofs */
+	if (ofs.x < pos.x)
+		ofs.x = pos.x - ofs.x;
+	else
+		ofs.x = 0;
+	if (ofs.y < pos.y)
+		ofs.y = pos.y - ofs.y;
+	else
+		ofs.y = 0;
+
+	/* draw */
+	for (y = ofs.y; y < size.y; y++)
+	{
+		xx = pos.x;
+		yy = pos.y + y - ofs.y;
+		memcpy(&PIXEL(drawdest, xx, yy), &PIXEL(pixelmap, ofs.x, y), size.x);
 	}
 }
 
@@ -937,7 +974,7 @@ void eui_xbm(eui_vec2_t pos, eui_color_t color, int w, int h, char *bitmap)
 {
 	int x, y, xx, yy;
 
-	/* transform pos */
+	/* transform */
 	eui_transform_box(&pos, EUI_VEC2(w, h));
 
 	/* draw graphic */
@@ -955,7 +992,7 @@ void eui_xbm(eui_vec2_t pos, eui_color_t color, int w, int h, char *bitmap)
 				if (xx < 0 || xx >= drawdest.w || yy < 0 || yy >= drawdest.h)
 					continue;
 
-				PIXEL(xx, yy) = color;
+				PIXEL(drawdest, xx, yy) = color;
 			}
 		}
 	}

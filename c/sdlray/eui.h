@@ -306,6 +306,9 @@ void eui_filled_triangle(eui_vec2_t p0, eui_vec2_t p1, eui_vec2_t p2, eui_color_
 /* draw line from p0 to p1, transformed */
 void eui_line(eui_vec2_t p0, eui_vec2_t p1, eui_color_t color);
 
+/* draw pixelmap, transformed */
+void eui_pixelmap(eui_vec2_t pos, eui_pixelmap_t pixelmap);
+
 /* draw xbm graphic, transformed */
 void eui_xbm(eui_vec2_t pos, eui_color_t color, int w, int h, char *bits);
 
