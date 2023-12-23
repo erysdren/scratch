@@ -439,10 +439,8 @@ void eui_reset_frame(void)
 /* set current frame alignment */
 void eui_set_align(int xalign, int yalign)
 {
-	if (xalign != EUI_UNSET)
-		frames[frame_index].align.x = xalign;
-	if (yalign != EUI_UNSET)
-		frames[frame_index].align.y = yalign;
+	frames[frame_index].align.x = xalign;
+	frames[frame_index].align.y = yalign;
 }
 
 /*
