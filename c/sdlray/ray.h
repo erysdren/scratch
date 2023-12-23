@@ -106,11 +106,6 @@ typedef struct ray_t {
 		SDL_Surface **maskwalls;
 		SDL_Surface *sky;
 	} textures;
-	struct {
-		float scale;
-		vec2i_t offset;
-		vec2i_t cursor;
-	} editor;
 	SDL_Surface *dest;
 	SDL_Surface *colormap;
 	SDL_Surface *font;
@@ -131,9 +126,6 @@ void ray_printf(ray_t *ray, int x, int y, char *s, ...);
 
 /* fill area with color */
 void ray_fill(ray_t *ray, int x, int y, int w, int h, uint8_t c);
-
-/* draw ray editor */
-void ray_draw_editor(ray_t *ray);
 
 /* init ray structure */
 void ray_init(ray_t *ray);

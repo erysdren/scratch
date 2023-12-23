@@ -567,85 +567,8 @@ void ray_fill(ray_t *ray, int x, int y, int w, int h, uint8_t c)
 	SDL_FillRect(ray->dest, &rect, c);
 }
 
-/* draw tile on screen */
-static void ray_editor_draw_tile(ray_t *ray, tile_t *tile, int x, int y)
-{
-	SDL_Rect rect;
-	SDL_Surface *tex;
-
-	if (!tile->height)
-		tex = ray->textures.floors[tile->floor_texture];
-	else
-		tex = ray->textures.walls[tile->texture - 1];
-
-	rect.x = x;
-	rect.y = y;
-	rect.w = tex->w;
-	rect.h = tex->h;
-
-	SDL_BlitSurface(tex, NULL, ray->dest, &rect);
-}
-
-/* draw ray editor */
-void ray_draw_editor(ray_t *ray)
-{
-	int tilex, tiley;
-	tile_t *tile;
-	tile_t *selected_tile;
-	vec2i_t selected_pos;
-	bool selected = false;
-	int x, y;
-	SDL_Rect rect;
-
-	/* clear screen */
-	memset(ray->dest->pixels, 0, ray->dest->h * ray->dest->pitch);
-
-	/* draw tiles */
-	x = ray->editor.offset.x;
-	y = ray->editor.offset.y;
-	for (tiley = 0; tiley < ray->tilemap.height; tiley++)
-	{
-		x = ray->editor.offset.x;
-
-		for (tilex = 0; tilex < ray->tilemap.width; tilex++)
-		{
-			tile = &RAY_TILE_AT(ray, tilex, tiley);
-			ray_editor_draw_tile(ray, tile, x, y);
-
-			if (ray->editor.cursor.x >= x && ray->editor.cursor.x <= x + 64 &&
-				ray->editor.cursor.y >= y && ray->editor.cursor.y <= y + 64)
-			{
-				selected_tile = tile;
-				selected_pos.x = tilex;
-				selected_pos.y = tiley;
-				selected = true;
-			}
-
-			x += 64;
-		}
-
-		y += 64;
-	}
-
-#if 0
-	/* draw crosshair */
-	rect.x = ray->editor.cursor.x - ray->crosshair->w / 2;
-	rect.y = ray->editor.cursor.y - ray->crosshair->h / 2;
-	rect.w = ray->crosshair->w;
-	rect.h = ray->crosshair->h;
-	SDL_BlitSurface(ray->crosshair, NULL, ray->dest, &rect);
-
-	/* draw selected text */
-	if (selected)
-	{
-		ray_printf(ray, rect.x + 32, rect.y, "x=%d y=%d\nheight=%d", selected_pos.x, selected_pos.y, selected_tile->height);
-	}
-#endif
-}
-
 /* init ray structure */
 void ray_init(ray_t *ray)
 {
 	memset(ray, 0, sizeof(ray_t));
-	ray->editor.scale = 1;
 }

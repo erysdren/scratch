@@ -39,10 +39,6 @@ SOFTWARE.
 #include "SDL_image.h"
 
 #include "ray.h"
-#include "eui.h"
-#include "eui_sdl2.h"
-
-#include "X11/bitmaps/terminal"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -67,7 +63,6 @@ static struct {
 #define MAP_HEIGHT 32
 tile_t tiles[MAP_WIDTH * MAP_HEIGHT];
 ray_t ray;
-bool ineditor = true;
 
 /* install palette to SDL_Surface */
 SDL_bool install_palette(const char *filename, SDL_Surface *surface)
@@ -259,6 +254,8 @@ int main(int argc, char **argv)
 	sdl.last = 0;
 	sdl.dt = 0;
 
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+
 	/* init raycaster */
 	ray_init(&ray);
 
@@ -321,9 +318,6 @@ int main(int argc, char **argv)
 	/* set render destination */
 	ray.dest = sdl.surface8;
 
-	/* setup editor */
-	ray.editor.scale = 0.5;
-
 	/* main loop */
 	sdl.running = SDL_TRUE;
 	while (sdl.running)
@@ -332,8 +326,6 @@ int main(int argc, char **argv)
 
 		while (SDL_PollEvent(&sdl.event))
 		{
-			eui_push_event_sdl2(&sdl.event);
-
 			switch (sdl.event.type)
 			{
 				case SDL_QUIT:
@@ -341,8 +333,6 @@ int main(int argc, char **argv)
 					break;
 
 				case SDL_MOUSEMOTION:
-					ray.editor.cursor.x = sdl.event.motion.x;
-					ray.editor.cursor.y = sdl.event.motion.y;
 					ray.camera.pitch += sdl.event.motion.yrel;
 					ray.camera.yaw -= sdl.event.motion.xrel;
 					break;
@@ -360,140 +350,66 @@ int main(int argc, char **argv)
 		sdl.now = SDL_GetPerformanceCounter();
 		sdl.dt = ((double)(sdl.now - sdl.last) / (double)SDL_GetPerformanceFrequency());
 
-		if (ineditor)
+		/* get look direction */
+		dir.x = sinf(DEG2RAD(ray.camera.yaw)) * sdl.dt * 2;
+		dir.y = cosf(DEG2RAD(ray.camera.yaw)) * sdl.dt * 2;
+
+		/* movement controls */
+		if (sdl.keys[SDL_SCANCODE_W] || sdl.keys[SDL_SCANCODE_UP])
 		{
-			SDL_SetRelativeMouseMode(SDL_FALSE);
-
-			/* look controls */
-			if (sdl.keys[SDL_SCANCODE_LEFT])
-			{
-				ray.editor.offset.x += 1;
-			}
-			if (sdl.keys[SDL_SCANCODE_RIGHT])
-			{
-				ray.editor.offset.x -= 1;
-			}
-			if (sdl.keys[SDL_SCANCODE_UP])
-			{
-				ray.editor.offset.y += 1;
-			}
-			if (sdl.keys[SDL_SCANCODE_DOWN])
-			{
-				ray.editor.offset.y -= 1;
-			}
-
-			/* begin eui */
-			if (eui_begin_sdl2(sdl.surface8));
-			{
-				/* clear */
-				eui_clear(3);
-
-				/* top bar */
-				eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(WIDTH, 16), 31);
-				eui_filled_box(EUI_VEC2(0, 16), EUI_VEC2(WIDTH, 1), 7);
-
-				/* top bar buttons */
-				eui_button(EUI_VEC2(0, 0), EUI_VEC2(48, 16), "File", my_cool_button, NULL);
-				eui_button(EUI_VEC2(48, 0), EUI_VEC2(48, 16), "Edit", my_cool_button, NULL);
-				eui_button(EUI_VEC2(96, 0), EUI_VEC2(48, 16), "Help", my_cool_button, NULL);
-
-				/* 1st example window */
-				eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
-				eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(320, 200), 31);
-				eui_border_box(EUI_VEC2(0, 0), EUI_VEC2(320, 200), 2, 15);
-				eui_push_frame(EUI_VEC2(0, 0), EUI_VEC2(320 - 16, 200 - 16));
-				eui_text(EUI_VEC2(0, 0), 0, "Line of text");
-				eui_checkbox(EUI_VEC2(0, 12), "Checkbox", 0, &test_value);
-				eui_pop_frame();
-
-				/* 2nd example window */
-				eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
-				eui_filled_box(EUI_VEC2(64, 64), EUI_VEC2(320, 200), 31);
-				eui_border_box(EUI_VEC2(64, 64), EUI_VEC2(320, 200), 2, 15);
-				eui_push_frame(EUI_VEC2(64, 64), EUI_VEC2(320 - 16, 200 - 16));
-				eui_text(EUI_VEC2(0, 0), 0, "hello world!");
-
-				/* draw pixelmap */
-				eui_pixelmap_t test;
-				test.w = ray.textures.walls[5]->w;
-				test.h = ray.textures.walls[5]->h;
-				test.pitch = ray.textures.walls[5]->pitch;
-				test.pixels = (eui_color_t *)ray.textures.walls[5]->pixels;
-
-				eui_set_align(EUI_ALIGN_MIDDLE, EUI_ALIGN_MIDDLE);
-				eui_pixelmap(EUI_VEC2(0, 0), test);
-
-				eui_pop_frame();
-
-				/* end eui */
-				eui_end();
-			}
+			ray.camera.origin.x += dir.x;
+			ray.camera.origin.y += dir.y;
 		}
-		else
+		if (sdl.keys[SDL_SCANCODE_S] || sdl.keys[SDL_SCANCODE_DOWN])
 		{
-			SDL_SetRelativeMouseMode(SDL_TRUE);
-
-			/* get look direction */
-			dir.x = sinf(DEG2RAD(ray.camera.yaw)) * sdl.dt * 2;
-			dir.y = cosf(DEG2RAD(ray.camera.yaw)) * sdl.dt * 2;
-
-			/* movement controls */
-			if (sdl.keys[SDL_SCANCODE_W] || sdl.keys[SDL_SCANCODE_UP])
-			{
-				ray.camera.origin.x += dir.x;
-				ray.camera.origin.y += dir.y;
-			}
-			if (sdl.keys[SDL_SCANCODE_S] || sdl.keys[SDL_SCANCODE_DOWN])
-			{
-				ray.camera.origin.x -= dir.x;
-				ray.camera.origin.y -= dir.y;
-			}
-			if (sdl.keys[SDL_SCANCODE_A])
-			{
-				ray.camera.origin.x += dir.y;
-				ray.camera.origin.y -= dir.x;
-			}
-			if (sdl.keys[SDL_SCANCODE_D])
-			{
-				ray.camera.origin.x -= dir.y;
-				ray.camera.origin.y += dir.x;
-			}
-
-			/* look controls */
-			if (sdl.keys[SDL_SCANCODE_LEFT])
-			{
-				ray.camera.yaw += 1;
-			}
-			if (sdl.keys[SDL_SCANCODE_RIGHT])
-			{
-				ray.camera.yaw -= 1;
-			}
-			if (sdl.keys[SDL_SCANCODE_PAGEUP])
-			{
-				ray.camera.pitch -= 2;
-			}
-			if (sdl.keys[SDL_SCANCODE_PAGEDOWN])
-			{
-				ray.camera.pitch += 2;
-			}
-			if (sdl.keys[SDL_SCANCODE_HOME])
-			{
-				ray.camera.pitch = 0;
-			}
-
-			/* light controls */
-			if (sdl.keys[SDL_SCANCODE_KP_PLUS])
-			{
-				ray.tilemap.light_level += 1;
-			}
-			if (sdl.keys[SDL_SCANCODE_KP_MINUS])
-			{
-				ray.tilemap.light_level -= 1;
-			}
-
-			/* draw */
-			ray_draw(&ray);
+			ray.camera.origin.x -= dir.x;
+			ray.camera.origin.y -= dir.y;
 		}
+		if (sdl.keys[SDL_SCANCODE_A])
+		{
+			ray.camera.origin.x += dir.y;
+			ray.camera.origin.y -= dir.x;
+		}
+		if (sdl.keys[SDL_SCANCODE_D])
+		{
+			ray.camera.origin.x -= dir.y;
+			ray.camera.origin.y += dir.x;
+		}
+
+		/* look controls */
+		if (sdl.keys[SDL_SCANCODE_LEFT])
+		{
+			ray.camera.yaw += 1;
+		}
+		if (sdl.keys[SDL_SCANCODE_RIGHT])
+		{
+			ray.camera.yaw -= 1;
+		}
+		if (sdl.keys[SDL_SCANCODE_PAGEUP])
+		{
+			ray.camera.pitch -= 2;
+		}
+		if (sdl.keys[SDL_SCANCODE_PAGEDOWN])
+		{
+			ray.camera.pitch += 2;
+		}
+		if (sdl.keys[SDL_SCANCODE_HOME])
+		{
+			ray.camera.pitch = 0;
+		}
+
+		/* light controls */
+		if (sdl.keys[SDL_SCANCODE_KP_PLUS])
+		{
+			ray.tilemap.light_level += 1;
+		}
+		if (sdl.keys[SDL_SCANCODE_KP_MINUS])
+		{
+			ray.tilemap.light_level -= 1;
+		}
+
+		/* draw */
+		ray_draw(&ray);
 
 		/* blit to screen */
 		SDL_BlitSurface(sdl.surface8, &sdl.rect, sdl.surface32, &sdl.rect);
