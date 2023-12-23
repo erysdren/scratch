@@ -1,6 +1,7 @@
 /*
 MIT License
 
+Copyright (c) 2018 shpuld
 Copyright (c) 2023 erysdren (it/she/they)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -41,7 +42,6 @@ enum {
 
 /* true/false/unset */
 enum {
-	EUI_UNSET = -1,
 	EUI_FALSE = 0,
 	EUI_TRUE = 1
 };
