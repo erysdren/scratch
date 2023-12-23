@@ -177,6 +177,28 @@ static const unsigned char font8x8_basic[128][8] = {
 
 /*
  *
+ * xbm icons
+ *
+ */
+
+/* checkbox border */
+static const int checkbox_border_w = 11;
+static const int checkbox_border_h = 11;
+static char checkbox_border_bits[] = {
+	0xff, 0x07, 0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0x01, 0x04,
+	0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0xff, 0x07
+};
+
+/* checkbox x */
+static const int checkbox_x_w = 11;
+static const int checkbox_x_h = 11;
+static char checkbox_x_bits[] = {
+	0x00, 0x00, 0x00, 0x00, 0x04, 0x01, 0x88, 0x00, 0x50, 0x00, 0x20, 0x00,
+	0x50, 0x00, 0x88, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00, 0x00
+};
+
+/*
+ *
  * tables
  *
  */
@@ -971,18 +993,18 @@ void eui_pixelmap(eui_vec2_t pos, eui_pixelmap_t pixelmap)
 void eui_xbm(eui_vec2_t pos, eui_color_t color, int w, int h, char *bitmap)
 {
 	int x, y, xx, yy;
+	int pitch;
 
 	/* transform */
 	eui_transform_box(&pos, EUI_VEC2(w, h));
 
 	/* draw graphic */
+	pitch = w + (8 % w) - (w % 8);
 	for (y = 0; y < h; y++)
 	{
 		for (x = 0; x < w; x++)
 		{
-			int b = (y * w + x) / 8;
-
-			if (bitmap[b] & 1 << (x % 8))
+			if (bitmap[(y * pitch + x) / 8] & 1 << (x % 8))
 			{
 				xx = pos.x + x;
 				yy = pos.y + y;
@@ -1039,8 +1061,8 @@ void eui_checkbox(eui_vec2_t pos, char *label, eui_color_t color, bool *value)
 		return;
 
 	/* box border */
-	size = EUI_VEC2(11, 9);
-	eui_border_box(pos, size, 1, color);
+	size = EUI_VEC2(11, 11);
+	eui_xbm(pos, color, checkbox_border_w, checkbox_border_h, checkbox_border_bits);
 
 	/* toggle on click */
 	hovered = eui_is_hovered(pos, size);
@@ -1054,8 +1076,8 @@ void eui_checkbox(eui_vec2_t pos, char *label, eui_color_t color, bool *value)
 
 	/* draw x */
 	if (*value)
-		eui_text(EUI_VEC2(pos.x + 2, pos.y), color, "x");
+		eui_xbm(pos, color, checkbox_x_w, checkbox_x_h, checkbox_x_bits);
 
 	/* label */
-	eui_text(EUI_VEC2(pos.x + 13, pos.y), color, label);
+	eui_text(EUI_VEC2(pos.x + 13, pos.y + 2), color, label);
 }

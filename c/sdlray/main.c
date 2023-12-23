@@ -402,8 +402,8 @@ int main(int argc, char **argv)
 				eui_filled_box(EUI_VEC2(0, 0), EUI_VEC2(320, 200), 31);
 				eui_border_box(EUI_VEC2(0, 0), EUI_VEC2(320, 200), 2, 15);
 				eui_push_frame(EUI_VEC2(0, 0), EUI_VEC2(320 - 16, 200 - 16));
-				eui_text(EUI_VEC2(0, 0), 0, "hello world!");
-				eui_checkbox(EUI_VEC2(0, 12), "checkbox", 0, &test_value);
+				eui_text(EUI_VEC2(0, 0), 0, "Line of text");
+				eui_checkbox(EUI_VEC2(0, 12), "Checkbox", 0, &test_value);
 				eui_pop_frame();
 
 				/* 2nd example window */
