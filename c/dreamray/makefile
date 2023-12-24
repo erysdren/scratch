@@ -9,7 +9,7 @@ CFLAGS += $(shell $(PKGCONFIG) sdl2 SDL2_image --cflags) -Ofast
 LDFLAGS += -lm $(shell $(PKGCONFIG) sdl2 SDL2_image --libs)
 
 # executable name
-EXEC ?= sdlray
+EXEC ?= dreamray
 
 # objects
 OBJECTS = main.o ray.o

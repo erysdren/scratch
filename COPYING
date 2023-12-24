@@ -16,6 +16,7 @@ derivatives or components of.
 /c/brender/*
 /c/cpu8086/*
 /c/dos_utils/*
+/c/dreamray/*
 /c/fixed_point_math/*
 /c/lev_tool/*
 /c/ne_tool/*
@@ -24,7 +25,6 @@ derivatives or components of.
 /c/ray/*
 /c/rott/*
 /c/rtlx2rtl/*
-/c/sdlray/*
 /c/troika_texture_tool/*
 /c/unpak_hrot/*
 /c/unwal/*
