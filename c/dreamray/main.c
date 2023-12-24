@@ -61,6 +61,7 @@ static struct {
 /* ray structure */
 #define MAP_WIDTH 32
 #define MAP_HEIGHT 32
+#define TILE_AT(x, y) tiles[(y) * MAP_WIDTH + (x)]
 tile_t tiles[MAP_WIDTH * MAP_HEIGHT];
 ray_t ray;
 
@@ -273,15 +274,40 @@ int main(int argc, char **argv)
 		}
 	}
 
-	tiles[3 * MAP_WIDTH + 3].height = 8;
-	tiles[3 * MAP_WIDTH + 3].texture = 6;
+	/* wall */
+	TILE_AT(5, 10).height = 8;
+	TILE_AT(5, 10).texture = 17;
+	TILE_AT(6, 10).height = 8;
+	TILE_AT(6, 10).texture = 17;
+	TILE_AT(7, 10).height = 8;
+	TILE_AT(7, 10).texture = 17;
+	TILE_AT(8, 10).height = 8;
+	TILE_AT(8, 10).texture = 18;
+	TILE_AT(9, 10).height = 8;
+	TILE_AT(9, 10).texture = 17;
+	TILE_AT(10, 10).height = 8;
+	TILE_AT(10, 10).texture = 19;
+	TILE_AT(11, 10).height = 7;
+	TILE_AT(11, 10).texture = 17;
+	TILE_AT(12, 10).height = 6;
+	TILE_AT(12, 10).texture = 17;
+	TILE_AT(13, 10).height = 5;
+	TILE_AT(13, 10).texture = 17;
+	TILE_AT(14, 10).height = 4;
+	TILE_AT(14, 10).texture = 17;
+	TILE_AT(15, 10).height = 3;
+	TILE_AT(15, 10).texture = 17;
+	TILE_AT(16, 10).height = 2;
+	TILE_AT(16, 10).texture = 17;
+	TILE_AT(17, 10).height = 1;
+	TILE_AT(17, 10).texture = 17;
 
 	/* setup tilemap */
 	ray.tilemap.width = MAP_WIDTH;
 	ray.tilemap.height = MAP_HEIGHT;
 	ray.tilemap.tiles = tiles;
-	ray.tilemap.light_scale = -2;
-	ray.tilemap.light_level = -16;
+	ray.tilemap.light_scale = 2;
+	ray.tilemap.light_level = 0;
 	ray.tilemap.ceiling = 8;
 
 	/* setup camera */
@@ -302,7 +328,7 @@ int main(int argc, char **argv)
 	load_walls("gfx/palette.dat");
 	load_maskwalls("gfx/palette.dat");
 	load_floors("gfx/palette.dat");
-	ray.textures.sky = IMG_Load("gfx/sky_night.png");
+	ray.textures.sky = IMG_Load("gfx/sky.png");
 	ray.colormap = IMG_Load("gfx/colormap.png");
 	ray.font = IMG_Load("gfx/font8x8.png");
 	SDL_SetColorKey(ray.font, SDL_TRUE, 0xFF);

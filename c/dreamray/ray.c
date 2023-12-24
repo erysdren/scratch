@@ -339,6 +339,9 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 			if ((hit->side == 0 && hit->ray_dir.x > 0) || (hit->side == 1 && hit->ray_dir.y < 0))
 				tex_x = tex->w - tex_x - 1;
 
+			/* flip x coord */
+			tex_x = (tex_x - tex->w) * -1;
+
 			light = dist * ray->tilemap.light_scale + ray->tilemap.light_level + tile->light;
 
 			/* draw textured line */
