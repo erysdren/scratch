@@ -58,6 +58,9 @@
 # dreamray
 /c/dreamray/dreamray
 
+# dumpmaptiles
+/c/dumpmaptiles/dumpmaptiles
+
 # troika_texture_tool
 /c/troika_texture_tool/ttt
 /c/troika_texture_tool/*.tth

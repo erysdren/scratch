@@ -17,6 +17,7 @@ derivatives or components of.
 /c/cpu8086/*
 /c/dos_utils/*
 /c/dreamray/*
+/c/dumpmaptiles/*
 /c/fixed_point_math/*
 /c/lev_tool/*
 /c/ne_tool/*
