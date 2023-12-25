@@ -53,8 +53,9 @@ typedef struct hit_t {
 /* ray hit result enum */
 enum {
 	HIT_DONE = 0,
-	HIT_WALL = 1,
-	HIT_MASK = 2
+	HIT_EDGE = 1,
+	HIT_WALL = 2,
+	HIT_MASK = 3
 };
 
 int remap(int value, int a1, int a2, int b1, int b2)
@@ -119,6 +120,11 @@ int ray_cast(ray_t *ray, hit_t *hit)
 				return HIT_WALL;
 			}
 		}
+
+		if (hit->map_pos.x == 0 || hit->map_pos.x == ray->tilemap.width - 1)
+			return HIT_EDGE;
+		if (hit->map_pos.y == 0 || hit->map_pos.y == ray->tilemap.height - 1)
+			return HIT_EDGE;
 	}
 
 	return HIT_DONE;
@@ -314,7 +320,7 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 		}
 
 		/* draw walls */
-		if (ray->config.draw_wall_textures)
+		if (ray->config.draw_wall_textures && tile->height > 0)
 		{
 			float wall_x;
 			int tex_x;

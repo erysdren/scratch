@@ -262,19 +262,6 @@ int main(int argc, char **argv)
 
 	/* setup tiles */
 	memset(tiles, 0, sizeof(tiles));
-	for (y = 0; y < MAP_HEIGHT; y++)
-	{
-		for (x = 0; x < MAP_WIDTH; x++)
-		{
-			if (x == 0 || y == 0 || x == MAP_WIDTH - 1 || y == MAP_HEIGHT - 1)
-			{
-				tiles[y * MAP_WIDTH + x].height = 8;
-				tiles[y * MAP_WIDTH + x].texture = 6;
-			}
-		}
-	}
-
-	/* wall */
 	TILE_AT(5, 10).height = 8;
 	TILE_AT(5, 10).texture = 17;
 	TILE_AT(6, 10).height = 8;
