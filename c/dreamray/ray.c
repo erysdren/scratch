@@ -53,7 +53,7 @@ typedef struct hit_t {
 /* ray hit result enum */
 enum {
 	HIT_DONE = 0,
-	HIT_EDGE = 1,
+	HIT_SKY = 1,
 	HIT_WALL = 2,
 	HIT_MASK = 3
 };
@@ -122,9 +122,9 @@ int ray_cast(ray_t *ray, hit_t *hit)
 		}
 
 		if (hit->map_pos.x == 0 || hit->map_pos.x == ray->tilemap.width - 1)
-			return HIT_EDGE;
+			return HIT_SKY;
 		if (hit->map_pos.y == 0 || hit->map_pos.y == ray->tilemap.height - 1)
-			return HIT_EDGE;
+			return HIT_SKY;
 	}
 
 	return HIT_DONE;
@@ -245,6 +245,10 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 				else
 					dist += hit->delta_dist.x / 2;
 			}
+			else if (hittype == HIT_SKY)
+			{
+				dist = hit->side_dist.x;
+			}
 		}
 		else
 		{
@@ -259,6 +263,10 @@ void ray_draw_column(int x, ray_t *ray, hit_t *hit)
 					continue;
 				else
 					dist += hit->delta_dist.y / 2;
+			}
+			else if (hittype == HIT_SKY)
+			{
+				dist = hit->side_dist.y;
 			}
 		}
 
