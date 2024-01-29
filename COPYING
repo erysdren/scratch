@@ -15,10 +15,12 @@ derivatives or components of.
 
 /c/brender/*
 /c/cpu8086/*
+/c/dos-jam-2023-12/*
 /c/dos_utils/*
 /c/dreamray/*
 /c/dumpmaptiles/*
 /c/fixed_point_math/*
+/c/formats/*
 /c/lev_tool/*
 /c/ne_tool/*
 /c/prey95/*
@@ -39,3 +41,9 @@ derivatives or components of.
 +-----------------------------------------------------------------------------+
 
 /c/ia16/*
+
++-----------------------------------------------------------------------------+
+|    CC0 1.0 Universal                               /licenses/LICENSE.CC0    |
++-----------------------------------------------------------------------------+
+
+/html/yt2008/*
