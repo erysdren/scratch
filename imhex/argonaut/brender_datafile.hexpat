@@ -116,6 +116,38 @@ struct BrChunkHeader {
 	u32 Size;
 };
 
+union BrScalar {
+	float f;
+	u32 x;
+};
+
+struct BrVector2 {
+	BrScalar x, y;
+};
+
+struct BrVector3 {
+	BrScalar x, y, z;
+};
+
+struct BrRGB {
+	u8 Index;
+	u8 Red;
+	u8 Green;
+	u8 Blue;
+};
+
+struct BrFace {
+	u16 Vertices[3];
+	u16 Smoothing;
+	u8 Flags;
+};
+
+using BrUV = BrVector2;
+using BrVertex = BrVector3;
+using BrVertexColour = BrRGB;
+using BrVertexNormal = BrVector3;
+
+
 //
 // Chunk data
 //
@@ -135,6 +167,18 @@ struct BrOldPixelmapChunk {
 struct BrFileInfoChunk {
 	BrFileInfoType Type;
 	u32 Version;
+};
+
+// VERTICES
+struct BrVerticesChunk {
+	u32 NumVertices;
+	BrVertex Vertices[NumVertices];
+};
+
+// VERTEX_UV
+struct BrVertexUvChunk {
+	u32 NumUVs;
+	BrUV UVs[NumUVs];
 };
 
 // PIXELS
@@ -161,6 +205,35 @@ struct BrPixelmapChunk {
 	char Identifier[];
 };
 
+// FACES
+struct BrFacesChunk {
+	u32 NumFaces;
+	BrFace Faces[NumFaces];
+};
+
+// MODEL
+struct BrModelChunk {
+	u16 Flags;
+	BrVector3 Pivot;
+	u16 CreaseAngle;
+	BrScalar Radius;
+	BrVector3 MinBounds;
+	BrVector3 MaxBounds;
+	char Identifier[];
+};
+
+// VERTEX_COLOUR
+struct BrVertexColourChunk {
+	u32 NumVertexColours;
+	BrVertexColour VertexColours[NumVertexColours];
+};
+
+// VERTEX_NORMAL
+struct BrVertexNormalChunk {
+	u32 NumVertexNormals;
+	BrVertexNormal VertexNormals[NumVertexNormals];
+};
+
 //
 // Main chunk structure
 //
@@ -170,8 +243,14 @@ struct BrChunk {
 	match (Header.Type) {
 		(BrChunkType::OLD_PIXELMAP): BrOldPixelmapChunk;
 		(BrChunkType::FILE_INFO): BrFileInfoChunk;
+		(BrChunkType::VERTICES): BrVerticesChunk;
+		(BrChunkType::VERTEX_UV): BrVertexUvChunk;
 		(BrChunkType::PIXELS): BrPixelsChunk;
 		(BrChunkType::PIXELMAP): BrPixelmapChunk;
+		(BrChunkType::FACES): BrFacesChunk;
+		(BrChunkType::MODEL): BrModelChunk;
+		(BrChunkType::VERTEX_COLOUR): BrVertexColourChunk;
+		(BrChunkType::VERTEX_NORMAL): BrVertexNormalChunk;
 		(_): padding[Header.Size];
 	}
 };
