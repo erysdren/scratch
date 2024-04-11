@@ -129,7 +129,13 @@ struct BrVector3 {
 	BrScalar x, y, z;
 };
 
-struct BrRGB {
+struct BrColour {
+	u8 Red;
+	u8 Green;
+	u8 Blue;
+};
+
+struct BrVertexColour {
 	u8 Index;
 	u8 Red;
 	u8 Green;
@@ -144,8 +150,9 @@ struct BrFace {
 
 using BrUV = BrVector2;
 using BrVertex = BrVector3;
-using BrVertexColour = BrRGB;
 using BrVertexNormal = BrVector3;
+using BrUFraction = BrScalar;
+using BrAngle = u16;
 
 
 //
@@ -181,6 +188,11 @@ struct BrVertexUvChunk {
 	BrUV UVs[NumUVs];
 };
 
+// COLOUR_MAP_REF
+struct BrColourMapRefChunk {
+	char Identifier[];
+};
+
 // PIXELS
 struct BrPixelsChunk {
 	u32 NumPixels;
@@ -205,6 +217,26 @@ struct BrPixelmapChunk {
 	char Identifier[];
 };
 
+// MATERIAL
+struct BrMaterialChunk {
+	BrColour Colour;
+	u8 Opacity;
+	BrUFraction ka;
+	BrUFraction kd;
+	BrUFraction ks;
+	BrScalar Power;
+	u32 Flags;
+	BrVector2 TransformMap[3];
+	u16 Mode;
+	u8 IndexBase;
+	u8 IndexRange;
+	BrScalar FogMin;
+	BrScalar FogMax;
+	BrColour FogColour;
+	s32 SubdivideTolerance;
+	char Identifier[];
+};
+
 // FACES
 struct BrFacesChunk {
 	u32 NumFaces;
@@ -215,7 +247,7 @@ struct BrFacesChunk {
 struct BrModelChunk {
 	u16 Flags;
 	BrVector3 Pivot;
-	u16 CreaseAngle;
+	BrAngle CreaseAngle;
 	BrScalar Radius;
 	BrVector3 MinBounds;
 	BrVector3 MaxBounds;
@@ -245,8 +277,10 @@ struct BrChunk {
 		(BrChunkType::FILE_INFO): BrFileInfoChunk;
 		(BrChunkType::VERTICES): BrVerticesChunk;
 		(BrChunkType::VERTEX_UV): BrVertexUvChunk;
+		(BrChunkType::COLOUR_MAP_REF): BrColourMapRefChunk;
 		(BrChunkType::PIXELS): BrPixelsChunk;
 		(BrChunkType::PIXELMAP): BrPixelmapChunk;
+		(BrChunkType::MATERIAL): BrMaterialChunk;
 		(BrChunkType::FACES): BrFacesChunk;
 		(BrChunkType::MODEL): BrModelChunk;
 		(BrChunkType::VERTEX_COLOUR): BrVertexColourChunk;
