@@ -203,6 +203,18 @@ struct BrPixelsChunk {
 	}
 };
 
+// ACTOR
+struct BrActorChunk {
+	u8 Type;
+	u8 RenderStyle;
+	char Identifier[];
+};
+
+// ACTOR_MODEL
+struct BrActorModelChunk {
+	char Identifier[];
+};
+
 // PIXELMAP
 struct BrPixelmapChunk {
 	BrPixelmapType Type;
@@ -276,6 +288,8 @@ struct BrChunk {
 		(BrChunkType::VERTEX_UV): BrVertexUvChunk;
 		(BrChunkType::COLOUR_MAP_REF): BrColourMapRefChunk;
 		(BrChunkType::PIXELS): BrPixelsChunk;
+		(BrChunkType::ACTOR): BrActorChunk;
+		(BrChunkType::ACTOR_MODEL): BrActorModelChunk;
 		(BrChunkType::PIXELMAP): BrPixelmapChunk;
 		(BrChunkType::MATERIAL): BrMaterialChunk;
 		(BrChunkType::FACES): BrFacesChunk;
