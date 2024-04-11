@@ -154,7 +154,6 @@ using BrVertexNormal = BrVector3;
 using BrUFraction = BrScalar;
 using BrAngle = u16;
 
-
 //
 // Chunk data
 //
@@ -165,8 +164,7 @@ struct BrOldPixelmapChunk {
 	u16 RowBytes;
 	u16 Width;
 	u16 Height;
-	u16 OriginX;
-	u16 OriginY;
+	u16 Origin[2];
 	char Identifier[];
 };
 
@@ -211,8 +209,7 @@ struct BrPixelmapChunk {
 	u16 RowBytes;
 	u16 Width;
 	u16 Height;
-	u16 OriginX;
-	u16 OriginY;
+	u16 Origin[2];
 	u16 MipOffset;
 	char Identifier[];
 };
