@@ -215,6 +215,11 @@ struct BrActorModelChunk {
 	char Identifier[];
 };
 
+// TRANSFORM_MATRIX34
+struct BrTransformMatrix34Chunk {
+	BrVector3 v[4];
+};
+
 // PIXELMAP
 struct BrPixelmapChunk {
 	BrPixelmapType Type;
@@ -290,6 +295,7 @@ struct BrChunk {
 		(BrChunkType::PIXELS): BrPixelsChunk;
 		(BrChunkType::ACTOR): BrActorChunk;
 		(BrChunkType::ACTOR_MODEL): BrActorModelChunk;
+		(BrChunkType::TRANSFORM_MATRIX34): BrTransformMatrix34Chunk;
 		(BrChunkType::PIXELMAP): BrPixelmapChunk;
 		(BrChunkType::MATERIAL): BrMaterialChunk;
 		(BrChunkType::FACES): BrFacesChunk;
