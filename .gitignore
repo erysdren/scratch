@@ -55,6 +55,9 @@
 /c/rtlx2rtl/*.rtcx
 /c/rtlx2rtl/*.wad
 
+# safeutils
+/c/safeutils/test1
+
 # dreamray
 /c/dreamray/dreamray
 
