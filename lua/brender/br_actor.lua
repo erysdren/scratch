@@ -65,13 +65,18 @@ end
 -- BrActorSearch(br_actor *root, char *pattern);
 function br_actor:findChildren(pattern)
 	local children = {}
+	local num_children = 0
 	for key,value in pairs(self.children) do
-		print(value.identifier)
 		if string.find(value.identifier, pattern) ~= nil then
 			table.insert(children, value)
+			num_children = num_children + 1
 		end
 	end
-	return children
+	if num_children == 0 then
+		return nil
+	else
+		return children
+	end
 end
 
 -- v1db_p.h
