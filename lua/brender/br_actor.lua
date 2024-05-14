@@ -45,13 +45,16 @@ BR_RSTYLE_ANTIALIASED_LINES = 8
 BR_RSTYLE_ANTIALIASED_FACES = 9
 BR_RSTYLE_MAX = 10
 
--- setup metatable
+-- setup type
 local br_actor = {}
 br_actor.__index = br_actor
 
 -- v1db_p.h
 -- BrActorAdd(br_actor *parent, br_actor *a);
 function br_actor:addChild(child)
+	if type(child) ~= "br_actor" then
+		error("Child type is not br_actor!")
+	end
 	table.insert(self.children, child)
 end
 
@@ -121,5 +124,5 @@ type = function(o)
 	return otype
 end
 
--- return metatable
+-- return type
 return br_actor
