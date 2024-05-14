@@ -4,7 +4,7 @@ RM ?= rm -f
 
 EXEC ?= test1
 
-OBJECTS = test1.o safeutils.o
+OBJECTS = test1.o erysdren_utils.o
 
 all: clean $(EXEC)
 

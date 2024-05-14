@@ -29,15 +29,15 @@ SOFTWARE.
 #include <string.h>
 #include <errno.h>
 
-#include "safeutils.h"
+#include "erysdren_utils.h"
 
 void die(const char *s, ...)
 {
-	static char buffer[1024];
+	static char buffer[2048];
 	va_list list;
 
 	va_start(list, s);
-	vsprintf(buffer, s, list);
+	vsnprintf(buffer, sizeof(buffer), s, list);
 	va_end(list);
 
 	fprintf(stderr, "%s\n", buffer);
@@ -47,9 +47,7 @@ void die(const char *s, ...)
 
 void *mem_alloc(size_t size)
 {
-	void *ptr;
-
-	ptr = malloc(size);
+	void *ptr = calloc(1, size);
 
 	if (ptr == NULL)
 		die("Memory allocation failed with %zu bytes", size);
@@ -67,9 +65,7 @@ void mem_free(void *ptr)
 
 FILE *file_open(const char *filename, const char *mode)
 {
-	FILE *file;
-
-	file = fopen(filename, mode);
+	FILE *file = fopen(filename, mode);
 
 	if (file == NULL)
 		die("Opening \"%s\" failed: %s", filename, strerror(errno));
@@ -80,19 +76,43 @@ FILE *file_open(const char *filename, const char *mode)
 int file_close(FILE *stream)
 {
 	if (fclose(stream) == EOF)
-		die("%s", strerror(errno));
+		die("fclose() failed: %s", strerror(errno));
 
 	return 0;
 }
 
 size_t file_write(void *ptr, size_t size, size_t n, FILE *stream)
 {
-	size_t r;
-
-	r = fwrite(ptr, size, n, stream);
+	size_t r = fwrite(ptr, size, n, stream);
 
 	if (ferror(stream))
-		die("%s", strerror(errno));
+		die("fwrite() failed: %s", strerror(errno));
 
 	return r;
+}
+
+int string_endswith(char *str, char *ext)
+{
+	size_t len_str = strlen(str);
+	size_t len_ext = strlen(ext);
+	if (len_ext > len_str) return FALSE;
+	return strcmp(str + len_str - len_ext, ext) == 0 ? TRUE : FALSE;
+}
+
+char *string_duplicate(const char *s, ...)
+{
+	static char buffer[2048];
+	va_list list;
+	char *ret;
+
+	va_start(list, s);
+	vsnprintf(buffer, sizeof(buffer), s, list);
+	va_end(list);
+
+	ret = strndup(buffer, sizeof(buffer));
+
+	if (ret == NULL)
+		die("strndup() failed: %s", strerror(errno));
+
+	return ret;
 }

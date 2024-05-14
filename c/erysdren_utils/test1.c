@@ -22,28 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#pragma once
-#ifndef __SAFEUTILS_H__
-#define __SAFEUTILS_H__
+#include <stdio.h>
 
-#include <stdint.h>
+#include "erysdren_utils.h"
 
-/* we have assert() at home */
-#define ASSERT(e) \
-	do { \
-		if (!(e)) die("assertion (" #e ") failed at " __FILE__ "#%d", __LINE__); \
-	} while (0)
+int main(int argc, char **argv)
+{
+	FILE *f;
 
-/* stop everything and die immediately */
-void die(const char *s, ...);
+	ASSERT((f = fopen("nonexistentfile", "rb")) != NULL);
 
-/* memory */
-void *mem_alloc(size_t size);
-void mem_free(void *ptr);
+	fclose(f);
 
-/* file handling */
-FILE *file_open(const char *filename, const char *mode);
-int file_close(FILE *stream);
-size_t file_write(void *ptr, size_t size, size_t n, FILE *stream);
-
-#endif /* __SAFEUTILS_H__ */
+	return 0;
+}

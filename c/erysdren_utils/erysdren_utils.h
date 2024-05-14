@@ -22,17 +22,46 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#pragma once
+#ifndef __ERYSDREN_UTILS_H__
+#define __ERYSDREN_UTILS_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
+#include <stdint.h>
 
-#include "safeutils.h"
+/* we have assert() at home */
+#define ASSERT(e) \
+	do { \
+		if (!(e)) die("assertion (" #e ") failed at " __FILE__ "#%d", __LINE__); \
+	} while (0)
 
-int main(int argc, char **argv)
-{
-	FILE *f;
+/* true and false */
+#define TRUE (1 == 1)
+#define FALSE (1 == 0)
 
-	ASSERT((f = fopen("nonexistentfile", "rb")) != NULL);
+/* static array size */
+#define ASIZE(a) (sizeof(a) / sizeof(a[0]))
 
-	fclose(f);
+/* stop everything and die immediately */
+void die(const char *s, ...);
 
-	return 0;
+/* memory */
+void *mem_alloc(size_t size);
+void mem_free(void *ptr);
+
+/* file handling */
+FILE *file_open(const char *filename, const char *mode);
+int file_close(FILE *stream);
+size_t file_write(void *ptr, size_t size, size_t n, FILE *stream);
+
+/* strings */
+int string_endswith(char *str, char *ext);
+char *string_duplicate(const char *s, ...);
+
+#ifdef __cplusplus
 }
+#endif
+#endif /* __ERYSDREN_UTILS_H__ */
