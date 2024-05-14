@@ -35,6 +35,7 @@ derivatives or components of.
 /c/upkg/*
 /cpp/h2inc-llvm/*
 /imhex/*
+/lua/brender/*
 /python/tmj2map/*
 
 +-----------------------------------------------------------------------------+
