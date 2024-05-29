@@ -5,8 +5,6 @@
 extern "C" {
 #endif
 
-#include <stdlib.h>
-
 /* result codes */
 enum {
 	QCVM_OK,
@@ -17,7 +15,8 @@ enum {
 	QCVM_BUILTIN_CALL,
 	QCVM_BUILTIN_NOT_FOUND,
 	QCVM_EXECUTION_FINISHED,
-	QCVM_INVALID_PROGS
+	QCVM_INVALID_PROGS,
+	QCVM_MAX_RESULT_CODES
 };
 
 /* main container */
@@ -30,7 +29,7 @@ typedef struct qcvm {
 	 * your own qc compiler. qcvm expects the entire file structure to be
 	 * present.
 	 */
-	size_t len_progs;
+	unsigned int len_progs;
 	void *progs;
 
 	/** set to >0 if qcvm can write to progs memory
@@ -52,7 +51,7 @@ typedef struct qcvm {
 	 * update the opcode in memory to point to the correct builtin array index.
 	 * this will make for slightly faster execution in further steps.
 	 */
-	size_t num_builtins;
+	unsigned int num_builtins;
 	struct qcvm_builtin {
 		int id;
 		const char *name;
@@ -78,7 +77,7 @@ typedef struct qcvm {
 	 * if this buffer is null, qcvm will not be able to return strings from
 	 * builtins.
 	 */
-	size_t len_tempstrings;
+	unsigned int len_tempstrings;
 	void *tempstrings;
 
 	/*
@@ -107,14 +106,14 @@ typedef struct qcvm {
 	} *header;
 
 	/* statements */
-	size_t num_statements;
+	unsigned int num_statements;
 	struct qcvm_statement {
 		unsigned short opcode;
 		short vars[3];
 	} *statements;
 
 	/* functions */
-	size_t num_functions;
+	unsigned int num_functions;
 	struct qcvm_function {
 		int first_statement;
 		int first_parm;
@@ -127,11 +126,11 @@ typedef struct qcvm {
 	} *functions;
 
 	/* strings */
-	size_t len_strings;
+	unsigned int len_strings;
 	char *strings;
 
 	/* field vars */
-	size_t num_field_vars;
+	unsigned int num_field_vars;
 	struct qcvm_var {
 		unsigned short type;
 		unsigned short ofs;
@@ -139,11 +138,11 @@ typedef struct qcvm {
 	} *field_vars;
 
 	/* global vars */
-	size_t num_global_vars;
+	unsigned int num_global_vars;
 	struct qcvm_var *global_vars;
 
 	/* globals */
-	size_t num_globals;
+	unsigned int num_globals;
 	union qcvm_global {
 		float f;
 		int i;

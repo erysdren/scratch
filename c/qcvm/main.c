@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "qcvm.h"
 
 /*
@@ -19,10 +20,10 @@ static void die(int r)
 }
 
 /* load an entire file into memory */
-static void *load_file(const char *filename, size_t *sz)
+static void *load_file(const char *filename, unsigned int *sz)
 {
 	void *buffer;
-	size_t filesize;
+	unsigned int filesize;
 	FILE *file;
 
 	file = fopen(filename, "rb");
@@ -52,7 +53,7 @@ int _say_hello_world(qcvm_t *qcvm)
 }
 
 struct qcvm_builtin builtins[] = {
-	{1, "say_hello_world", 0, NULL, _say_hello_world}
+	{1, "say_hello_world", 0, 0, _say_hello_world}
 };
 
 /*

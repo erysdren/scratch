@@ -1,41 +1,38 @@
 
-#include <stddef.h>
 #include "qcvm.h"
-
-#define ASIZE(a) (sizeof(a)/sizeof(a[0]))
 
 int qcvm_init(qcvm_t *qcvm)
 {
-	if (qcvm == NULL)
+	if (qcvm == 0)
 		return QCVM_NULL_POINTER;
-	if (qcvm->progs == NULL || !qcvm->len_progs)
+	if (qcvm->progs == 0 || !qcvm->len_progs)
 		return QCVM_INVALID_PROGS;
 
 	/* file header */
 	qcvm->header = (struct qcvm_header *)qcvm->progs;
 
 	/* statements */
-	qcvm->num_statements = (size_t)qcvm->header->num_statements;
+	qcvm->num_statements = (unsigned int)qcvm->header->num_statements;
 	qcvm->statements = (struct qcvm_statement *)((char *)qcvm->progs + qcvm->header->ofs_statements);
 
 	/* functions */
-	qcvm->num_functions = (size_t)qcvm->header->num_functions;
+	qcvm->num_functions = (unsigned int)qcvm->header->num_functions;
 	qcvm->functions = (struct qcvm_function *)((char *)qcvm->progs + qcvm->header->ofs_functions);
 
 	/* strings */
-	qcvm->len_strings = (size_t)qcvm->header->len_strings;
+	qcvm->len_strings = (unsigned int)qcvm->header->len_strings;
 	qcvm->strings = (char *)qcvm->progs + qcvm->header->ofs_strings;
 
 	/* field vars */
-	qcvm->num_field_vars = (size_t)qcvm->header->num_field_vars;
+	qcvm->num_field_vars = (unsigned int)qcvm->header->num_field_vars;
 	qcvm->field_vars = (struct qcvm_var *)((char *)qcvm->progs + qcvm->header->ofs_field_vars);
 
 	/* global vars */
-	qcvm->num_global_vars = (size_t)qcvm->header->num_global_vars;
+	qcvm->num_global_vars = (unsigned int)qcvm->header->num_global_vars;
 	qcvm->global_vars = (struct qcvm_var *)((char *)qcvm->progs + qcvm->header->ofs_global_vars);
 
 	/* globals */
-	qcvm->num_globals = (size_t)qcvm->header->num_globals;
+	qcvm->num_globals = (unsigned int)qcvm->header->num_globals;
 	qcvm->globals = (union qcvm_global *)((char *)qcvm->progs + qcvm->header->ofs_globals);
 
 	return QCVM_OK;
@@ -55,7 +52,7 @@ const char *qcvm_result_string(int r)
 		"Invalid progs data"
 	};
 
-	if (r < 0 || (size_t)r >= ASIZE(results))
+	if (r < 0 || r >= QCVM_MAX_RESULT_CODES)
 		return results[QCVM_INVALID_RESULT_CODE];
 
 	return results[r];
@@ -63,7 +60,7 @@ const char *qcvm_result_string(int r)
 
 int qcvm_load(qcvm_t *qcvm, const char *name)
 {
-	if (qcvm == NULL || name == NULL)
+	if (qcvm == 0 || name == 0)
 		return QCVM_NULL_POINTER;
 
 	return QCVM_OK;
@@ -71,7 +68,7 @@ int qcvm_load(qcvm_t *qcvm, const char *name)
 
 int qcvm_step(qcvm_t *qcvm)
 {
-	if (qcvm == NULL)
+	if (qcvm == 0)
 		return QCVM_NULL_POINTER;
 
 	return QCVM_EXECUTION_FINISHED;
@@ -81,7 +78,7 @@ int qcvm_run(qcvm_t *qcvm, const char *name)
 {
 	int r, running;
 
-	if (qcvm == NULL || name == NULL)
+	if (qcvm == 0 || name == 0)
 		return QCVM_NULL_POINTER;
 
 	/* load function */
