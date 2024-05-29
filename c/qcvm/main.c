@@ -61,13 +61,16 @@ struct qcvm_builtin builtins[] = {
  *
  */
 
-int main(void)
+int main(int argc, char **argv)
 {
 	int r;
 	qcvm_t qcvm;
 
 	/* load progs */
-	qcvm.progs = load_file("qcpong.dat", &qcvm.len_progs);
+	if (argc > 1)
+		qcvm.progs = load_file(argv[1], &qcvm.len_progs);
+	else
+		qcvm.progs = load_file("qc_test1.dat", &qcvm.len_progs);
 	qcvm.progs_writeable = 1;
 
 	/* create tempstrings buffer */
