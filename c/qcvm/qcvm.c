@@ -8,6 +8,35 @@ int qcvm_init(qcvm_t *qcvm)
 {
 	if (qcvm == NULL)
 		return QCVM_NULL_POINTER;
+	if (qcvm->progs == NULL || !qcvm->len_progs)
+		return QCVM_INVALID_PROGS;
+
+	/* file header */
+	qcvm->header = (struct qcvm_header *)qcvm->progs;
+
+	/* statements */
+	qcvm->num_statements = (size_t)qcvm->header->num_statements;
+	qcvm->statements = (struct qcvm_statement *)((char *)qcvm->progs + qcvm->header->ofs_statements);
+
+	/* functions */
+	qcvm->num_functions = (size_t)qcvm->header->num_functions;
+	qcvm->functions = (struct qcvm_function *)((char *)qcvm->progs + qcvm->header->ofs_functions);
+
+	/* strings */
+	qcvm->len_strings = (size_t)qcvm->header->len_strings;
+	qcvm->strings = (char *)qcvm->progs + qcvm->header->ofs_strings;
+
+	/* field vars */
+	qcvm->num_field_vars = (size_t)qcvm->header->num_field_vars;
+	qcvm->field_vars = (struct qcvm_var *)((char *)qcvm->progs + qcvm->header->ofs_field_vars);
+
+	/* global vars */
+	qcvm->num_global_vars = (size_t)qcvm->header->num_global_vars;
+	qcvm->global_vars = (struct qcvm_var *)((char *)qcvm->progs + qcvm->header->ofs_global_vars);
+
+	/* globals */
+	qcvm->num_globals = (size_t)qcvm->header->num_globals;
+	qcvm->globals = (union qcvm_global *)((char *)qcvm->progs + qcvm->header->ofs_globals);
 
 	return QCVM_OK;
 }
@@ -22,7 +51,8 @@ const char *qcvm_result_string(int r)
 		"Invalid result code",
 		"Builtin call",
 		"Builtin not found",
-		"Execution finished"
+		"Execution finished",
+		"Invalid progs data"
 	};
 
 	if (r < 0 || (size_t)r >= ASIZE(results))
@@ -73,8 +103,12 @@ int qcvm_run(qcvm_t *qcvm, const char *name)
 
 			/* parse builtin call */
 			case QCVM_BUILTIN_CALL:
-				/* builtin was not found */
 				r = QCVM_BUILTIN_NOT_FOUND;
+				running = 0;
+				break;
+
+			case QCVM_EXECUTION_FINISHED:
+				r = QCVM_OK;
 				running = 0;
 				break;
 

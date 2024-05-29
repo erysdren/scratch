@@ -16,7 +16,8 @@ enum {
 	QCVM_INVALID_RESULT_CODE,
 	QCVM_BUILTIN_CALL,
 	QCVM_BUILTIN_NOT_FOUND,
-	QCVM_EXECUTION_FINISHED
+	QCVM_EXECUTION_FINISHED,
+	QCVM_INVALID_PROGS
 };
 
 /* main container */
@@ -79,6 +80,75 @@ typedef struct qcvm {
 	 */
 	size_t len_tempstrings;
 	void *tempstrings;
+
+	/*
+	 *
+	 * "private" fields, don't mess with these.
+	 *
+	 */
+
+	/* file header */
+	struct qcvm_header {
+		int version;
+		int crc;
+		int ofs_statements;
+		int num_statements;
+		int ofs_global_vars;
+		int num_global_vars;
+		int ofs_field_vars;
+		int num_field_vars;
+		int ofs_functions;
+		int num_functions;
+		int ofs_strings;
+		int len_strings;
+		int ofs_globals;
+		int num_globals;
+		int num_entity_fields;
+	} *header;
+
+	/* statements */
+	size_t num_statements;
+	struct qcvm_statement {
+		unsigned short opcode;
+		short vars[3];
+	} *statements;
+
+	/* functions */
+	size_t num_functions;
+	struct qcvm_function {
+		int first_statement;
+		int first_parm;
+		int num_locals;
+		int profile;
+		int osf_name;
+		int ofs_filename;
+		int num_parms;
+		unsigned char parm_sizes[8];
+	} *functions;
+
+	/* strings */
+	size_t len_strings;
+	char *strings;
+
+	/* field vars */
+	size_t num_field_vars;
+	struct qcvm_var {
+		unsigned short type;
+		unsigned short ofs;
+		int name;
+	} *field_vars;
+
+	/* global vars */
+	size_t num_global_vars;
+	struct qcvm_var *global_vars;
+
+	/* globals */
+	size_t num_globals;
+	union qcvm_global {
+		float f;
+		int i;
+		unsigned int ui;
+	} *globals;
 
 } qcvm_t;
 
