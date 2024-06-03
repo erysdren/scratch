@@ -156,22 +156,36 @@ typedef struct qcvm {
  * this function parses the progs buffer and sets up pointers to the various
  * structures present in the file. it also checks for what features are
  * available, such as writeable progs memory and tempstrings.
+ *
+ * @param qcvm virtual machine to init
+ * @returns result code
  */
 int qcvm_init(qcvm_t *qcvm);
 
 /** get static string from result code
+ * @param r result code
+ * @returns null terminated result string
  */
 const char *qcvm_result_string(int r);
 
 /** queue up function for execution
+ * @param qcvm virtual machine to use
+ * @param name function name
+ * @returns result code
  */
 int qcvm_load(qcvm_t *qcvm, const char *name);
 
 /** execute one qcvm step
+ * @param qcvm virtual machine to use
+ * @returns result code
  */
 int qcvm_step(qcvm_t *qcvm);
 
 /** queue up and execute the named function
+ *
+ * @param qcvm virtual machine to use
+ * @param name case-sensitive function name
+ * @returns result code
  */
 int qcvm_run(qcvm_t *qcvm, const char *name);
 
