@@ -1,7 +1,7 @@
 
 # GM_BETAC17
 
-![A dystopian city skyline rendered in Garry's Mod](./images/gm_betac170012.jpg)
+![A dystopian city skyline rendered in Garry's Mod.](./images/gm_betac170012.jpg)
 
 I released this level for Garry's Mod in September 2018 after working on it on
 and off for about 3 years. I built it as a love letter to all of the unused
@@ -9,9 +9,7 @@ development concepts and art from [Half-Life 2](https://store.steampowered.com/a
 The first prototype was made in May 2015 and was built from actual level scraps
 taken from those early iterations of Half-Life 2.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/H6Y9-iD_NoI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-*A video of the level from May 2015 after only two days of development.*
+![A video of the level from May 2015 after only two days of development.](https://www.youtube.com/watch?v=H6Y9-iD_NoI)
 
 Around this time I was doing a lot of research and tinkering with an early
 build of Half-Life 2, originally leaked in 2003 but containing development
@@ -20,7 +18,7 @@ had a much darker, more grim tone compared to the tone of the final game. This
 heavily influenced my direction while working on this level over the next few
 years.
 
-![Greybox version of the map from August 2016](./images/hl2_2016-08-19_23-01-58.png)
+![Greybox version of the map from August 2016.](./images/hl2_2016-08-19_23-01-58.png)
 
 *Greybox version of the map from August 2016*
 
@@ -30,20 +28,18 @@ designing things layout-first. I had no prior training or experience before
 this, and it taught me a lot about how to design levels for videogames from
 scratch instead of relying on other people's work.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/tgWtcpnX2L8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-*A video of the level from August 2016 showing a rough scripted sequence outline*
+![A video of the level from August 2016 showing a rough scripted sequence outline.](https://www.youtube.com/watch?v=tgWtcpnX2L8)
 
 It was never really intended for any kind of gameplay, just an atmospheric art
 piece that you could walk around in the Source Engine. Though I did experiment
 with a made up story scenario that involved an NPC guiding the player through
 the environment while delivering spoken exposition.
 
-![One area that did not make the final cut](./images/truecitizen_downtown2.jpg)
+![One area that did not make the final cut.](./images/truecitizen_downtown2.jpg)
 
 *One area that did not make the final cut.*
 
-![The final version of the level, as released in September 2018](./images/gm_betac170002.jpg)
+![The final version of the level, as released in September 2018.](./images/gm_betac170002.jpg)
 
 *The final version of the level, as released in September 2018*
 
