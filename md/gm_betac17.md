@@ -9,7 +9,7 @@ development concepts and art from [Half-Life 2](https://store.steampowered.com/a
 The first prototype was made in May 2015 and was built from actual level scraps
 taken from those early iterations of Half-Life 2.
 
-![A video of the level from May 2015 after only two days of development](https://www.youtube.com/watch?v=H6Y9-iD_NoI)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/H6Y9-iD_NoI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 *A video of the level from May 2015 after only two days of development.*
 
@@ -30,7 +30,7 @@ designing things layout-first. I had no prior training or experience before
 this, and it taught me a lot about how to design levels for videogames from
 scratch instead of relying on other people's work.
 
-![A video of the level from August 2016 showing a rough scripted sequence outline](https://www.youtube.com/watch?v=tgWtcpnX2L8)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/tgWtcpnX2L8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 *A video of the level from August 2016 showing a rough scripted sequence outline*
 
