@@ -1,8 +1,0 @@
-
-#pragma warning disable Q208
-#pragma progs_dat qc_test1.dat
-#pragma autoproto
-
-#includelist
-	qc_test1.qc
-#endlist

@@ -2,10 +2,11 @@
 EXEC ?= test
 RM ?= rm -f
 CC ?= gcc
+QCC ?= fteqcc
 PKGCONFIG ?= pkg-config
 
-override CFLAGS += -std=c89 -pedantic -Wextra -Wall -Werror
-override LDFLAGS +=
+override CFLAGS += -g3 -std=c89 -pedantic -Wextra -Wall -Werror -fsanitize=address -fanalyzer
+override LDFLAGS += -g3 -fsanitize=address -fanalyzer
 
 OBJECTS = main.o qcvm.o
 

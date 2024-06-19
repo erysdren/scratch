@@ -11,13 +11,25 @@ enum {
 	QCVM_NULL_POINTER,
 	QCVM_FUNCTION_NOT_FOUND,
 	QCVM_INVALID_OPCODE,
+	QCVM_INVALID_FUNCTION,
 	QCVM_INVALID_RESULT_CODE,
 	QCVM_BUILTIN_CALL,
 	QCVM_BUILTIN_NOT_FOUND,
 	QCVM_EXECUTION_FINISHED,
 	QCVM_INVALID_PROGS,
+	QCVM_UNSUPPORTED_VERSION,
+	QCVM_STACK_OVERFLOW,
+	QCVM_STACK_UNDERFLOW,
 	QCVM_MAX_RESULT_CODES
 };
+
+/* these can be adjusted at compile time, but i wouldn't recommend it */
+#ifndef QCVM_STACK_DEPTH
+#define QCVM_STACK_DEPTH (32)
+#endif
+#ifndef QCVM_LOCAL_STACK_DEPTH
+#define QCVM_LOCAL_STACK_DEPTH (2048)
+#endif
 
 /* main container */
 typedef struct qcvm {
@@ -32,24 +44,14 @@ typedef struct qcvm {
 	unsigned int len_progs;
 	void *progs;
 
-	/** set to >0 if qcvm can write to progs memory
-	 *
-	 * this only happens when parsing builtin calls. if a call opcode has a
-	 * value of 0, then the qcvm will search the qcvm->builtins array for one
-	 * with a matching name string, and update the opcode in memory to point to
-	 * that one. it will also do this to update an out-of-range builtin number
-	 * to one in range, if the name string matches.
-	 */
-	int progs_writeable;
-
 	/** native functions
 	 *
 	 * these functions are called from qc if the call opcode is <=0. first,
 	 * qcvm will see if the opcode number (made positive) is a valid index into
 	 * the array. if not, it will search the array for one with a name string
-	 * matching the function called from qc. if progs_writeable is >0, it will
-	 * update the opcode in memory to point to the correct builtin array index.
-	 * this will make for slightly faster execution in further steps.
+	 * matching the function called from qc. NOTE: QCVM will update the opcode
+	 * in memory to point to the correct builtin array index. this will make
+	 * for slightly faster execution in further steps.
 	 */
 	unsigned int num_builtins;
 	struct qcvm_builtin {
@@ -119,7 +121,7 @@ typedef struct qcvm {
 		int first_parm;
 		int num_locals;
 		int profile;
-		int osf_name;
+		int ofs_name;
 		int ofs_filename;
 		int num_parms;
 		unsigned char parm_sizes[8];
@@ -148,6 +150,41 @@ typedef struct qcvm {
 		int i;
 		unsigned int ui;
 	} *globals;
+
+	/*
+	 *
+	 * runtime stuff.
+	 *
+	 */
+
+	/* stack */
+	struct qcvm_stack {
+		int statement;
+		struct qcvm_function *function;
+	} stack[QCVM_STACK_DEPTH];
+	int stack_depth;
+	int local_stack[QCVM_LOCAL_STACK_DEPTH];
+	int local_stack_used;
+	struct qcvm_stack xstack;
+
+	/* execution state */
+	struct qcvm_function *current_function;
+	struct qcvm_function *next_function;
+	struct qcvm_statement *current_statement;
+	int current_statement_index;
+	int current_builtin;
+	int exit_depth;
+	int current_argc;
+
+	/* function evaluation */
+	union qcvm_eval {
+		int s;
+		float f;
+		float v[3];
+		int func;
+		int i;
+		int e;
+	} *eval[4];
 
 } qcvm_t;
 

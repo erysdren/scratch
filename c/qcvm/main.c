@@ -27,6 +27,7 @@ static void *load_file(const char *filename, unsigned int *sz)
 	FILE *file;
 
 	file = fopen(filename, "rb");
+	if (!file) return NULL;
 	fseek(file, 0L, SEEK_END);
 	filesize = ftell(file);
 	fseek(file, 0L, SEEK_SET);
@@ -72,7 +73,6 @@ int main(int argc, char **argv)
 		qcvm.progs = load_file(argv[1], &qcvm.len_progs);
 	else
 		qcvm.progs = load_file("qc_test1.dat", &qcvm.len_progs);
-	qcvm.progs_writeable = 1;
 
 	/* create tempstrings buffer */
 	qcvm.len_tempstrings = 4096;
