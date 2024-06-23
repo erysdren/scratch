@@ -55,7 +55,6 @@ typedef struct qcvm {
 	 */
 	unsigned int num_builtins;
 	struct qcvm_builtin {
-		int id;
 		const char *name;
 		int num_args;
 		const char **args;

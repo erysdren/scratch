@@ -166,9 +166,8 @@ static int setup_function(qcvm_t *qcvm, struct qcvm_function *func)
 {
 	int i, x, p;
 
-	/* save exit depth */
-	qcvm->exit_depth = qcvm->stack_depth;
-	qcvm->current_function = func;
+	if (!qcvm || !func)
+		return QCVM_NULL_POINTER;
 
 	/* setup stack */
 	qcvm->stack[qcvm->stack_depth] = qcvm->xstack;
@@ -193,6 +192,7 @@ static int setup_function(qcvm_t *qcvm, struct qcvm_function *func)
 	}
 
 	/* finish setting up */
+	qcvm->current_function = func;
 	qcvm->xstack.function = func;
 	qcvm->current_statement_index = func->first_statement - 1;
 
@@ -223,7 +223,7 @@ static int close_function(qcvm_t *qcvm)
 	qcvm->xstack.function = qcvm->stack[qcvm->stack_depth].function;
 
 	/* set next statement */
-	qcvm->current_statement_index = qcvm->stack[qcvm->stack_depth].statement;;
+	qcvm->current_statement_index = qcvm->stack[qcvm->stack_depth].statement;
 
 	return QCVM_OK;
 }
@@ -280,7 +280,7 @@ int qcvm_step(qcvm_t *qcvm)
 		case OPCODE_CALL8:
 		{
 			/* check for null function */
-			if (!qcvm->eval[1]->func)
+			if (qcvm->eval[1]->func < 1)
 				return QCVM_INVALID_FUNCTION;
 
 			/* get function argc */
@@ -289,8 +289,8 @@ int qcvm_step(qcvm_t *qcvm)
 			/* assign next function value */
 			qcvm->next_function = &qcvm->functions[qcvm->eval[1]->func];
 
-			/* no builtins yet */
-			if (!qcvm->next_function->first_statement)
+			/* setup state for builtin call */
+			if (qcvm->next_function->first_statement < 1)
 				return QCVM_BUILTIN_CALL;
 
 			/* setup for execution */
@@ -326,9 +326,13 @@ int qcvm_step(qcvm_t *qcvm)
 int qcvm_run(qcvm_t *qcvm, const char *name)
 {
 	int r, running;
+	unsigned int i;
 
 	if (!qcvm || !name)
 		return QCVM_NULL_POINTER;
+
+	/* save exit depth */
+	qcvm->exit_depth = qcvm->stack_depth;
 
 	/* load function */
 	if ((r = qcvm_load(qcvm, name)) != QCVM_OK)
@@ -349,20 +353,53 @@ int qcvm_run(qcvm_t *qcvm, const char *name)
 
 			/* parse builtin call */
 			case QCVM_BUILTIN_CALL:
-				r = QCVM_BUILTIN_NOT_FOUND;
-				running = 0;
-				break;
+			{
+				if (qcvm->next_function->first_statement == 0)
+				{
+					char *name = qcvm->strings + qcvm->next_function->ofs_name;
+
+					/* search for named builtin */
+					for (i = 0; i < qcvm->num_builtins; i++)
+					{
+						if (_strcmp(name, qcvm->builtins[i].name) == 0)
+						{
+							qcvm->builtins[i].func(qcvm);
+							r = QCVM_OK;
+							break;
+						}
+					}
+				}
+				else if (qcvm->next_function->first_statement < 0)
+				{
+					/* get builtin by index */
+					int builtin = -1 * qcvm->next_function->first_statement;
+
+					/* check bounds */
+					if (builtin < 0 || builtin >= (int)qcvm->num_builtins)
+					{
+						r = QCVM_BUILTIN_NOT_FOUND;
+					}
+					else
+					{
+						qcvm->builtins[builtin].func(qcvm);
+						r = QCVM_OK;
+					}
+				}
+
+				/* its error */
+				if (r != QCVM_OK)
+					return r;
+				else
+					break;
+			}
 
 			/* execution finished */
 			case QCVM_EXECUTION_FINISHED:
-				r = QCVM_OK;
-				running = 0;
-				break;
+				return QCVM_OK;
 
 			/* something else happened */
 			default:
-				running = 0;
-				break;
+				return r;
 		}
 	}
 

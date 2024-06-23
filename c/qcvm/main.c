@@ -54,7 +54,7 @@ int _say_hello_world(qcvm_t *qcvm)
 }
 
 struct qcvm_builtin builtins[] = {
-	{1, "say_hello_world", 0, 0, _say_hello_world}
+	{"say_hello_world", 0, 0, _say_hello_world}
 };
 
 /*

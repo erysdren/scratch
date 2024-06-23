@@ -6,17 +6,13 @@
 
 void print(string s, ...) = #1 : print;
 
-void other_function1()
+float func_with_arg(float in)
 {
-	float num = 3;
-}
-
-void other_function2()
-{
-	float num = 42;
+	return in * 2;
 }
 
 void main()
 {
+	float f = func_with_arg(2);
 	print("hello world!\n");
 }
