@@ -53,8 +53,19 @@ int _say_hello_world(qcvm_t *qcvm)
 	return QCVM_OK;
 }
 
+static const int max_entities = 64;
+static int num_entities = 0;
+
+int _spawn(qcvm_t *qcvm)
+{
+	UNUSED(qcvm);
+	qcvm_return_entity(qcvm, ++num_entities);
+	return QCVM_OK;
+}
+
 struct qcvm_builtin builtins[] = {
-	{"say_hello_world", 0, 0, _say_hello_world}
+	{"say_hello_world", 0, 0, _say_hello_world},
+	{"spawn", 0, 0, _spawn}
 };
 
 /*
@@ -66,6 +77,7 @@ struct qcvm_builtin builtins[] = {
 int main(int argc, char **argv)
 {
 	int r;
+	unsigned int entity_fields, entity_size;
 	qcvm_t qcvm;
 
 	/* load progs */
@@ -86,6 +98,14 @@ int main(int argc, char **argv)
 	if ((r = qcvm_init(&qcvm)) != QCVM_OK)
 		die(r);
 
+	/* query entity info */
+	if ((r = qcvm_query_entity_info(&qcvm, &entity_fields, &entity_size)) != QCVM_OK)
+		die(r);
+
+	/* allocate entities buffer */
+	qcvm.len_entities = entity_size * max_entities;
+	qcvm.entities = malloc(qcvm.len_entities);
+
 	/* run main function */
 	if ((r = qcvm_run(&qcvm, "main")) != QCVM_OK)
 		die(r);
@@ -93,6 +113,7 @@ int main(int argc, char **argv)
 	/* free data */
 	free(qcvm.progs);
 	free(qcvm.tempstrings);
+	free(qcvm.entities);
 
 	return 0;
 }

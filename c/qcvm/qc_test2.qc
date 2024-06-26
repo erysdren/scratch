@@ -5,6 +5,7 @@
 #pragma autoproto
 
 void print(string s, ...) = #1 : print;
+entity spawn() = #2 : spawn;
 
 class MyClass {
 	string classname;
@@ -25,6 +26,6 @@ void MyClass::SayHi(void)
 
 void main()
 {
-	MyClass m;
+	MyClass m = spawn(MyClass);
 	m.SayHi();
 }

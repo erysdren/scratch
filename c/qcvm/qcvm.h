@@ -18,9 +18,10 @@ enum {
 	QCVM_EXECUTION_FINISHED,
 	QCVM_INVALID_PROGS,
 	QCVM_UNSUPPORTED_VERSION,
+	QCVM_UNSUPPORTED_OPCODE,
 	QCVM_STACK_OVERFLOW,
 	QCVM_STACK_UNDERFLOW,
-	QCVM_MAX_RESULT_CODES
+	QCVM_NUM_RESULT_CODES
 };
 
 /* these can be adjusted at compile time, but i wouldn't recommend it */
@@ -30,6 +31,9 @@ enum {
 #ifndef QCVM_LOCAL_STACK_DEPTH
 #define QCVM_LOCAL_STACK_DEPTH (2048)
 #endif
+
+/* number of opcodes */
+extern const int qcvm_num_opcodes;
 
 /* main container */
 typedef struct qcvm {
@@ -43,6 +47,14 @@ typedef struct qcvm {
 	 */
 	unsigned int len_progs;
 	void *progs;
+
+	/** entities buffer
+	 *
+	 * allocate this to a suitably large size to store entity definitions and
+	 * all their fields.
+	 */
+	unsigned int len_entities;
+	void *entities;
 
 	/** native functions
 	 *
@@ -181,8 +193,9 @@ typedef struct qcvm {
 		float f;
 		float v[3];
 		int func;
+		int field;
 		int i;
-		int e;
+		unsigned int e;
 	} *eval[4];
 
 } qcvm_t;
@@ -197,6 +210,25 @@ typedef struct qcvm {
  * @returns result code
  */
 int qcvm_init(qcvm_t *qcvm);
+
+/** query qcvm for amount of memory needed for per-entity storage
+ *
+ * qcvm requires a writeable buffer to store entities and their fields. each
+ * entity field is 12 bytes, and the amount of entity fields in a progs file is
+ * user-defined. use this function to allocate a suitable amount of space.
+ *
+ * usage example:
+ *
+ * const int max_entities = 8192;
+ * unsigned int entity_fields = 0;
+ * unsigned int entity_size = 0;
+ * qcvm_query_entity_info(&qcvm, &entity_fields, &entity_size);
+ * qcvm.entities = malloc(max_entities * entity_size);
+ *
+ * @param qcvm virtual machone to query
+ * @returns result code
+ */
+int qcvm_query_entity_info(qcvm_t *qcvm, unsigned int *num_fields, unsigned int *size);
 
 /** get static string from result code
  * @param r result code
@@ -224,6 +256,40 @@ int qcvm_step(qcvm_t *qcvm);
  * @returns result code
  */
 int qcvm_run(qcvm_t *qcvm, const char *name);
+
+/** return a vector to the function that called this one
+ *
+ * @param qcvm virtual machine to use
+ * @param a vector x value
+ * @param b vector y value
+ * @param c vector z value
+ * @returns result code
+ */
+int qcvm_return_vector(qcvm_t *qcvm, float x, float y, float z);
+
+/** return an int to the function that called this one
+ *
+ * @param qcvm virtual machine to use
+ * @param i integer value
+ * @returns result code
+ */
+int qcvm_return_int(qcvm_t *qcvm, int i);
+
+/** return a float to the function that called this one
+ *
+ * @param qcvm virtual machine to use
+ * @param f float value
+ * @returns result code
+ */
+int qcvm_return_float(qcvm_t *qcvm, float f);
+
+/** return an entity index to the function that called this one
+ *
+ * @param qcvm virtual machine to use
+ * @param e entity index
+ * @returns result code
+ */
+int qcvm_return_entity(qcvm_t *qcvm, unsigned int e);
 
 #ifdef __cplusplus
 }

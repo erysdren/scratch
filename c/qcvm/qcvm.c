@@ -19,9 +19,11 @@ static const int progs_version_extended = 7;
 #define OFS_PARM7 (25)
 #define OFS_RESERVED (28)
 
+#define STR_OFS(o) (qcvm->strings + (o))
+
 /* opcode names */
 #include <stdio.h>
-static const char *opcode_names[] = {
+const char *qcvm_opcode_names[] = {
 	/* vanilla */
 	"OPCODE_DONE", "OPCODE_MUL_F", "OPCODE_MUL_V", "OPCODE_MUL_FV", "OPCODE_MUL_VF",
 	"OPCODE_DIV_F", "OPCODE_ADD_F", "OPCODE_ADD_V", "OPCODE_SUB_F", "OPCODE_SUB_V",
@@ -55,8 +57,12 @@ enum {
 	OPCODE_NOT_ENT, OPCODE_NOT_FNC, OPCODE_IF, OPCODE_IFNOT, OPCODE_CALL0,
 	OPCODE_CALL1, OPCODE_CALL2, OPCODE_CALL3, OPCODE_CALL4, OPCODE_CALL5,
 	OPCODE_CALL6, OPCODE_CALL7, OPCODE_CALL8, OPCODE_STATE, OPCODE_GOTO,
-	OPCODE_AND_F, OPCODE_OR_F, OPCODE_BITAND_F, OPCODE_BITOR_F
+	OPCODE_AND_F, OPCODE_OR_F, OPCODE_BITAND_F, OPCODE_BITOR_F,
+
+	NUM_OPCODES
 };
+
+const int qcvm_num_opcodes = NUM_OPCODES;
 
 int qcvm_init(qcvm_t *qcvm)
 {
@@ -103,6 +109,23 @@ int qcvm_init(qcvm_t *qcvm)
 	return QCVM_OK;
 }
 
+int qcvm_query_entity_info(qcvm_t *qcvm, unsigned int *num_fields, unsigned int *size)
+{
+	if (!qcvm)
+		return QCVM_NULL_POINTER;
+
+	if (!qcvm->header || !qcvm->field_vars || !qcvm->num_field_vars)
+		return QCVM_INVALID_PROGS;
+
+	if (num_fields)
+		*num_fields = (unsigned int)qcvm->header->num_entity_fields;
+
+	if (size)
+		*size = (unsigned int)(qcvm->header->num_field_vars * 4);
+
+	return QCVM_OK;
+}
+
 const char *qcvm_result_string(int r)
 {
 	static const char *results[] = {
@@ -116,12 +139,13 @@ const char *qcvm_result_string(int r)
 		"Builtin not found",
 		"Execution finished",
 		"Invalid progs data",
+		"Unsupported progs version",
+		"Unsupported opcode",
 		"Stack overflow",
-		"Stack underflow",
-		"Unsupported progs version"
+		"Stack underflow"
 	};
 
-	if (r < 0 || r >= QCVM_MAX_RESULT_CODES)
+	if (r < 0 || r >= QCVM_NUM_RESULT_CODES)
 		return results[QCVM_INVALID_RESULT_CODE];
 
 	return results[r];
@@ -267,9 +291,10 @@ int qcvm_step(qcvm_t *qcvm)
 
 	/* parse opcode */
 	opcode = qcvm->current_statement->opcode;
-	printf("opcode: 0x%02x: %s\n", opcode, opcode_names[opcode]);
+	printf("opcode: 0x%02x: %s\n", opcode, qcvm_opcode_names[opcode]);
 	switch (opcode)
 	{
+		/* function call */
 		case OPCODE_CALL0:
 		case OPCODE_CALL1:
 		case OPCODE_CALL3:
@@ -284,7 +309,7 @@ int qcvm_step(qcvm_t *qcvm)
 				return QCVM_INVALID_FUNCTION;
 
 			/* get function argc */
-			qcvm->current_argc = qcvm->current_statement->opcode - OPCODE_CALL0;
+			qcvm->current_argc = opcode - OPCODE_CALL0;
 
 			/* assign next function value */
 			qcvm->next_function = &qcvm->functions[qcvm->eval[1]->func];
@@ -300,6 +325,7 @@ int qcvm_step(qcvm_t *qcvm)
 			return QCVM_OK;
 		}
 
+		/* function return */
 		case OPCODE_RETURN:
 		case OPCODE_DONE:
 		{
@@ -316,11 +342,367 @@ int qcvm_step(qcvm_t *qcvm)
 			return QCVM_OK;
 		}
 
+		case OPCODE_MUL_F:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f * qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_MUL_V:
+		{
+			qcvm->eval[3]->f =
+				qcvm->eval[1]->v[0] * qcvm->eval[2]->v[0] +
+				qcvm->eval[1]->v[1] * qcvm->eval[2]->v[1] +
+				qcvm->eval[1]->v[2] * qcvm->eval[2]->v[2];
+			break;
+		}
+
+		case OPCODE_MUL_FV:
+		{
+			qcvm->eval[3]->v[0] = qcvm->eval[1]->f * qcvm->eval[2]->v[0];
+			qcvm->eval[3]->v[1] = qcvm->eval[1]->f * qcvm->eval[2]->v[1];
+			qcvm->eval[3]->v[2] = qcvm->eval[1]->f * qcvm->eval[2]->v[2];
+			break;
+		}
+
+		case OPCODE_MUL_VF:
+		{
+			qcvm->eval[3]->v[0] = qcvm->eval[2]->f * qcvm->eval[1]->v[0];
+			qcvm->eval[3]->v[1] = qcvm->eval[2]->f * qcvm->eval[1]->v[1];
+			qcvm->eval[3]->v[2] = qcvm->eval[2]->f * qcvm->eval[1]->v[2];
+			break;
+		}
+
+		case OPCODE_DIV_F:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f / qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_ADD_F:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f + qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_ADD_V:
+		{
+			qcvm->eval[3]->v[0] = qcvm->eval[1]->v[0] + qcvm->eval[2]->v[0];
+			qcvm->eval[3]->v[1] = qcvm->eval[1]->v[1] + qcvm->eval[2]->v[1];
+			qcvm->eval[3]->v[2] = qcvm->eval[1]->v[2] + qcvm->eval[2]->v[2];
+			break;
+		}
+
+		case OPCODE_SUB_F:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f - qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_SUB_V:
+		{
+			qcvm->eval[3]->v[0] = qcvm->eval[1]->v[0] - qcvm->eval[2]->v[0];
+			qcvm->eval[3]->v[1] = qcvm->eval[1]->v[1] - qcvm->eval[2]->v[1];
+			qcvm->eval[3]->v[2] = qcvm->eval[1]->v[2] - qcvm->eval[2]->v[2];
+			break;
+		}
+
+		case OPCODE_EQ_F:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f == qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_EQ_V:
+		{
+			qcvm->eval[3]->f =
+				(qcvm->eval[1]->v[0] == qcvm->eval[2]->v[0]) &&
+				(qcvm->eval[1]->v[1] == qcvm->eval[2]->v[1]) &&
+				(qcvm->eval[1]->v[2] == qcvm->eval[2]->v[2]);
+			break;
+		}
+
+		case OPCODE_EQ_S:
+		{
+			qcvm->eval[3]->f = !_strcmp(STR_OFS(qcvm->eval[1]->s), STR_OFS(qcvm->eval[2]->s));
+			break;
+		}
+
+		case OPCODE_EQ_E:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->i == qcvm->eval[2]->i;
+			break;
+		}
+
+		case OPCODE_EQ_FNC:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->func == qcvm->eval[2]->func;
+			break;
+		}
+
+		case OPCODE_NE_F:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f != qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_NE_V:
+		{
+			qcvm->eval[3]->f =
+				(qcvm->eval[1]->v[0] != qcvm->eval[2]->v[0]) ||
+				(qcvm->eval[1]->v[1] != qcvm->eval[2]->v[1]) ||
+				(qcvm->eval[1]->v[2] != qcvm->eval[2]->v[2]);
+			break;
+		}
+
+		case OPCODE_NE_S:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_NE_E:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->i != qcvm->eval[2]->i;
+			break;
+		}
+
+		case OPCODE_NE_FNC:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->func != qcvm->eval[2]->func;
+			break;
+		}
+
+		case OPCODE_LE:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f <= qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_GE:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f >= qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_LT:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f < qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_GT:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f > qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_LOAD_F:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_LOAD_V:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_LOAD_S:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_LOAD_ENT:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_LOAD_FLD:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_LOAD_FNC:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_ADDRESS:
+		{
+			unsigned int *entity_ofs;
+			unsigned int *field_ofs;
+
+			/* get offset to entity */
+			entity_ofs = (unsigned int *)qcvm->entities +
+				(qcvm->eval[1]->e * qcvm->header->num_field_vars);
+
+			/* get offset to entity field */
+			field_ofs = &entity_ofs[qcvm->eval[2]->i];
+
+			/* offset from start of entities buffer */
+			qcvm->eval[3]->i = (int)((unsigned char *)field_ofs - (unsigned char *)qcvm->entities);
+
+			break;
+		}
+
+		case OPCODE_STORE_F:
+		{
+			qcvm->eval[2]->i = qcvm->eval[1]->i;
+			break;
+		}
+
+		case OPCODE_STORE_V:
+		{
+			qcvm->eval[2]->v[0] = qcvm->eval[1]->v[0];
+			qcvm->eval[2]->v[1] = qcvm->eval[1]->v[1];
+			qcvm->eval[2]->v[2] = qcvm->eval[1]->v[2];
+			break;
+		}
+
+		case OPCODE_STORE_S:
+		{
+			qcvm->eval[2]->s = qcvm->eval[1]->s;
+			break;
+		}
+
+		case OPCODE_STORE_ENT:
+		{
+			qcvm->eval[2]->e = qcvm->eval[1]->e;
+			break;
+		}
+
+		case OPCODE_STORE_FLD:
+		{
+			qcvm->eval[2]->field = qcvm->eval[1]->field;
+			break;
+		}
+
+		case OPCODE_STORE_FNC:
+		{
+			qcvm->eval[2]->i = qcvm->eval[1]->i;
+			break;
+		}
+
+		case OPCODE_STOREP_F:
+		{
+			qcvm->eval[0] = (union qcvm_eval *)((unsigned char *)qcvm->entities + qcvm->eval[2]->i);
+			qcvm->eval[0]->i = qcvm->eval[1]->i;
+			break;
+		}
+
+		case OPCODE_STOREP_V:
+		{
+			qcvm->eval[0] = (union qcvm_eval *)((unsigned char *)qcvm->entities + qcvm->eval[2]->i);
+			qcvm->eval[0]->v[0] = qcvm->eval[1]->v[0];
+			qcvm->eval[0]->v[1] = qcvm->eval[1]->v[1];
+			qcvm->eval[0]->v[2] = qcvm->eval[1]->v[2];
+			break;
+		}
+
+		case OPCODE_STOREP_S:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_STOREP_ENT:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_STOREP_FLD:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_STOREP_FNC:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_NOT_F:
+		{
+			qcvm->eval[3]->f = !qcvm->eval[1]->f;
+			break;
+		}
+
+		case OPCODE_NOT_V:
+		{
+			qcvm->eval[3]->f = !qcvm->eval[1]->v[0] && !qcvm->eval[1]->v[1] && !qcvm->eval[1]->v[2];
+			break;
+		}
+
+		case OPCODE_NOT_S:
+		{
+			qcvm->eval[3]->f = !qcvm->eval[1]->s || !qcvm->strings[qcvm->eval[1]->s];
+			break;
+		}
+
+		case OPCODE_NOT_ENT:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_NOT_FNC:
+		{
+			qcvm->eval[3]->f = !qcvm->eval[1]->func;
+			break;
+		}
+
+		case OPCODE_IF:
+		{
+			if (qcvm->eval[1]->i)
+				qcvm->current_statement_index += qcvm->current_statement->vars[1] - 1;
+			break;
+		}
+
+		case OPCODE_IFNOT:
+		{
+			if (!qcvm->eval[1]->i)
+				qcvm->current_statement_index += qcvm->current_statement->vars[1] - 1;
+			break;
+		}
+
+		case OPCODE_STATE:
+		{
+			return QCVM_UNSUPPORTED_OPCODE;
+		}
+
+		case OPCODE_GOTO:
+		{
+			qcvm->current_statement_index += qcvm->current_statement->vars[0] - 1;
+			break;
+		}
+
+		case OPCODE_AND_F:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f && qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_OR_F:
+		{
+			qcvm->eval[3]->f = qcvm->eval[1]->f || qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_BITAND_F:
+		{
+			qcvm->eval[3]->f = (int)qcvm->eval[1]->f & (int)qcvm->eval[2]->f;
+			break;
+		}
+
+		case OPCODE_BITOR_F:
+		{
+			qcvm->eval[3]->f = (int)qcvm->eval[1]->f | (int)qcvm->eval[2]->f;
+			break;
+		}
+
 		default:
 		{
-			return QCVM_OK;
+			return QCVM_INVALID_OPCODE;
 		}
 	}
+
+	return QCVM_OK;
 }
 
 int qcvm_run(qcvm_t *qcvm, const char *name)
@@ -364,6 +746,7 @@ int qcvm_run(qcvm_t *qcvm, const char *name)
 						if (_strcmp(name, qcvm->builtins[i].name) == 0)
 						{
 							qcvm->builtins[i].func(qcvm);
+							qcvm->next_function->first_statement = -1 * (i + 1);
 							r = QCVM_OK;
 							break;
 						}
@@ -372,7 +755,7 @@ int qcvm_run(qcvm_t *qcvm, const char *name)
 				else if (qcvm->next_function->first_statement < 0)
 				{
 					/* get builtin by index */
-					int builtin = -1 * qcvm->next_function->first_statement;
+					int builtin = (-1 * qcvm->next_function->first_statement) - 1;
 
 					/* check bounds */
 					if (builtin < 0 || builtin >= (int)qcvm->num_builtins)
@@ -404,4 +787,52 @@ int qcvm_run(qcvm_t *qcvm, const char *name)
 	}
 
 	return r;
+}
+
+int qcvm_return_vector(qcvm_t *qcvm, float x, float y, float z)
+{
+	if (!qcvm)
+		return QCVM_NULL_POINTER;
+
+	qcvm->globals[OFS_RETURN].f = x;
+	qcvm->globals[OFS_RETURN + 1].f = y;
+	qcvm->globals[OFS_RETURN + 2].f = z;
+
+	return QCVM_OK;
+}
+
+int qcvm_return_int(qcvm_t *qcvm, int i)
+{
+	if (!qcvm)
+		return QCVM_NULL_POINTER;
+
+	qcvm->globals[OFS_RETURN].i = i;
+	qcvm->globals[OFS_RETURN + 1].i = 0;
+	qcvm->globals[OFS_RETURN + 2].i = 0;
+
+	return QCVM_OK;
+}
+
+int qcvm_return_float(qcvm_t *qcvm, float f)
+{
+	if (!qcvm)
+		return QCVM_NULL_POINTER;
+
+	qcvm->globals[OFS_RETURN].f = f;
+	qcvm->globals[OFS_RETURN + 1].f = 0;
+	qcvm->globals[OFS_RETURN + 2].f = 0;
+
+	return QCVM_OK;
+}
+
+int qcvm_return_entity(qcvm_t *qcvm, unsigned int e)
+{
+	if (!qcvm)
+		return QCVM_NULL_POINTER;
+
+	qcvm->globals[OFS_RETURN].ui = e;
+	qcvm->globals[OFS_RETURN + 1].ui = 0;
+	qcvm->globals[OFS_RETURN + 2].ui = 0;
+
+	return QCVM_OK;
 }
