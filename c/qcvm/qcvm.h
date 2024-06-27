@@ -15,11 +15,13 @@ enum {
 	QCVM_INVALID_FUNCTION,
 	QCVM_INVALID_RESULT_CODE,
 	QCVM_BUILTIN_CALL,
+	QCVM_STATE_CALL,
 	QCVM_BUILTIN_NOT_FOUND,
 	QCVM_EXECUTION_FINISHED,
 	QCVM_INVALID_PROGS,
 	QCVM_UNSUPPORTED_VERSION,
 	QCVM_UNSUPPORTED_OPCODE,
+	QCVM_UNSUPPORTED_FUNCTION,
 	QCVM_STACK_OVERFLOW,
 	QCVM_STACK_UNDERFLOW,
 	QCVM_ARGUMENT_OUT_OF_RANGE,
@@ -106,7 +108,7 @@ typedef struct qcvm {
 	 * builtins.
 	 */
 	unsigned int len_tempstrings;
-	void *tempstrings;
+	char *tempstrings;
 
 	/*
 	 *
@@ -201,6 +203,7 @@ typedef struct qcvm {
 	int current_builtin;
 	int exit_depth;
 	int current_argc;
+	char *tempstrings_ptr;
 
 	/* function evaluation */
 	union qcvm_eval {
@@ -272,6 +275,22 @@ int qcvm_step(qcvm_t *qcvm);
  */
 int qcvm_run(qcvm_t *qcvm, const char *name);
 
+/** return a string to the function that called this one
+ *
+ * @param qcvm virtual machine to use
+ * @param s null-terminated string
+ * @returns result code
+ */
+int qcvm_return_string(qcvm_t *qcvm, const char *s);
+
+/** return a float to the function that called this one
+ *
+ * @param qcvm virtual machine to use
+ * @param f float value
+ * @returns result code
+ */
+int qcvm_return_float(qcvm_t *qcvm, float f);
+
 /** return a vector to the function that called this one
  *
  * @param qcvm virtual machine to use
@@ -281,22 +300,6 @@ int qcvm_run(qcvm_t *qcvm, const char *name);
  * @returns result code
  */
 int qcvm_return_vector(qcvm_t *qcvm, float x, float y, float z);
-
-/** return an int to the function that called this one
- *
- * @param qcvm virtual machine to use
- * @param i integer value
- * @returns result code
- */
-int qcvm_return_int(qcvm_t *qcvm, int i);
-
-/** return a float to the function that called this one
- *
- * @param qcvm virtual machine to use
- * @param f float value
- * @returns result code
- */
-int qcvm_return_float(qcvm_t *qcvm, float f);
 
 /** return an entity index to the function that called this one
  *
@@ -342,6 +345,15 @@ int qcvm_get_argument_float(qcvm_t *qcvm, int i, float *f);
  * @returns result code
  */
 int qcvm_get_argument_vector(qcvm_t *qcvm, int i, float *x, float *y, float *z);
+
+/** retrieve entity index from function argument
+ *
+ * @param qcvm virtual machine to use
+ * @param i argument index
+ * @param e unsigned integer to fill
+ * @returns result code
+ */
+int qcvm_get_argument_entity(qcvm_t *qcvm, int i, unsigned int *e);
 
 #ifdef __cplusplus
 }

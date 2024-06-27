@@ -72,6 +72,8 @@ int qcvm_init(qcvm_t *qcvm)
 		return QCVM_NULL_POINTER;
 	if (!qcvm->progs || !qcvm->len_progs)
 		return QCVM_INVALID_PROGS;
+	if (!qcvm->tempstrings)
+		return QCVM_INVALID_PROGS;
 
 	/* file header */
 	qcvm->header = (struct qcvm_header *)qcvm->progs;
@@ -83,6 +85,9 @@ int qcvm_init(qcvm_t *qcvm)
 		return QCVM_UNSUPPORTED_VERSION;
 	else if (qcvm->header->version != progs_version_standard)
 		return QCVM_INVALID_PROGS;
+
+	/* tempstrings */
+	qcvm->tempstrings_ptr = qcvm->tempstrings;
 
 	/* statements */
 	qcvm->num_statements = (unsigned int)qcvm->header->num_statements;
@@ -139,11 +144,13 @@ const char *qcvm_result_string(int r)
 		"Invalid function",
 		"Invalid result code",
 		"Builtin call",
+		"State call",
 		"Builtin not found",
 		"Execution finished",
 		"Invalid progs data",
 		"Unsupported progs version",
 		"Unsupported opcode",
+		"Unsupported function",
 		"Stack overflow",
 		"Stack underflow",
 		"Argument index is out of range",
@@ -625,7 +632,8 @@ int qcvm_step(qcvm_t *qcvm)
 
 		case OPCODE_STATE:
 		{
-			return QCVM_UNSUPPORTED_OPCODE;
+			/* must be handled by user program */
+			return QCVM_STATE_CALL;
 		}
 
 		case OPCODE_GOTO:
@@ -738,6 +746,10 @@ int qcvm_run(qcvm_t *qcvm, const char *name)
 					break;
 			}
 
+			/* TODO: parse state call */
+			case QCVM_STATE_CALL:
+				break;
+
 			/* execution finished */
 			case QCVM_EXECUTION_FINISHED:
 				return QCVM_OK;
@@ -751,26 +763,33 @@ int qcvm_run(qcvm_t *qcvm, const char *name)
 	return r;
 }
 
-int qcvm_return_vector(qcvm_t *qcvm, float x, float y, float z)
+int qcvm_return_string(qcvm_t *qcvm, const char *s)
 {
+	char *ptr, *tempstrings_end;
+	unsigned int len;
+
 	if (!qcvm)
 		return QCVM_NULL_POINTER;
 
-	qcvm->globals[OFS_RETURN].f = x;
-	qcvm->globals[OFS_RETURN + 1].f = y;
-	qcvm->globals[OFS_RETURN + 2].f = z;
+	if (!qcvm->tempstrings || !qcvm->tempstrings_ptr)
+		return QCVM_UNSUPPORTED_FUNCTION;
 
-	return QCVM_OK;
-}
+	/* end of tempstrings buffer */
+	tempstrings_end = qcvm->tempstrings + qcvm->len_tempstrings;
 
-int qcvm_return_int(qcvm_t *qcvm, int i)
-{
-	if (!qcvm)
-		return QCVM_NULL_POINTER;
+	/* get string len */
+	ptr = (char *)s;
+	len = 0;
+	while (*ptr++ != '\0')
+		len++;
 
-	qcvm->globals[OFS_RETURN].i = i;
-	qcvm->globals[OFS_RETURN + 1].i = 0;
-	qcvm->globals[OFS_RETURN + 2].i = 0;
+	/* check tempstrings bounds */
+	if (qcvm->tempstrings + len >= tempstrings_end)
+		qcvm->tempstrings_ptr = qcvm->tempstrings;
+
+	/* bootleg strncpy */
+	while (*s != '\0' && qcvm->tempstrings_ptr < tempstrings_end)
+		*qcvm->tempstrings_ptr++ = *s++;
 
 	return QCVM_OK;
 }
@@ -783,6 +802,18 @@ int qcvm_return_float(qcvm_t *qcvm, float f)
 	qcvm->globals[OFS_RETURN].f = f;
 	qcvm->globals[OFS_RETURN + 1].f = 0;
 	qcvm->globals[OFS_RETURN + 2].f = 0;
+
+	return QCVM_OK;
+}
+
+int qcvm_return_vector(qcvm_t *qcvm, float x, float y, float z)
+{
+	if (!qcvm)
+		return QCVM_NULL_POINTER;
+
+	qcvm->globals[OFS_RETURN].f = x;
+	qcvm->globals[OFS_RETURN + 1].f = y;
+	qcvm->globals[OFS_RETURN + 2].f = z;
 
 	return QCVM_OK;
 }
@@ -854,6 +885,20 @@ int qcvm_get_argument_vector(qcvm_t *qcvm, int i, float *x, float *y, float *z)
 
 	if (z)
 		*z = qcvm->globals[OFS_PARM0 + (i * 3) + 2].f;
+
+	return QCVM_OK;
+}
+
+int qcvm_get_argument_entity(qcvm_t *qcvm, int i, unsigned int *e)
+{
+	if (!qcvm)
+		return QCVM_NULL_POINTER;
+
+	if (i < 0 || i >= 8)
+		return QCVM_ARGUMENT_OUT_OF_RANGE;
+
+	if (e)
+		*e = qcvm->globals[OFS_PARM0 + (i * 3)].ui;
 
 	return QCVM_OK;
 }
