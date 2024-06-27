@@ -21,6 +21,8 @@ static const int progs_version_extended = 7;
 
 #define STR_OFS(o) (qcvm->strings + (o))
 
+#define FIELD_PTR(e, o) (&((unsigned int *)qcvm->entities + ((e) * qcvm->header->num_entity_fields))[(o)])
+
 /* opcode names */
 #include <stdio.h>
 const char *qcvm_opcode_names[] = {
@@ -121,7 +123,7 @@ int qcvm_query_entity_info(qcvm_t *qcvm, unsigned int *num_fields, unsigned int 
 		*num_fields = (unsigned int)qcvm->header->num_entity_fields;
 
 	if (size)
-		*size = (unsigned int)(qcvm->header->num_field_vars * 4);
+		*size = (unsigned int)qcvm->header->num_entity_fields * 4;
 
 	return QCVM_OK;
 }
@@ -130,6 +132,7 @@ const char *qcvm_result_string(int r)
 {
 	static const char *results[] = {
 		"Ok",
+		"Unknown error",
 		"Unexpected NULL pointer",
 		"Function not found",
 		"Invalid opcode",
@@ -142,7 +145,9 @@ const char *qcvm_result_string(int r)
 		"Unsupported progs version",
 		"Unsupported opcode",
 		"Stack overflow",
-		"Stack underflow"
+		"Stack underflow",
+		"Argument index is out of range",
+		"Wrong type for getting argument value"
 	};
 
 	if (r < 0 || r >= QCVM_NUM_RESULT_CODES)
@@ -297,6 +302,7 @@ int qcvm_step(qcvm_t *qcvm)
 		/* function call */
 		case OPCODE_CALL0:
 		case OPCODE_CALL1:
+		case OPCODE_CALL2:
 		case OPCODE_CALL3:
 		case OPCODE_CALL4:
 		case OPCODE_CALL5:
@@ -457,7 +463,8 @@ int qcvm_step(qcvm_t *qcvm)
 
 		case OPCODE_NE_S:
 		{
-			return QCVM_UNSUPPORTED_OPCODE;
+			qcvm->eval[3]->f = _strcmp(STR_OFS(qcvm->eval[1]->s), STR_OFS(qcvm->eval[2]->s));
+			break;
 		}
 
 		case OPCODE_NE_E:
@@ -497,54 +504,48 @@ int qcvm_step(qcvm_t *qcvm)
 		}
 
 		case OPCODE_LOAD_F:
-		{
-			return QCVM_UNSUPPORTED_OPCODE;
-		}
-
-		case OPCODE_LOAD_V:
-		{
-			return QCVM_UNSUPPORTED_OPCODE;
-		}
-
 		case OPCODE_LOAD_S:
-		{
-			return QCVM_UNSUPPORTED_OPCODE;
-		}
-
 		case OPCODE_LOAD_ENT:
-		{
-			return QCVM_UNSUPPORTED_OPCODE;
-		}
-
 		case OPCODE_LOAD_FLD:
-		{
-			return QCVM_UNSUPPORTED_OPCODE;
-		}
-
 		case OPCODE_LOAD_FNC:
 		{
-			return QCVM_UNSUPPORTED_OPCODE;
-		}
+			/* get offset to field */
+			qcvm->eval[1] = (union qcvm_eval *)FIELD_PTR(qcvm->eval[1]->e, qcvm->eval[2]->i);
 
-		case OPCODE_ADDRESS:
-		{
-			unsigned int *entity_ofs;
-			unsigned int *field_ofs;
-
-			/* get offset to entity */
-			entity_ofs = (unsigned int *)qcvm->entities +
-				(qcvm->eval[1]->e * qcvm->header->num_field_vars);
-
-			/* get offset to entity field */
-			field_ofs = &entity_ofs[qcvm->eval[2]->i];
-
-			/* offset from start of entities buffer */
-			qcvm->eval[3]->i = (int)((unsigned char *)field_ofs - (unsigned char *)qcvm->entities);
+			/* load field value */
+			qcvm->eval[3]->i = qcvm->eval[1]->i;
 
 			break;
 		}
 
+		case OPCODE_LOAD_V:
+		{
+			/* get offset to field */
+			qcvm->eval[1] = (union qcvm_eval *)FIELD_PTR(qcvm->eval[1]->e, qcvm->eval[2]->i);
+
+			/* load field value */
+			qcvm->eval[3]->v[0] = qcvm->eval[1]->v[0];
+			qcvm->eval[3]->v[1] = qcvm->eval[1]->v[1];
+			qcvm->eval[3]->v[2] = qcvm->eval[1]->v[2];
+
+			break;
+		}
+
+		case OPCODE_ADDRESS:
+		{
+			/* get offset to entity field */
+			unsigned int *field_ptr = FIELD_PTR(qcvm->eval[1]->e, qcvm->eval[2]->i);
+
+			/* get offset from start of entities buffer */
+			qcvm->eval[3]->i = (int)((unsigned char *)field_ptr - (unsigned char *)qcvm->entities);
+			break;
+		}
+
 		case OPCODE_STORE_F:
+		case OPCODE_STORE_S:
+		case OPCODE_STORE_ENT:
+		case OPCODE_STORE_FLD:
+		case OPCODE_STORE_FNC:
 		{
 			qcvm->eval[2]->i = qcvm->eval[1]->i;
 			break;
@@ -558,31 +559,11 @@ int qcvm_step(qcvm_t *qcvm)
 			break;
 		}
 
-		case OPCODE_STORE_S:
-		{
-			qcvm->eval[2]->s = qcvm->eval[1]->s;
-			break;
-		}
-
-		case OPCODE_STORE_ENT:
-		{
-			qcvm->eval[2]->e = qcvm->eval[1]->e;
-			break;
-		}
-
-		case OPCODE_STORE_FLD:
-		{
-			qcvm->eval[2]->field = qcvm->eval[1]->field;
-			break;
-		}
-
-		case OPCODE_STORE_FNC:
-		{
-			qcvm->eval[2]->i = qcvm->eval[1]->i;
-			break;
-		}
-
 		case OPCODE_STOREP_F:
+		case OPCODE_STOREP_S:
+		case OPCODE_STOREP_ENT:
+		case OPCODE_STOREP_FLD:
+		case OPCODE_STOREP_FNC:
 		{
 			qcvm->eval[0] = (union qcvm_eval *)((unsigned char *)qcvm->entities + qcvm->eval[2]->i);
 			qcvm->eval[0]->i = qcvm->eval[1]->i;
@@ -596,26 +577,6 @@ int qcvm_step(qcvm_t *qcvm)
 			qcvm->eval[0]->v[1] = qcvm->eval[1]->v[1];
 			qcvm->eval[0]->v[2] = qcvm->eval[1]->v[2];
 			break;
-		}
-
-		case OPCODE_STOREP_S:
-		{
-			return QCVM_UNSUPPORTED_OPCODE;
-		}
-
-		case OPCODE_STOREP_ENT:
-		{
-			return QCVM_UNSUPPORTED_OPCODE;
-		}
-
-		case OPCODE_STOREP_FLD:
-		{
-			return QCVM_UNSUPPORTED_OPCODE;
-		}
-
-		case OPCODE_STOREP_FNC:
-		{
-			return QCVM_UNSUPPORTED_OPCODE;
 		}
 
 		case OPCODE_NOT_F:
@@ -638,7 +599,8 @@ int qcvm_step(qcvm_t *qcvm)
 
 		case OPCODE_NOT_ENT:
 		{
-			return QCVM_UNSUPPORTED_OPCODE;
+			qcvm->eval[3]->f = !qcvm->eval[1]->e;
+			break;
 		}
 
 		case OPCODE_NOT_FNC:
@@ -833,6 +795,65 @@ int qcvm_return_entity(qcvm_t *qcvm, unsigned int e)
 	qcvm->globals[OFS_RETURN].ui = e;
 	qcvm->globals[OFS_RETURN + 1].ui = 0;
 	qcvm->globals[OFS_RETURN + 2].ui = 0;
+
+	return QCVM_OK;
+}
+
+int qcvm_query_argument_count(qcvm_t *qcvm, int *argc)
+{
+	if (!qcvm)
+		return QCVM_NULL_POINTER;
+
+	if (argc)
+		*argc = qcvm->current_argc;
+
+	return QCVM_OK;
+}
+
+int qcvm_get_argument_string(qcvm_t *qcvm, int i, const char **s)
+{
+	if (!qcvm)
+		return QCVM_NULL_POINTER;
+
+	if (i < 0 || i >= 8)
+		return QCVM_ARGUMENT_OUT_OF_RANGE;
+
+	if (s)
+		*s = STR_OFS(qcvm->globals[OFS_PARM0 + (i * 3)].i);
+
+	return QCVM_OK;
+}
+
+int qcvm_get_argument_float(qcvm_t *qcvm, int i, float *f)
+{
+	if (!qcvm)
+		return QCVM_NULL_POINTER;
+
+	if (i < 0 || i >= 8)
+		return QCVM_ARGUMENT_OUT_OF_RANGE;
+
+	if (f)
+		*f = qcvm->globals[OFS_PARM0 + (i * 3)].f;
+
+	return QCVM_OK;
+}
+
+int qcvm_get_argument_vector(qcvm_t *qcvm, int i, float *x, float *y, float *z)
+{
+	if (!qcvm)
+		return QCVM_NULL_POINTER;
+
+	if (i < 0 || i >= 8)
+		return QCVM_ARGUMENT_OUT_OF_RANGE;
+
+	if (x)
+		*x = qcvm->globals[OFS_PARM0 + (i * 3)].f;
+
+	if (y)
+		*y = qcvm->globals[OFS_PARM0 + (i * 3) + 1].f;
+
+	if (z)
+		*z = qcvm->globals[OFS_PARM0 + (i * 3) + 2].f;
 
 	return QCVM_OK;
 }

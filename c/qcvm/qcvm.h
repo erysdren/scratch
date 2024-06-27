@@ -8,6 +8,7 @@ extern "C" {
 /* result codes */
 enum {
 	QCVM_OK,
+	QCVM_UNKNOWN_ERROR,
 	QCVM_NULL_POINTER,
 	QCVM_FUNCTION_NOT_FOUND,
 	QCVM_INVALID_OPCODE,
@@ -21,7 +22,21 @@ enum {
 	QCVM_UNSUPPORTED_OPCODE,
 	QCVM_STACK_OVERFLOW,
 	QCVM_STACK_UNDERFLOW,
+	QCVM_ARGUMENT_OUT_OF_RANGE,
+	QCVM_WRONG_ARGUMENT_TYPE,
 	QCVM_NUM_RESULT_CODES
+};
+
+/* qcvm variable types */
+enum {
+	QCVM_TYPE_VOID,
+	QCVM_TYPE_STRING,
+	QCVM_TYPE_FLOAT,
+	QCVM_TYPE_VECTOR,
+	QCVM_TYPE_ENTITY,
+	QCVM_TYPE_FIELD,
+	QCVM_TYPE_FUNCTION,
+	QCVM_TYPE_POINTER
 };
 
 /* these can be adjusted at compile time, but i wouldn't recommend it */
@@ -290,6 +305,43 @@ int qcvm_return_float(qcvm_t *qcvm, float f);
  * @returns result code
  */
 int qcvm_return_entity(qcvm_t *qcvm, unsigned int e);
+
+/** query argument type of current function
+ *
+ * @param qcvm virtual machine to use
+ * @param argc integer to fill
+ * @returns result code
+ */
+int qcvm_query_argument_count(qcvm_t *qcvm, int *argc);
+
+/** retrieve string from function argument
+ *
+ * @param qcvm virtual machine to use
+ * @param i argument index
+ * @param s string pointer to fill
+ * @returns result code
+ */
+int qcvm_get_argument_string(qcvm_t *qcvm, int i, const char **s);
+
+/** retrieve float from function argument
+ *
+ * @param qcvm virtual machine to use
+ * @param i argument index
+ * @param f float to fill
+ * @returns result code
+ */
+int qcvm_get_argument_float(qcvm_t *qcvm, int i, float *f);
+
+/** retrieve vector from function argument
+ *
+ * @param qcvm virtual machine to use
+ * @param i argument index
+ * @param x float to fill
+ * @param y float to fill
+ * @param z float to fill
+ * @returns result code
+ */
+int qcvm_get_argument_vector(qcvm_t *qcvm, int i, float *x, float *y, float *z);
 
 #ifdef __cplusplus
 }

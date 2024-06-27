@@ -5,7 +5,7 @@
 #pragma autoproto
 
 // builtins
-void say_hello_world() = #1 : say_hello_world;
+void print(string s, ...) = #1 : print;
 entity spawn() = #2 : spawn;
 
 // define some fields
@@ -13,6 +13,8 @@ entity spawn() = #2 : spawn;
 .vector test1;
 .float test2;
 .vector test3;
+.string test4;
+.entity test5;
 
 // main
 void main()
@@ -22,4 +24,15 @@ void main()
 	e.test2 = 42;
 	e.test1 = [2, 2, 2];
 	e.test3 = [3, 3, 3];
+
+	float store_test0 = e.test0;
+
+	if (store_test0 == 69)
+	{
+		print("69\n");
+	}
+	else
+	{
+		print("the world is ending\n");
+	}
 }

@@ -11,12 +11,18 @@ class MyClass {
 	string classname;
 	string targetname;
 	void() MyClass;
+	nonvirtual void() SayHello;
 	virtual void() SayHi;
 };
 
 void MyClass::MyClass(void)
 {
 	print("hello world!\n");
+}
+
+void MyClass::SayHello(void)
+{
+	print("hello!\n");
 }
 
 void MyClass::SayHi(void)
@@ -27,5 +33,9 @@ void MyClass::SayHi(void)
 void main()
 {
 	MyClass m = spawn(MyClass);
+	m.SayHello();
 	m.SayHi();
+	m.classname = "MyClassName";
+
+	print(m.classname, "\n");
 }

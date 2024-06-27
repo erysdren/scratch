@@ -46,10 +46,25 @@ static void *load_file(const char *filename, unsigned int *sz)
  *
  */
 
-int _say_hello_world(qcvm_t *qcvm)
+int _print(qcvm_t *qcvm)
 {
-	UNUSED(qcvm);
-	printf("hello world!\n");
+	int argc, r, i;
+
+	if ((r = qcvm_query_argument_count(qcvm, &argc)) != QCVM_OK)
+		return r;
+
+	for (i = 0; i < argc; i++)
+	{
+		const char *s;
+
+		if ((r = qcvm_get_argument_string(qcvm, i, &s)) != QCVM_OK)
+			return r;
+
+		fprintf(stdout, s);
+	}
+
+	fflush(stdout);
+
 	return QCVM_OK;
 }
 
@@ -58,13 +73,12 @@ static int num_entities = 0;
 
 int _spawn(qcvm_t *qcvm)
 {
-	UNUSED(qcvm);
 	qcvm_return_entity(qcvm, ++num_entities);
 	return QCVM_OK;
 }
 
 struct qcvm_builtin builtins[] = {
-	{"say_hello_world", 0, 0, _say_hello_world},
+	{"print", 0, 0, _print},
 	{"spawn", 0, 0, _spawn}
 };
 
