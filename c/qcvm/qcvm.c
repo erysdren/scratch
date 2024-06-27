@@ -632,7 +632,7 @@ int qcvm_step(qcvm_t *qcvm)
 
 		case OPCODE_STATE:
 		{
-			/* must be handled by user program */
+			/* must be handled by user program... somehow */
 			return QCVM_STATE_CALL;
 		}
 
