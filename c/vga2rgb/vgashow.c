@@ -3,6 +3,8 @@
 
 #include "vga8x16.h"
 
+#define BLINK_HZ ((1000 / 70) * 16)
+
 static const Uint8 palette[16][3] = {
 	{0x00, 0x00, 0x00}, {0x00, 0x00, 0xab}, {0x00, 0xab, 0x00}, {0x00, 0xab, 0xab},
 	{0xab, 0x00, 0x00}, {0xab, 0x00, 0xab}, {0xab, 0x57, 0x00}, {0xab, 0xab, 0xab},
@@ -10,7 +12,7 @@ static const Uint8 palette[16][3] = {
 	{0xff, 0x57, 0x57}, {0xff, 0x57, 0xff}, {0xff, 0xff, 0x57}, {0xff, 0xff, 0xff}
 };
 
-static void render_cell(Uint8 *image, int pitch, Uint16 cell)
+static void render_cell(Uint8 *image, int pitch, Uint16 cell, SDL_bool noblink)
 {
 	// get components
 	Uint8 code = (Uint8)(cell & 0xFF);
@@ -28,6 +30,9 @@ static void render_cell(Uint8 *image, int pitch, Uint16 cell)
 			// write bgcolor
 			image[y * pitch + x] = bgcolor;
 
+			if (blink && noblink)
+				continue;
+
 			// write fgcolor
 			Uint8 *bitmap = &VGA8X16[code * 16];
 
@@ -40,14 +45,17 @@ static void render_cell(Uint8 *image, int pitch, Uint16 cell)
 int main(int argc, char **argv)
 {
 	Uint16 screen[25][80];
-	Uint8 image[400][640];
+	Uint8 image0[400][640];
+	Uint8 image1[400][640];
 	Uint32 format, rmask, gmask, bmask, amask;
 	int bpp;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
 	SDL_Texture *texture;
 	SDL_Surface *surface8;
-	SDL_Surface *surface24;
+	SDL_Surface *windowsurface;
+	SDL_Surface *windowsurface0;
+	SDL_Surface *windowsurface1;
 	SDL_Color colors[16];
 	SDL_Rect rect;
 	FILE *input;
@@ -67,9 +75,11 @@ int main(int argc, char **argv)
 		for (int x = 0; x < 80; x++)
 		{
 			uint16_t cell = screen[y][x];
-			uint8_t *imgpos = &image[y * 16][x * 8];
+			uint8_t *imgpos0 = &image0[y * 16][x * 8];
+			uint8_t *imgpos1 = &image1[y * 16][x * 8];
 
-			render_cell(imgpos, 640, cell);
+			render_cell(imgpos0, 640, cell, SDL_FALSE);
+			render_cell(imgpos1, 640, cell, SDL_TRUE);
 		}
 	}
 
@@ -77,13 +87,13 @@ int main(int argc, char **argv)
 
 	window = SDL_CreateWindow(argv[1],
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-		640, 480, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+		640, 400, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
-	SDL_RenderSetLogicalSize(renderer, 640, 480);
-	SDL_SetWindowMinimumSize(window, 640, 480);
+	SDL_RenderSetLogicalSize(renderer, 640, 400);
+	SDL_SetWindowMinimumSize(window, 640, 400);
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderClear(renderer);
 	SDL_RenderPresent(renderer);
@@ -102,7 +112,9 @@ int main(int argc, char **argv)
 
 	format = SDL_GetWindowPixelFormat(window);
 	SDL_PixelFormatEnumToMasks(format, &bpp, &rmask, &gmask, &bmask, &amask);
-	surface24 = SDL_CreateRGBSurface(0, 640, 400, bpp, rmask, gmask, bmask, amask);
+	windowsurface0 = SDL_CreateRGBSurface(0, 640, 400, bpp, rmask, gmask, bmask, amask);
+	windowsurface1 = SDL_CreateRGBSurface(0, 640, 400, bpp, rmask, gmask, bmask, amask);
+
 	texture = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_STREAMING, 640, 400);
 
 	rect.x = 0;
@@ -110,14 +122,23 @@ int main(int argc, char **argv)
 	rect.w = 640;
 	rect.h = 400;
 
+	// make blink-off
 	for (int y = 0; y < 400; y++)
-	{
-		SDL_memcpy(&((Uint8 *)surface8->pixels)[y * surface8->pitch], &image[y][0], 640);
-	}
+		SDL_memcpy(&((Uint8 *)surface8->pixels)[y * surface8->pitch], &image0[y][0], 640);
 
-	SDL_BlitSurface(surface8, &rect, surface24, &rect);
-	SDL_UpdateTexture(texture, NULL, surface24->pixels, surface24->pitch);
+	SDL_BlitSurface(surface8, &rect, windowsurface0, &rect);
 
+	// make blink-on
+	for (int y = 0; y < 400; y++)
+		SDL_memcpy(&((Uint8 *)surface8->pixels)[y * surface8->pitch], &image1[y][0], 640);
+
+	SDL_BlitSurface(surface8, &rect, windowsurface1, &rect);
+
+	windowsurface = windowsurface0;
+
+	Uint64 next = SDL_GetTicks64() + BLINK_HZ;
+
+	// main loop
 	while (!SDL_QuitRequested())
 	{
 		SDL_Event event;
@@ -127,6 +148,18 @@ int main(int argc, char **argv)
 				goto done;
 		}
 
+		Uint64 now = SDL_GetTicks64();
+		if (next <= now)
+		{
+			if (windowsurface == windowsurface0)
+				windowsurface = windowsurface1;
+			else
+				windowsurface = windowsurface0;
+
+			next += BLINK_HZ;
+		}
+
+		SDL_UpdateTexture(texture, NULL, windowsurface->pixels, windowsurface->pitch);
 		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
@@ -135,7 +168,8 @@ int main(int argc, char **argv)
 done:
 
 	SDL_FreeSurface(surface8);
-	SDL_FreeSurface(surface24);
+	SDL_FreeSurface(windowsurface0);
+	SDL_FreeSurface(windowsurface1);
 	SDL_DestroyTexture(texture);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
