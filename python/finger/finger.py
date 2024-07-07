@@ -12,7 +12,7 @@ if __name__ == "__main__":
 	if len(sys.argv) != 2:
 		print_help()
 
-	args = sys.argv[1].split('@')
+	args = sys.argv[1].split("@")
 	if not args or len(args) != 2:
 		print_help()
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 	s.sendall(f"{username}\r\n".encode("ascii"))
 	plan = s.recv(8192)
 	print(f"[{hostname}]")
-	print(plan.decode("ascii"), end ="")
+	print(plan.decode("ascii"), end="")
 
 	s.shutdown(socket.SHUT_RDWR)
 	s.close()
