@@ -18,10 +18,9 @@ if __name__ == "__main__":
 
 	username = args[0]
 	hostname = args[1]
-	port = 79
 
 	try:
-		s = socket.create_connection((hostname, port), 5)
+		s = socket.create_connection((hostname, 79), 5)
 	except OSError as msg:
 		print(msg)
 		sys.exit(1)
