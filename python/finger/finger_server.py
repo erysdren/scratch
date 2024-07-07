@@ -27,7 +27,7 @@ if __name__ == "__main__":
 				print(f"Connected by {repr(addr)}")
 				while True:
 					command = conn.recv(128)
-					if not command: break;
+					if not command: break
 					print(f"Finger command: {repr(command)}")
 					plan = get_plan(command.decode("ascii").strip())
 					conn.sendall(f"{plan}\n\n".encode("ascii"))
