@@ -9,7 +9,7 @@ def get_plan(username):
 if __name__ == "__main__":
 
 	try:
-		addr = ("localhost", 79)
+		addr = ("", 79)
 		if socket.has_dualstack_ipv6():
 			s = socket.create_server(addr, family=socket.AF_INET6, dualstack_ipv6=True)
 		else:
