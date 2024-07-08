@@ -3,8 +3,8 @@
 
 import socket, sys
 
-def get_plan(username):
-	return "user must implement this"
+def get_plan(username, verbose):
+	return f"username={username} verbose={verbose}"
 
 if __name__ == "__main__":
 
@@ -29,7 +29,14 @@ if __name__ == "__main__":
 					command = conn.recv(128)
 					if not command: break
 					print(f"Finger command: {repr(command)}")
-					plan = get_plan(command.decode("ascii").strip())
+					cmd = command.decode("ascii").strip()
+					if cmd[:3].casefold() == "/W ".casefold():
+						username = cmd[3:]
+						verbose = True
+					else:
+						username = cmd
+						verbose = False
+					plan = get_plan(username, verbose)
 					conn.sendall(f"{plan}\n\n".encode("ascii"))
 					conn.shutdown(socket.SHUT_RDWR)
 					conn.close()
