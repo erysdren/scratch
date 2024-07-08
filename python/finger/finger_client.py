@@ -22,7 +22,7 @@ if __name__ == "__main__":
 	try:
 		s = socket.create_connection((hostname, 79), 5)
 	except OSError as msg:
-		print(msg)
+		print(msg, file=sys.stderr)
 		sys.exit(1)
 
 	s.sendall(f"{username}\r\n".encode("ascii"))

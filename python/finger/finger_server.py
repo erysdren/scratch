@@ -15,7 +15,7 @@ if __name__ == "__main__":
 		else:
 			s = socket.create_server(addr)
 	except OSError as msg:
-		print(msg)
+		print(msg, file=sys.stderr)
 		sys.exit(1)
 
 	print(f"Listening on {repr(addr)}")
