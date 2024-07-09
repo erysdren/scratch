@@ -15,11 +15,13 @@ derivatives or components of.
 
 /c/brender/*
 /c/cpu8086/*
-/c/dos-jam-2023-12/*
 /c/dos_utils/*
+/c/dos-jam-2023-12/*
 /c/dumpmaptiles/*
+/c/erysdren_utils/*
 /c/fixed_point_math/*
 /c/formats/*
+/c/gunpoint/*
 /c/lev_tool/*
 /c/ne_tool/*
 /c/prey95/*
@@ -27,15 +29,17 @@ derivatives or components of.
 /c/ray/*
 /c/rott/*
 /c/rtlx2rtl/*
-/c/safeutils/*
 /c/steampath/*
+/c/tcc/*
 /c/troika_texture_tool/*
 /c/unpak_hrot/*
 /c/unwal/*
 /c/upkg/*
 /imhex/*
 /lua/brender/*
+/python/finger/*
 /python/tmj2map/*
+/python/vga2rgb/*
 
 +-----------------------------------------------------------------------------+
 |    GNU GPLv3                                       /licenses/LICENSE.GPL3   |
@@ -56,3 +60,9 @@ derivatives or components of.
 
 /assets/ref/*
 /assets/lab/*
+
++-----------------------------------------------------------------------------+
+|    GNU AGPLv3                                     /licenses/LICENSE.AGPL3   |
++-----------------------------------------------------------------------------+
+
+/c/term_test/*
