@@ -74,6 +74,8 @@ void term_printf(const char *fmt, ...);
 void term_printf_xy(uint16_t x, uint16_t y, const char *fmt, ...);
 void term_setxy(uint16_t x, uint16_t y);
 void term_setformat(const char *fmt);
+void term_clear(void);
+void term_clear_line(void);
 
 /* get */
 uint16_t term_getwidth(void);
@@ -83,7 +85,7 @@ uint16_t term_getheight(void);
 void term_flush(void);
 
 /* utils */
-size_t term_textsize(const char* str);
+size_t term_textsize(const char *str);
 
 /* widgets */
 void term_filledbox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char *fill);

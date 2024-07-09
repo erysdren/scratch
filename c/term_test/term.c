@@ -42,7 +42,7 @@ static struct termios term;
 static struct termios term_bak;
 static char term_buffer[0xF000];
 static char *term_buffer_end = (char *)term_buffer + sizeof(term_buffer);
-static char *term_buffer_ptr;
+static char *term_buffer_ptr = (char *)term_buffer;
 static uint16_t term_width, term_height;
 
 static void resize_handler(int i)
@@ -63,8 +63,6 @@ static void signal_handler(int i)
 
 void term_init(void)
 {
-	term_buffer_ptr = (char *)term_buffer;
-
 	tcgetattr(STDOUT_FILENO, &term_bak);
 	tcgetattr(STDOUT_FILENO, &term);
 
@@ -74,7 +72,9 @@ void term_init(void)
 	atexit(term_quit);
 	signal(SIGTERM, signal_handler);
 	signal(SIGINT, signal_handler);
+#ifndef __MSDOS__
 	signal(SIGWINCH, resize_handler);
+#endif
 
 	term_write(
 		ESC ALTBUF HIGH
@@ -136,6 +136,16 @@ void term_setformat(const char *fmt)
 	term_printf(ESC "%s" COLOR, fmt);
 }
 
+void term_clear(void)
+{
+	term_write(ESC CLEARTERM);
+}
+
+void term_clear_line(void)
+{
+	term_write(ESC CLEARLINE);
+}
+
 uint16_t term_getwidth(void)
 {
 	return term_width;
@@ -152,7 +162,7 @@ void term_flush(void)
 	term_buffer_ptr = (char *)term_buffer;
 }
 
-size_t term_textsize(const char* str)
+size_t term_textsize(const char *str)
 {
 	size_t sz = 0, i = 0;
 
