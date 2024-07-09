@@ -35,11 +35,11 @@ derivatives or components of.
 /c/unpak_hrot/*
 /c/unwal/*
 /c/upkg/*
+/c/vga2rgb/*
 /imhex/*
 /lua/brender/*
 /python/finger/*
 /python/tmj2map/*
-/python/vga2rgb/*
 
 +-----------------------------------------------------------------------------+
 |    GNU GPLv3                                       /licenses/LICENSE.GPL3   |
