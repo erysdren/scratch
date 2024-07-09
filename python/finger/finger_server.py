@@ -3,28 +3,33 @@
 
 import socket, sys
 
+PORT=79
+TIMEOUT=15
+MAX_CONNECTS=10
+
 def get_plan(username, verbose):
 	return f"username={username} verbose={verbose}"
 
 if __name__ == "__main__":
 
 	try:
-		addr = ("", 79)
+		addr = ("", PORT)
 		if socket.has_dualstack_ipv6():
 			s = socket.create_server(addr, family=socket.AF_INET6, dualstack_ipv6=True)
 		else:
-			s = socket.create_server(addr)
+			s = socket.create_server(addr, backlog=MAX_CONNECTS)
 	except OSError as msg:
 		print(msg, file=sys.stderr)
 		sys.exit(1)
 
-	print(f"Listening on {repr(addr)}")
+	print(f"Now listening on port: {PORT}\nConnection timeout: {TIMEOUT} seconds\nMax simultaneous connections: {MAX_CONNECTS}")
 
 	while True:
 		try:
 			conn, addr = s.accept()
 			with conn:
-				print(f"Connected by {repr(addr)}")
+				conn.settimeout(TIMEOUT)
+				print(f"Connected by: {addr[0]}:{addr[1]}")
 				while True:
 					command = conn.recv(128)
 					if not command: break
