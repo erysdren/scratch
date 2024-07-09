@@ -2,13 +2,32 @@
 # -*- coding: utf-8 -*-
 
 import socket, sys
+from pathlib import Path
 
-PORT=79
-TIMEOUT=15
-MAX_CONNECTS=10
+# port to listen on (standard finger port is 79)
+PORT = 79
+
+# timeout (in seconds) before an open connection is closed
+TIMEOUT = 15
+
+# max number of simultaneous connections allowed
+MAX_CONNECTS = 10
+
+# local fingerspace directory to query
+FINGERSPACE = "/fingerspace"
 
 def get_plan(username, verbose):
-	return f"username={username} verbose={verbose}"
+
+	filename = f"{FINGERSPACE}/{username}"
+
+	if Path(filename).is_file():
+		planfile = open(filename, "r")
+		plan = planfile.read()
+		planfile.close()
+		print(f"Returned the contents of: {filename}")
+		return plan;
+	else:
+		return "Bogus user specified."
 
 if __name__ == "__main__":
 
