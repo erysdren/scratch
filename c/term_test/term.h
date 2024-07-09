@@ -71,8 +71,13 @@ void term_quit(void);
 /* push to term */
 void term_write(const char *s);
 void term_printf(const char *fmt, ...);
-void term_print_xy(uint16_t x, uint16_t y, const char *s);
+void term_printf_xy(uint16_t x, uint16_t y, const char *fmt, ...);
+void term_setxy(uint16_t x, uint16_t y);
 void term_setformat(const char *fmt);
+
+/* get */
+uint16_t term_getwidth(void);
+uint16_t term_getheight(void);
 
 /* flush to screen */
 void term_flush(void);

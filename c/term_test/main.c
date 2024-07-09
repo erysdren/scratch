@@ -29,21 +29,6 @@ SOFTWARE.
 
 #include "term.h"
 
-static void die(const char *fmt, ...)
-{
-	va_list ap;
-	static char buffer[512];
-
-	va_start(ap, fmt);
-	vsnprintf(buffer, sizeof(buffer), fmt, ap);
-	va_end(ap);
-
-	fprintf(stderr, "ERROR: %s\n", buffer);
-	fflush(stderr);
-
-	exit(1);
-}
-
 void term_repaint(void)
 {
 	term_setformat(BRIGHT WITH FG WHITE WITH BG BLUE);

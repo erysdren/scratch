@@ -40,7 +40,8 @@ SOFTWARE.
 
 static struct termios term;
 static struct termios term_bak;
-static char term_buffer[16384];
+static char term_buffer[0xF000];
+static char *term_buffer_end = (char *)term_buffer + sizeof(term_buffer);
 static char *term_buffer_ptr;
 static uint16_t term_width, term_height;
 
@@ -102,7 +103,7 @@ void term_quit(void)
 
 void term_write(const char *s)
 {
-	term_buffer_ptr += sprintf(term_buffer_ptr, s);
+	term_buffer_ptr += snprintf(term_buffer_ptr, term_buffer_end - term_buffer_ptr, s);
 }
 
 void term_printf(const char *fmt, ...)
@@ -110,18 +111,39 @@ void term_printf(const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
-	term_buffer_ptr += vsprintf(term_buffer_ptr, fmt, ap);
+	term_buffer_ptr += vsnprintf(term_buffer_ptr, term_buffer_end - term_buffer_ptr, fmt, ap);
 	va_end(ap);
 }
 
-void term_print_xy(uint16_t x, uint16_t y, const char *s)
+void term_printf_xy(uint16_t x, uint16_t y, const char *fmt, ...)
 {
-	term_printf(ESC "%u" WITH "%u" JUMP "%s", y, x, s);
+	va_list ap;
+
+	term_setxy(x, y);
+
+	va_start(ap, fmt);
+	term_buffer_ptr += vsnprintf(term_buffer_ptr, term_buffer_end - term_buffer_ptr, fmt, ap);
+	va_end(ap);
+}
+
+void term_setxy(uint16_t x, uint16_t y)
+{
+	term_printf(ESC "%u" WITH "%u" JUMP, y, x);
 }
 
 void term_setformat(const char *fmt)
 {
 	term_printf(ESC "%s" COLOR, fmt);
+}
+
+uint16_t term_getwidth(void)
+{
+	return term_width;
+}
+
+uint16_t term_getheight(void)
+{
+	return term_height;
 }
 
 void term_flush(void)
@@ -147,7 +169,7 @@ void term_filledbox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char *
 {
 	for (uint16_t yy = 0; yy < h; yy++)
 	{
-		term_printf(ESC "%u" WITH "%u" JUMP, y + yy, x);
+		term_setxy(x, y + yy);
 		for (uint16_t xx = 0; xx < w; xx++)
 		{
 			term_write(fill);
@@ -163,5 +185,5 @@ void term_messagebox(const char *message)
 	uint16_t msgy = (term_height / 2) - (msgh / 2);
 
 	term_filledbox(msgx, msgy, msgw, msgh, " ");
-	term_print_xy(msgx + 1, msgy + (msgh / 2), message);
+	term_printf_xy(msgx + 1, msgy + (msgh / 2), message);
 }
