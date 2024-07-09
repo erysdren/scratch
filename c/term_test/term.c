@@ -35,6 +35,7 @@
 static struct termios term;
 static struct termios term_bak;
 static char term_buffer[0xF000];
+static char *term_buffer_start = (char *)term_buffer;
 static char *term_buffer_end = (char *)term_buffer + sizeof(term_buffer);
 static char *term_buffer_ptr = (char *)term_buffer;
 static uint16_t term_width, term_height;
@@ -97,12 +98,17 @@ void term_quit(void)
 
 void term_write(const char *s)
 {
+	if (term_buffer_ptr >= term_buffer_end)
+		return;
 	term_buffer_ptr += snprintf(term_buffer_ptr, term_buffer_end - term_buffer_ptr, s);
 }
 
 void term_printf(const char *fmt, ...)
 {
 	va_list ap;
+
+	if (term_buffer_ptr >= term_buffer_end)
+		return;
 
 	va_start(ap, fmt);
 	term_buffer_ptr += vsnprintf(term_buffer_ptr, term_buffer_end - term_buffer_ptr, fmt, ap);
@@ -114,6 +120,9 @@ void term_printf_xy(uint16_t x, uint16_t y, const char *fmt, ...)
 	va_list ap;
 
 	term_setxy(x, y);
+
+	if (term_buffer_ptr >= term_buffer_end)
+		return;
 
 	va_start(ap, fmt);
 	term_buffer_ptr += vsnprintf(term_buffer_ptr, term_buffer_end - term_buffer_ptr, fmt, ap);
@@ -152,7 +161,10 @@ uint16_t term_getheight(void)
 
 void term_flush(void)
 {
-	write(STDOUT_FILENO, term_buffer, term_buffer_ptr - term_buffer);
+	if (term_buffer_ptr >= term_buffer_end)
+		return;
+
+	write(STDOUT_FILENO, term_buffer, term_buffer_ptr - term_buffer_start);
 	term_buffer_ptr = (char *)term_buffer;
 }
 
