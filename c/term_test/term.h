@@ -16,7 +16,6 @@
  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 #ifndef _TERM_H_
 #define _TERM_H_
 
