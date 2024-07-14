@@ -37,7 +37,7 @@ static struct termios term_bak;
 static char term_buffer[0xF000];
 static char *term_buffer_start = (char *)term_buffer;
 static char *term_buffer_end = (char *)term_buffer + sizeof(term_buffer);
-static char *term_buffer_ptr = term_buffer_start;
+static char *term_buffer_ptr = (char *)term_buffer;
 static uint16_t term_width, term_height;
 
 static void resize_handler(int i)
