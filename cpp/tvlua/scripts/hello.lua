@@ -1,6 +1,4 @@
 
-print(tv.foo)
-
 local GreetThemCmd = 100
 
 function greetingBox()

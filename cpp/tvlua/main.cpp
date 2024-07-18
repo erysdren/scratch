@@ -7,11 +7,20 @@
 #include <sol/sol.hpp>
 
 struct tv {
-	int foo = 8080;
-
-	void setter(const char *_name, sol::object _val, sol::this_state _s)
+	bool has_initStatusLine = false;
+	sol::function initStatusLine;
+	void _initStatusLine()
 	{
-		std::cout << _name << std::endl;
+		std::cout << "_initStatusLine" << std::endl;
+	}
+
+	void setter(sol::object key, sol::object value, sol::this_state)
+	{
+		if (key.as<std::string>() == "initStatusLine")
+		{
+			this->initStatusLine = value.as<sol::protected_function>();
+			this->has_initStatusLine = true;
+		}
 	}
 };
 
@@ -28,9 +37,7 @@ int main(int argc, char **argv)
 	lua.open_libraries(sol::lib::base, sol::lib::table);
 
 	// bind usertype
-	lua.new_usertype<tv>("tv",
-		"foo", &tv::foo,
-		sol::meta_function::new_index, &tv::setter);
+	lua.new_usertype<tv>("tv", sol::meta_function::new_index, &tv::setter);
 
 	// add a static global of it
 	lua["tv"] = tv{};
@@ -45,8 +52,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	// call functions
 	tv &lua_tv = lua["tv"];
-	assert(lua_tv.foo == 8080);
+	if (lua_tv.has_initStatusLine)
+		lua_tv.initStatusLine();
+	else
+		lua_tv._initStatusLine();
 
 	return 0;
 }
