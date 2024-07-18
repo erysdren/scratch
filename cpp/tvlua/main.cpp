@@ -7,20 +7,16 @@
 #include <sol/sol.hpp>
 
 struct tv {
-	bool has_initStatusLine = false;
-	sol::function initStatusLine;
-	void _initStatusLine()
+	sol::function initStatusLine_lua;
+	void initStatusLine_native()
 	{
-		std::cout << "_initStatusLine" << std::endl;
+		std::cout << "initStatusLine_native" << std::endl;
 	}
 
 	void setter(sol::object key, sol::object value, sol::this_state)
 	{
 		if (key.as<std::string>() == "initStatusLine")
-		{
-			this->initStatusLine = value.as<sol::protected_function>();
-			this->has_initStatusLine = true;
-		}
+			this->initStatusLine_lua = value.as<sol::protected_function>();
 	}
 };
 
@@ -54,10 +50,10 @@ int main(int argc, char **argv)
 
 	// call functions
 	tv &lua_tv = lua["tv"];
-	if (lua_tv.has_initStatusLine)
-		lua_tv.initStatusLine();
+	if (lua_tv.initStatusLine_lua)
+		lua_tv.initStatusLine_lua();
 	else
-		lua_tv._initStatusLine();
+		lua_tv.initStatusLine_native();
 
 	return 0;
 }
