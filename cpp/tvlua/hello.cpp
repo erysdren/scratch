@@ -54,7 +54,7 @@ public:
 	void openScript()
 	{
 		char fileName[MAXPATH];
-		strcpy(fileName, "*.*");
+		strcpy(fileName, "*.lua");
 
 		if (executeDialog(new TFileDialog("*.lua", "Open script", "~N~ame", fdOpenButton, 100), fileName) != cmCancel)
 			this->program = this->lua.load_file(fileName);
@@ -118,7 +118,7 @@ TMenuBar *THelloApp::initMenuBar( TRect r )
     r.b.y = r.a.y+1;
 
     return new TMenuBar( r,
-      *new TSubMenu( "~H~ello", kbAltH ) +
+      *new TSubMenu( "~F~ile", kbAltF ) +
 		*new TMenuItem( "~O~pen Script...", cmOpen, kbAltO ) +
 		*new TMenuItem( "~R~un Script...", cmRun, kbAltR ) +
          newLine() +
