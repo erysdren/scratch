@@ -6,7 +6,7 @@ find_package(tvision REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LUA REQUIRED lua)
 
-add_executable(tvlua main.cpp)
+add_executable(tvlua hello.cpp)
 target_include_directories(tvlua PRIVATE ${LUA_INCLUDE_DIR})
 target_link_libraries(tvlua PRIVATE tvision::tvision ${LUA_LIBRARIES})
 

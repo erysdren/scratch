@@ -20,6 +20,7 @@
 #define Uses_TStatusDef
 #define Uses_TDeskTop
 #define Uses_TStringView
+#define Uses_MsgBox
 #include <tvision/tv.h>
 
 #include <sol/sol.hpp>
@@ -41,6 +42,22 @@ void registerTVisionTypes(sol::state &lua)
 	);
 }
 
+void registerTVisionFunctions(sol::state &lua)
+{
+	// messageBox
+	lua["mfWarning"] = mfWarning;
+	lua["mfError"] = mfError;
+	lua["mfInformation"] = mfInformation;
+	lua["mfConfirmation"] = mfConfirmation;
+	lua["mfYesButton"] = mfYesButton;
+	lua["mfNoButton"] = mfNoButton;
+	lua["mfOKButton"] = mfOKButton;
+	lua["mfCancelButton"] = mfCancelButton;
+	lua["mfYesNoCancel"] = mfYesNoCancel;
+	lua["mfOKCancel"] = mfOKCancel;
+	lua["messageBox"] = messageBox;
+}
+
 int main(int argc, char **argv)
 {
 	if (argc != 2)
@@ -53,8 +70,8 @@ int main(int argc, char **argv)
 	sol::state lua;
 	lua.open_libraries(sol::lib::base, sol::lib::table, sol::lib::string);
 
-	// register tvision types
-	registerTVisionTypes(lua);
+	// register tvision
+	registerTVisionFunctions(lua);
 
 	// run script
 	try
