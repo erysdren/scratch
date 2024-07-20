@@ -75,10 +75,18 @@ void TScriptApp::openScript()
 	strcpy(fileName, "*.lua");
 
 	if (executeDialog(new TFileDialog("*.lua", "Open script", "~N~ame", fdOpenButton, 100), fileName) != cmCancel)
+	{
 		program = lua.load_file(fileName);
-
-	if (messageBox("Run script now?", mfYesButton | mfNoButton) == cmYes)
-		runScript();
+		if (!program.valid())
+		{
+			messageBox("Script failed to load", mfOKButton);
+		}
+		else
+		{
+			if (messageBox("Run script now?", mfYesButton | mfNoButton | mfConfirmation) == cmYes)
+				runScript();
+		}
+	}
 }
 
 void TScriptApp::runScript()
