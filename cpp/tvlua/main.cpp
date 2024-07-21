@@ -25,6 +25,8 @@
 
 #include <sol/sol.hpp>
 
+#include "tvlua.h"
+
 enum {
 	cmRun = 100
 };
@@ -55,18 +57,7 @@ TScriptApp::TScriptApp() : TProgInit(&TScriptApp::initStatusLine, &TScriptApp::i
 {
 	lua.open_libraries(sol::lib::base, sol::lib::table, sol::lib::string);
 
-	// messageBox
-	lua["mfWarning"] = mfWarning;
-	lua["mfError"] = mfError;
-	lua["mfInformation"] = mfInformation;
-	lua["mfConfirmation"] = mfConfirmation;
-	lua["mfYesButton"] = mfYesButton;
-	lua["mfNoButton"] = mfNoButton;
-	lua["mfOKButton"] = mfOKButton;
-	lua["mfCancelButton"] = mfCancelButton;
-	lua["mfYesNoCancel"] = mfYesNoCancel;
-	lua["mfOKCancel"] = mfOKCancel;
-	lua["messageBox"] = L_messageBox;
+	registerTurboTypes(lua);
 }
 
 void TScriptApp::openScript()
