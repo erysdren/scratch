@@ -375,7 +375,7 @@ int main(int argc, char **argv)
 		{
 			r.x = x / FONTWIDTH;
 			r.y = y / FONTHEIGHT;
-			ui_push("window", &r, z, VGA_COLOR_BLUE, VGA_COLOR_LIGHT_RED);
+			ui_push("<title>\r\n<body>", &r, z, VGA_COLOR_BLUE, VGA_COLOR_RED);
 			z += 1;
 			ui_sort();
 			ui_mark(&r);
