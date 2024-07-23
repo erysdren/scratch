@@ -16,17 +16,17 @@ static element_t *sorted_elements[MAX_ELEMENTS];
  * utils
  */
 
-__attribute__((const)) int imin(int x, int y)
+__attribute__((pure)) int imin(int x, int y)
 {
 	return x < y ? x : y;
 }
 
-__attribute__((const)) int imax(int x, int y)
+__attribute__((pure)) int imax(int x, int y)
 {
 	return x > y ? x : y;
 }
 
-__attribute__((const)) int iclamp(int i, int min, int max)
+__attribute__((pure)) int iclamp(int i, int min, int max)
 {
 	return imax(imin(i, max), min);
 }
@@ -102,7 +102,7 @@ element_t *ui_push(const char *label, rect_t *r, int z, uint32_t bg, uint32_t fg
 		return NULL;
 
 	elements[num_elements] = (element_t){
-		label ? strdup(label) : NULL, *r, z, bg, fg
+		label ? strdup(label) : NULL, *r, z, 0, bg, fg
 	};
 
 	return &elements[num_elements++];

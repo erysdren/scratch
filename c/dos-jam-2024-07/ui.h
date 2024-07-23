@@ -15,9 +15,9 @@
  * utils
  */
 
-__attribute__((const)) int imin(int x, int y);
-__attribute__((const)) int imax(int x, int y);
-__attribute__((const)) int iclamp(int i, int min, int max);
+__attribute__((pure)) int imin(int x, int y);
+__attribute__((pure)) int imax(int x, int y);
+__attribute__((pure)) int iclamp(int i, int min, int max);
 
 /*
  * rects
@@ -59,8 +59,8 @@ typedef struct element {
 	rect_t r;
 	int z;
 	int dirty;
-	uint32_t fg;
 	uint32_t bg;
+	uint32_t fg;
 } element_t;
 
 /* mark an area of the screen as dirty */

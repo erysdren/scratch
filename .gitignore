@@ -26,6 +26,10 @@
 # cpu8086
 /c/cpu8086/cpu8086
 
+# luna
+/c/dos-jam-2024-07/lua/
+/c/dos-jam-2024-07/capture/
+
 # lev_tool
 /c/lev_tool/lev_tool
 
