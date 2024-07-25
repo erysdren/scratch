@@ -175,17 +175,17 @@ typedef struct __attribute__((packed)) gem {
 /* returns > 0 if gem is present in memory */
 int gem_available(void);
 
+/*
+ *
+ * init/quit
+ *
+ */
+
 /* initialize gem state */
 int gem_init(void);
 
 /* shutdown gem state */
 void gem_quit(void);
-
-/* read current gem state into structure */
-int gem_state_read(gem_t *g);
-
-/* write current gem state from structure */
-int gem_state_write(gem_t *g);
 
 /*
  *

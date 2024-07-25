@@ -2,12 +2,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stddef.h>
 
 #include <pc.h>
 #include <dpmi.h>
 #include <go32.h>
-#include <sys/nearptr.h>
-#include <sys/farptr.h>
 
 #include "gem.h"
 
@@ -17,8 +16,7 @@
  *
  */
 
-static int gem_state_selector = -1;
-static int gem_state_segment = -1;
+static gem_t gem;
 
 /*
  *
@@ -26,30 +24,38 @@ static int gem_state_segment = -1;
  *
  */
 
-#define PARAGRAPHS(sz) (((sz)+15)>>4)
-
 /* returns > 0 if gem is present in memory */
 int gem_available(void)
 {
-	_go32_dpmi_seginfo intr;
+	_go32_dpmi_seginfo vec;
 
-	_go32_dpmi_get_real_mode_interrupt_vector(GEM_INTERRUPT, &intr);
+	_go32_dpmi_get_real_mode_interrupt_vector(GEM_INTERRUPT, &vec);
 
-	if (intr.rm_segment == 0 && intr.rm_offset == 0)
+	if (vec.rm_segment == 0 && vec.rm_offset == 0)
 		return -1;
 
 	return 0;
 }
 
+/*
+ *
+ * init/quit
+ *
+ */
+
 /* initialize gem state */
 int gem_init(void)
 {
-	if (gem_available() == -1)
+	/* check if gem interrupt is regsitered */
+	if (gem_available() != 0)
 		return -1;
 
-	gem_state_selector = __dpmi_allocate_dos_memory(PARAGRAPHS(sizeof(gem_t)), &gem_state_segment);
-	if (gem_state_selector == -1)
-		return -1;
+	gem.block[GEM_BLOCK_CONTROL] = __tb + offsetof(gem_t, control);
+	gem.block[GEM_BLOCK_GLOBAL] = __tb + offsetof(gem_t, global);
+	gem.block[GEM_BLOCK_INT_IN] = __tb + offsetof(gem_t, int_in);
+	gem.block[GEM_BLOCK_INT_OUT] = __tb + offsetof(gem_t, int_out);
+	gem.block[GEM_BLOCK_ADDR_IN] = __tb + offsetof(gem_t, addr_in);
+	gem.block[GEM_BLOCK_ADDR_OUT] = __tb + offsetof(gem_t, addr_out);
 
 	return 0;
 }
@@ -57,27 +63,55 @@ int gem_init(void)
 /* shutdown gem state */
 void gem_quit(void)
 {
-	__dpmi_free_dos_memory(gem_state_selector);
+	memset(&gem, 0, sizeof(gem_t));
 }
 
-/* read current gem state into structure */
-int gem_state_read(gem_t *g)
+/*
+ *
+ * main gem api
+ *
+ */
+
+uint16_t _gem_do(uint16_t opcode)
 {
-	if (gem_state_selector == -1 || gem_state_segment == -1)
-		return -1;
+	__dpmi_regs regs;
 
-	movedata(gem_state_selector, 0, _my_ds(), (int)g, sizeof(gem_t));
+	gem.control[GEM_CONTROL_OPCODE] = opcode;
 
-	return 0;
+	/* put gem state into transfer buffer */
+	dosmemput(&gem, sizeof(gem_t), __tb);
+
+	/* fire interrupt */
+	regs.x.cx = 0x00C8;
+	regs.x.es = __tb >> 4;
+	regs.x.bx = __tb & 0x0f;
+	__dpmi_int(0xEF, &regs);
+
+	/* retrieve updated gem state */
+	dosmemget(__tb, sizeof(gem_t), &gem);
+
+	return gem.int_out[0];
 }
 
-/* write current gem state from structure */
-int gem_state_write(gem_t *g)
+/*
+ * application manager
+ */
+
+uint16_t gem_appl_init(void)
 {
-	if (gem_state_selector == -1 || gem_state_segment == -1)
-		return -1;
+	return _gem_do(GEM_OPCODE_APPL_INIT);
+}
 
-	movedata(_my_ds(), (int)g, gem_state_selector, 0, sizeof(gem_t));
+uint16_t gem_appl_exit(void)
+{
+	return _gem_do(GEM_OPCODE_APPL_EXIT);
+}
 
-	return 0;
+/*
+ * form manager
+ */
+
+uint16_t gem_form_alert(uint16_t btn, const char *msg)
+{
+	return _gem_do(GEM_OPCODE_APPL_EXIT);
 }

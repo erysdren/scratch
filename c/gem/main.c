@@ -23,17 +23,12 @@ static const char msg[] = "[1][Hello World from DPMI!][Ok]";
 
 int main(void)
 {
-	gem_t g;
-
 	if (gem_init() != 0)
 		die("Failed to setup GEM state.");
 
-	memset(&g, 0xFF, sizeof(gem_t));
-	gem_state_write(&g);
-	memset(&g, 0x00, sizeof(gem_t));
-	gem_state_read(&g);
+	uint16_t appid = gem_appl_init();
 
-	printf("%d\n", g.control[0]);
+	gem_appl_exit();
 
 	gem_quit();
 
