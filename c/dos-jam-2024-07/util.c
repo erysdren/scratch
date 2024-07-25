@@ -7,9 +7,24 @@
 
 #include "vid.h"
 
+__attribute__((pure)) int imin(int x, int y)
+{
+	return x < y ? x : y;
+}
+
+__attribute__((pure)) int imax(int x, int y)
+{
+	return x > y ? x : y;
+}
+
+__attribute__((pure)) int iclamp(int i, int min, int max)
+{
+	return imax(imin(i, max), min);
+}
+
 void die(const char *fmt, ...)
 {
-	static char error[80 * 25];
+	static char error[2048];
 	va_list ap;
 
 	va_start(ap, fmt);

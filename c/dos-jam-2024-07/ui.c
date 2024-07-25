@@ -7,83 +7,99 @@
 #include <assert.h>
 
 #include "ui.h"
+#include "util.h"
+#include "vid.h"
 
 static size_t num_elements = 0;
 static element_t elements[MAX_ELEMENTS];
 static element_t *sorted_elements[MAX_ELEMENTS];
 
-/*
- * utils
- */
-
-__attribute__((pure)) int imin(int x, int y)
+/* create new object with specified parent */
+object_t *object_new(object_t *parent)
 {
-	return x < y ? x : y;
+	object_t *o = calloc(1, sizeof(object_t));
+
+	/* initialize fields */
+	LIST_NEW(&o->children);
+
+	o->parent = parent;
+
+	if (parent)
+		LIST_ADDHEAD(&parent->children, o);
+
+	return o;
 }
 
-__attribute__((pure)) int imax(int x, int y)
+/* free an object and all children */
+void object_free(object_t *o)
 {
-	return x > y ? x : y;
+	while (LIST_HEAD(&o->children))
+		object_free(LIST_REMOVE(o->children));
+
+	if (o->text)
+		free(o->text);
+
+	free(o);
 }
 
-__attribute__((pure)) int iclamp(int i, int min, int max)
+/* immediately draw object and all children */
+void object_draw(object_t *o)
 {
-	return imax(imin(i, max), min);
+	uint8_t color = vid_cell_color(o->bg, o->fg);
+	uint16_t cell = vid_cell(' ', color);
+
+	/* fill color of element */
+	vid_cell_fill(o->r.x, o->r.y, o->r.w, o->r.h, cell);
+
+	/* write text */
+	if (o->text)
+	{
+		int x = o->r.x;
+		int y = o->r.y;
+		for (int i = 0; i < strlen(o->text); i++)
+		{
+			/* handle control characters */
+			if (o->text[i] == '\n')
+			{
+				y += 1;
+				continue;
+			}
+			else if (o->text[i] == '\r')
+			{
+				x = o->r.x;
+				continue;
+			}
+			else if (o->text[i] == '\t')
+			{
+				x += 4;
+				continue;
+			}
+
+			/* automatically wrap text */
+			if (x >= o->r.x + o->r.w)
+			{
+				x = o->r.x;
+				y += 1;
+			}
+
+			/* gone out of range */
+			if (y >= o->r.y + o->r.h)
+			{
+				break;
+			}
+
+			cell = vid_cell(o->text[i], color);
+			vid_cell_put(x, y, cell);
+
+			x += 1;
+		}
+	}
+
+	/* draw children */
+	object_t *child;
+	LIST_FOR(&o->children, child)
+		object_draw(child);
 }
-
-/*
- * rects
- */
-
-/* returns 1 if r0 fully contains r1 */
-int rect_contains(rect_t *r0, rect_t *r1)
-{
-	return
-		r1->x >= r0->x &&
-		r1->y >= r0->y &&
-		r1->x + r1->w <= r0->x + r0->w &&
-		r1->y + r1->h <= r0->y + r0->h;
-}
-
-/* returns 1 if r0 and r1 overlap in any way */
-int rect_intersects(rect_t *r0, rect_t *r1)
-{
-	return
-		r0->x < r1->x + r1->w &&
-		r0->x + r0->w > r1->x &&
-		r0->y < r1->y + r1->h &&
-		r0->y + r0->h > r1->y;
-}
-
-/* merge two rects by their largest extents */
-void rect_merge(rect_t *out, rect_t *r0, rect_t *r1)
-{
-	out->x = imin(r0->x, r1->x);
-	out->y = imin(r0->y, r1->y);
-
-	out->w = imax(r0->x + r0->w, r1->x + r1->w) - out->x;
-	out->h = imax(r0->y + r0->h, r1->y + r1->h) - out->y;
-}
-
-/* convert a rectangle to two points */
-void rect_to_points(rect_t *r, point_t *p0, point_t *p1)
-{
-	*p0 = (point_t){r->x, r->y};
-	*p1 = (point_t){r->x + r->w, r->y + r->h};
-}
-
-/* convert two points to a rect */
-void points_to_rect(rect_t *r, point_t *p0, point_t *p1)
-{
-	r->x = imin(p0->x, p1->x);
-	r->y = imin(p0->y, p1->y);
-	r->w = imax(p0->x, p1->x) - r->x;
-	r->h = imax(p0->y, p1->y) - r->y;
-}
-
-/*
- * ui
- */
 
 void ui_mark(rect_t *r)
 {
@@ -96,13 +112,13 @@ void ui_mark(rect_t *r)
 	}
 }
 
-element_t *ui_push(const char *label, rect_t *r, int z, uint32_t bg, uint32_t fg)
+element_t *ui_push(const char *text, rect_t *r, int z, uint8_t bg, uint8_t fg)
 {
 	if (num_elements >= MAX_ELEMENTS)
 		return NULL;
 
 	elements[num_elements] = (element_t){
-		label ? strdup(label) : NULL, *r, z, 0, bg, fg
+		text ? strdup(text) : NULL, *r, z, 0, bg, fg
 	};
 
 	return &elements[num_elements++];
@@ -125,8 +141,8 @@ void ui_reset(void)
 {
 	for (int i = 0; i < num_elements; i++)
 	{
-		if (elements[i].label)
-			free(elements[i].label);
+		if (elements[i].text)
+			free(elements[i].text);
 	}
 
 	num_elements = 0;
@@ -146,3 +162,101 @@ element_t *ui_next(void)
 
 	return sorted_elements[n++];
 }
+
+element_t *ui_probe(int x, int y)
+{
+	rect_t probe = {x, y, 1, 1};
+
+	for (int i = num_elements; i >= 0; --i)
+	{
+		if (rect_intersects(&sorted_elements[i]->r, &probe))
+		{
+			return sorted_elements[i];
+		}
+	}
+
+	return NULL;
+}
+
+#if 0
+
+/* shrink drawable size to fit text contents */
+void ui_drawable_shrinkwrap(ui_drawable_t *d)
+{
+	rect_t new = {d->r.x, d->r.y, 0, 1};
+
+	for (int i = 0; i < strlen(d->text); i++)
+	{
+		if (d->text[i] == '\n')
+		{
+			new.h += 1;
+		}
+		else if (d->text[i] == '\t')
+		{
+			new.w += 4;
+		}
+		else
+		{
+			new.w += 1;
+		}
+	}
+
+	d->r = new;
+}
+
+/* immediately draw drawable */
+void ui_drawable_draw(ui_drawable_t *d)
+{
+	int x, y;
+	uint8_t color = vid_cell_color(d->bg, d->fg);
+	uint16_t cell = vid_cell(' ', color);
+
+	/* fill color of element */
+	vid_cell_fill(d->r.x, d->r.y, d->r.w, d->r.h, cell);
+
+	/* write text */
+	if (d->text)
+	{
+		x = d->r.x;
+		y = d->r.y;
+		for (int i = 0; i < strlen(d->text); i++)
+		{
+			/* handle control characters */
+			if (d->text[i] == '\n')
+			{
+				y += 1;
+				continue;
+			}
+			else if (d->text[i] == '\r')
+			{
+				x = d->r.x;
+				continue;
+			}
+			else if (d->text[i] == '\t')
+			{
+				x += 4;
+				continue;
+			}
+
+			/* automatically wrap text */
+			if (x >= d->r.x + d->r.w)
+			{
+				x = d->r.x;
+				y += 1;
+			}
+
+			/* gone out of range */
+			if (y >= d->r.y + d->r.h)
+			{
+				break;
+			}
+
+			cell = vid_cell(d->text[i], color);
+			vid_cell_put(x, y, cell);
+
+			x += 1;
+		}
+	}
+}
+
+#endif

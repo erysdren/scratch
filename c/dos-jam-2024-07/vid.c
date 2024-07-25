@@ -74,7 +74,7 @@ void vid_framebuffer_clear(uint8_t bg, uint8_t fg)
 {
 	vid_color_bg = bg;
 	vid_color_fg = fg;
-	memset16(vid_framebuffer_get(), vid_cell(' ', vid_cell_color(bg, fg)), VID_BUFFER_SIZE);
+	memset16(vid_framebuffer_get(), vid_cell(' ', vid_cell_color(bg, fg)), VID_WIDTH * VID_HEIGHT);
 }
 
 /* set video mode */
@@ -147,11 +147,21 @@ __attribute__((pure)) uint16_t vid_cell(unsigned char c, uint8_t color)
 	return (uint16_t)c | (uint16_t)color << 8;
 }
 
-/* put character at x,y */
-void vid_putc(int x, int y, unsigned char c)
+/* put cell at x,y */
+void vid_cell_put(int x, int y, uint16_t cell)
 {
-	uint8_t *ofs = vid_framebuffer_get() + y * VID_PITCH + x * VID_BYTES_PER_PIXEL;
-	*ofs = vid_cell(c, vid_cell_color(vid_color_bg, vid_color_fg));
+	uint16_t *ofs = (uint16_t *)(vid_framebuffer_get() + y * VID_PITCH + x * VID_BYTES_PER_PIXEL);
+	*ofs = cell;
+}
+
+/* fill cells at x,y with width and height */
+void vid_cell_fill(int x, int y, int w, int h, uint16_t cell)
+{
+	for (int yy = y; yy < y + h; yy++)
+	{
+		uint8_t *ofs = vid_framebuffer_get() + yy * VID_PITCH + x * VID_BYTES_PER_PIXEL;
+		memset16(ofs, cell, w);
+	}
 }
 
 /* set cursor position */

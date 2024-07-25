@@ -4,70 +4,60 @@
 
 #include <stdint.h>
 
-/* NOTE: all coordinate and size values are in character cells, NOT pixels */
-/* NOTE: coordinates grow from the top left of the screen, starting at 0,0 */
+#include "rect.h"
+#include "list.h"
 
-#define MAX_ELEMENTS (256)
-#define WIDTH (80)
-#define HEIGHT (25)
-
-/*
- * utils
- */
-
-__attribute__((pure)) int imin(int x, int y);
-__attribute__((pure)) int imax(int x, int y);
-__attribute__((pure)) int iclamp(int i, int min, int max);
-
-/*
- * rects
- */
-
-typedef struct point {
-	int x, y;
-} point_t;
-
-#define print_point(p) printf(#p " x=%04d y=%04d\n", (p)->x, (p)->y)
-
-typedef struct rect {
-	int x, y, w, h;
-} rect_t;
-
-#define print_rect(r) printf(#r " x=%04d y=%04d w=%04d h=%04d\n", (r)->x, (r)->y, (r)->w, (r)->h)
-
-/* returns 1 if r0 fully contains r1 */
-int rect_contains(rect_t *r0, rect_t *r1);
-
-/* returns 1 if r0 and r1 intersect in any way */
-int rect_intersects(rect_t *r0, rect_t *r1);
-
-/* merge r0 and r1 into out by their largest extents */
-void rect_merge(rect_t *out, rect_t *r0, rect_t *r1);
-
-/* convert a rectangle to two points */
-void rect_to_points(rect_t *r, point_t *p0, point_t *p1);
-
-/* convert two points to a rect */
-void points_to_rect(rect_t *r, point_t *p0, point_t *p1);
+#define MAX_ELEMENTS (2048)
+#define MAX_FRAMES (1024)
 
 /*
  * ui
  */
 
 typedef struct element {
-	char *label;
+	char *text;
 	rect_t r;
 	int z;
 	int dirty;
-	uint32_t bg;
-	uint32_t fg;
+	uint8_t bg;
+	uint8_t fg;
 } element_t;
+
+typedef struct drawable {
+	char *text;
+	rect_t r;
+	uint8_t bg;
+	uint8_t fg;
+} drawable_t;
+
+typedef struct object {
+	/* object_t can be used as list_node_t */
+	struct object *next;
+	struct object **prev;
+	/* object_t.children can be used as list_t */
+	struct object *children;
+	struct object *parent;
+	/* drawable fields */
+	char *text;
+	rect_t r;
+	uint8_t bg;
+	uint8_t fg;
+} object_t;
+
+/* create new object with specified parent and type */
+object_t *object_new(object_t *parent);
+
+/* free an object and all children */
+void object_free(object_t *object);
+
+/* immediately draw object and all children */
+void object_draw(object_t *o);
 
 /* mark an area of the screen as dirty */
 void ui_mark(rect_t *r);
 
 /* push a new element to the stack */
-element_t *ui_push(const char *label, rect_t *r, int z, uint32_t bg, uint32_t fg);
+element_t *ui_push(const char *text, rect_t *r, int z, uint8_t bg, uint8_t fg);
 
 /* sort all elements in the stack by their z value */
 void ui_sort(void);
@@ -77,5 +67,18 @@ void ui_reset(void);
 
 /* get the next ui element in the stack */
 element_t *ui_next(void);
+
+/* probe at x,y for element */
+element_t *ui_probe(int x, int y);
+
+#if 0
+
+/* shrink drawable size to fit text contents */
+void ui_drawable_shrinkwrap(ui_drawable_t *e);
+
+/* immediately draw drawable */
+void ui_drawable_draw(ui_drawable_t *e);
+
+#endif
 
 #endif /* _UI_H_ */
