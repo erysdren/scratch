@@ -4,114 +4,40 @@
 #include <string.h>
 #include <stddef.h>
 
-#include <pc.h>
-#include <dpmi.h>
-#include <go32.h>
+#include <i86.h>
+#include <dos.h>
 
 #include "gem.h"
 
-/*
- *
- * gem state
- *
- */
-
-static gem_t gem;
-
-/*
- *
- * utiltiies
- *
- */
-
-/* returns > 0 if gem is present in memory */
+/* returns 0 if gem is available, or -1 on error */
 int gem_available(void)
 {
-	_go32_dpmi_seginfo vec;
-
-	_go32_dpmi_get_real_mode_interrupt_vector(GEM_INTERRUPT, &vec);
-
-	if (vec.rm_segment == 0 && vec.rm_offset == 0)
-		return -1;
-
-	return 0;
+	return _dos_getvect(GEM_INTERRUPT) ? 0 : -1;
 }
 
-/*
- *
- * init/quit
- *
- */
-
-/* initialize gem state */
-int gem_init(void)
+/* run gem command */
+unsigned short gem(unsigned short opcode, gem_t *g)
 {
-	/* check if gem interrupt is regsitered */
-	if (gem_available() != 0)
-		return -1;
+	union REGS r;
+	struct SREGS s;
+	void __far *gemblk[GEM_BLOCK_SIZE];
 
-	gem.block[GEM_BLOCK_CONTROL] = __tb + offsetof(gem_t, control);
-	gem.block[GEM_BLOCK_GLOBAL] = __tb + offsetof(gem_t, global);
-	gem.block[GEM_BLOCK_INT_IN] = __tb + offsetof(gem_t, int_in);
-	gem.block[GEM_BLOCK_INT_OUT] = __tb + offsetof(gem_t, int_out);
-	gem.block[GEM_BLOCK_ADDR_IN] = __tb + offsetof(gem_t, addr_in);
-	gem.block[GEM_BLOCK_ADDR_OUT] = __tb + offsetof(gem_t, addr_out);
+	gemblk[GEM_BLOCK_CONTROL] = &g->control;
+	gemblk[GEM_BLOCK_GLOBAL] = &g->global;
+	gemblk[GEM_BLOCK_INT_IN] = &g->int_in;
+	gemblk[GEM_BLOCK_INT_OUT] = &g->int_out;
+	gemblk[GEM_BLOCK_ADDR_IN] = &g->addr_in;
+	gemblk[GEM_BLOCK_ADDR_OUT] = &g->addr_out;
 
-	return 0;
-}
+	g->control[GEM_CONTROL_OPCODE] = opcode;
 
-/* shutdown gem state */
-void gem_quit(void)
-{
-	memset(&gem, 0, sizeof(gem_t));
-}
+	segread(&s);
 
-/*
- *
- * main gem api
- *
- */
+	r.w.cx = 0x00C8;
+	s.es = FP_SEG(&gemblk);
+	r.w.bx = FP_OFF(&gemblk);
 
-uint16_t _gem_do(uint16_t opcode)
-{
-	__dpmi_regs regs;
+	int86x(0xEF, &r, &r, &s);
 
-	gem.control[GEM_CONTROL_OPCODE] = opcode;
-
-	/* put gem state into transfer buffer */
-	dosmemput(&gem, sizeof(gem_t), __tb);
-
-	/* fire interrupt */
-	regs.x.cx = 0x00C8;
-	regs.x.es = __tb >> 4;
-	regs.x.bx = __tb & 0x0f;
-	__dpmi_int(0xEF, &regs);
-
-	/* retrieve updated gem state */
-	dosmemget(__tb, sizeof(gem_t), &gem);
-
-	return gem.int_out[0];
-}
-
-/*
- * application manager
- */
-
-uint16_t gem_appl_init(void)
-{
-	return _gem_do(GEM_OPCODE_APPL_INIT);
-}
-
-uint16_t gem_appl_exit(void)
-{
-	return _gem_do(GEM_OPCODE_APPL_EXIT);
-}
-
-/*
- * form manager
- */
-
-uint16_t gem_form_alert(uint16_t btn, const char *msg)
-{
-	return _gem_do(GEM_OPCODE_APPL_EXIT);
+	return g->int_out[0];
 }

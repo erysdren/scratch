@@ -1,20 +1,20 @@
 
-EXEC ?= hello.exe
-RM ?= rm -f
-CC = i586-pc-msdosdjgpp-gcc
+TARGET=scripter.app
 
-override CFLAGS += -Wall -Wextra -pedantic
-override LDFLAGS +=
+CC=wcc
+LD=wlink
+CFLAGS=-ms
+SYSTEM=dos
 
-OBJECTS = main.o gem.o
+OBJECTS=main.o gem.o
 
-all: clean $(EXEC)
+.c.o:
+	$(CC) $(CFLAGS) $*.c
 
-clean:
-	$(RM) $(OBJECTS) $(EXEC)
+$(TARGET): $(OBJECTS) wlink.rsp
+	$(LD) @wlink.rsp
 
-$(EXEC): $(OBJECTS)
-	$(CC) -o $@ $^ $(LDFLAGS)
-
-%.o: %.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+wlink.rsp: makefile
+	echo name $(TARGET) >wlink.rsp
+	echo system $(SYSTEM) >>wlink.rsp
+	for %i in ($(OBJECTS)) do echo file %i >>wlink.rsp

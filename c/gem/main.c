@@ -19,18 +19,25 @@ static void die(const char *fmt, ...)
 	exit(1);
 }
 
-static const char msg[] = "[1][Hello World from DPMI!][Ok]";
+const char alert[] = "[1][Hello World!][ Ok ]";
 
 int main(void)
 {
-	if (gem_init() != 0)
-		die("Failed to setup GEM state.");
+	gem_t g;
+	unsigned short appid;
 
-	uint16_t appid = gem_appl_init();
+	if (gem_available() != 0)
+		die("Please load GEM to run this application.");
 
-	gem_appl_exit();
+	memset(&g, 0, sizeof(gem_t));
 
-	gem_quit();
+	gem(GEM_OPCODE_APPL_INIT, &g);
+
+	g.int_in[0] = 1;
+	g.addr_in[0] = alert;
+	gem(GEM_OPCODE_FORM_ALERT, &g);
+
+	gem(GEM_OPCODE_APPL_EXIT, &g);
 
 	return 0;
 }

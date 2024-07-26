@@ -4,10 +4,6 @@
 
 #include <stdint.h>
 
-#include <pc.h>
-#include <dpmi.h>
-#include <go32.h>
-
 /* software interrupt to communicate with gem */
 #define GEM_INTERRUPT 0xEF
 
@@ -152,58 +148,38 @@ enum {
 
 /*
  *
- * gem state
+ * gem types
  *
  */
 
-typedef struct __attribute__((packed)) gem {
-	uint32_t block[GEM_BLOCK_SIZE];
-	uint16_t control[GEM_CONTROL_SIZE];
-	uint16_t global[GEM_GLOBAL_SIZE];
-	uint16_t int_in[GEM_INT_IN_SIZE];
-	uint16_t int_out[GEM_INT_OUT_SIZE];
-	uint32_t addr_in[GEM_ADDR_IN_SIZE];
-	uint32_t addr_out[GEM_ADDR_OUT_SIZE];
+typedef struct gemblk {
+	void __far *control;
+	void __far *global;
+	void __far *int_in;
+	void __far *int_out;
+	void __far *addr_in;
+	void __far *addr_out;
+} gemblk_t;
+
+typedef struct gem {
+	unsigned short control[GEM_CONTROL_SIZE];
+	unsigned short global[GEM_GLOBAL_SIZE];
+	unsigned short int_in[GEM_INT_IN_SIZE];
+	unsigned short int_out[GEM_INT_OUT_SIZE];
+	void __far *addr_in[GEM_ADDR_IN_SIZE];
+	void __far *addr_out[GEM_ADDR_OUT_SIZE];
 } gem_t;
 
 /*
  *
- * utiltiies
+ * gem functions
  *
  */
 
-/* returns > 0 if gem is present in memory */
+/* returns 0 if gem is available, or -1 on error */
 int gem_available(void);
 
-/*
- *
- * init/quit
- *
- */
-
-/* initialize gem state */
-int gem_init(void);
-
-/* shutdown gem state */
-void gem_quit(void);
-
-/*
- *
- * main gem api
- *
- */
-
-/*
- * application manager
- */
-
-uint16_t gem_appl_init(void);
-uint16_t gem_appl_exit(void);
-
-/*
- * form manager
- */
-
-uint16_t gem_form_alert(uint16_t btn, const char *msg);
+/* run gem command */
+unsigned short gem(unsigned short opcode, gem_t *gem);
 
 #endif /* _GEM_H_ */
