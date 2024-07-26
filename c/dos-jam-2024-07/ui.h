@@ -37,9 +37,14 @@ typedef struct object {
 	/* object_t.children can be used as list_t */
 	struct object *children;
 	struct object *parent;
-	/* drawable fields */
+	/* text buffer, wrapped to size. control codes accepted. */
 	char *text;
+	/* x&y are relative to parent.
+	 * if w or h == 0, inherit from parent.
+	 * if w or h < 0, subtract from parent size.
+	 */
 	rect_t r;
+	/* valid color range is 0-15, or < 0 to inherit from parent */
 	int bg;
 	int fg;
 } object_t;

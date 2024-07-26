@@ -17,6 +17,8 @@
 #include "util.h"
 #include "vid.h"
 
+#include "font8x8.xbm"
+
 static uint8_t vid_mode_old = 0x02;
 static uint8_t vid_color_bg = 0x00;
 static uint8_t vid_color_fg = 0x0F;
@@ -24,7 +26,7 @@ static uint8_t vid_color_fg = 0x0F;
 /* start video system */
 void vid_init(void)
 {
-	union REGS r;
+	__dpmi_regs r;
 
 	/* save current video mode */
 	vid_mode_old = vid_mode_get();
@@ -34,13 +36,19 @@ void vid_init(void)
 		die("Failed to enable near pointers");
 
 	/* set mode to 0x03 */
-	r.w.ax = 0x0003;
-	int86(0x10, &r, &r);
+	r.x.ax = 0x0003;
+	__dpmi_int(0x10, &r);
 
-	/* change font to 8x8 with a reset */
-	r.w.ax = 0x1112;
-	r.h.bl = 0x00;
-	int86(0x10, &r, &r);
+	/* change font to ada's 8x8 font */
+	dosmemput(font8x8_bits, sizeof(font8x8_bits), __tb);
+	r.x.ax = 0x1110;
+	r.x.es = __tb >> 4;
+	r.x.bp = __tb & 0x0f;
+	r.x.cx = 256;
+	r.x.dx = 0;
+	r.h.bl = 0;
+	r.h.bh = 8;
+	__dpmi_int(0x10, &r);
 
 	/* disable text blinking */
 	inportb(0x03da);
@@ -49,8 +57,8 @@ void vid_init(void)
 
 	/* set text mode cursor to block shape */
 	r.h.ah = 0x01;
-	r.w.cx = 0x0007;
-	int86(0x10, &r, &r);
+	r.x.cx = 0x0007;
+	__dpmi_int(0x10, &r);
 }
 
 /* shutdown video system */

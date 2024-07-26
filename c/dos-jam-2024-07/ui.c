@@ -54,6 +54,10 @@ void object_draw(object_t *o)
 	{
 		if (bg < 0) bg = parent->bg;
 		if (fg < 0) fg = parent->fg;
+		if (r.w == 0) r.w = parent->r.w;
+		else if (r.w < 0) r.w += parent->r.w;
+		if (r.h == 0) r.h = parent->r.h;
+		else if (r.h < 0) r.h += parent->r.h;
 		r.x += parent->r.x;
 		r.y += parent->r.y;
 		parent = parent->parent;
@@ -61,6 +65,9 @@ void object_draw(object_t *o)
 
 	/* no color was specified */
 	if (bg < 0 || fg < 0)
+		return;
+	/* no valid size was defined */
+	if (r.w <= 0 || r.h <= 0)
 		return;
 
 	uint8_t color = vid_cell_color(bg, fg);
