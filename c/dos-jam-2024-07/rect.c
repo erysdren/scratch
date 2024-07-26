@@ -12,20 +12,20 @@
 int rect_contains(rect_t *r0, rect_t *r1)
 {
 	return
-	r1->x >= r0->x &&
-	r1->y >= r0->y &&
-	r1->x + r1->w <= r0->x + r0->w &&
-	r1->y + r1->h <= r0->y + r0->h;
+		r1->x >= r0->x &&
+		r1->y >= r0->y &&
+		r1->x + r1->w <= r0->x + r0->w &&
+		r1->y + r1->h <= r0->y + r0->h;
 }
 
 /* returns 1 if r0 and r1 overlap in any way */
 int rect_intersects(rect_t *r0, rect_t *r1)
 {
 	return
-	r0->x < r1->x + r1->w &&
-	r0->x + r0->w > r1->x &&
-	r0->y < r1->y + r1->h &&
-	r0->y + r0->h > r1->y;
+		r0->x < r1->x + r1->w &&
+		r0->x + r0->w > r1->x &&
+		r0->y < r1->y + r1->h &&
+		r0->y + r0->h > r1->y;
 }
 
 /* merge two rects by their largest extents */

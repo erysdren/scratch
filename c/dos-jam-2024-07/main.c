@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 	object_t *root = object_new(NULL);
 	root->r = RECT(0, 0, VID_WIDTH, VID_HEIGHT);
 	root->bg = PAL_LIGHT_BLUE;
-	root->fg = PAL_LIGHT_GREY;
+	root->fg = PAL_WHITE;
 
 	/* window object */
 	object_t *window = object_new(root);
@@ -41,9 +41,9 @@ int main(int argc, char **argv)
 	/* text object */
 	object_t *text = object_new(window);
 	text->text = strdup("hello world!");
-	text->r = RECT(window->r.x + 1, window->r.y + 1, window->r.w - 2, window->r.h - 2);
-	text->bg = window->bg;
-	text->fg = window->fg;
+	text->r = RECT(1, 1, window->r.w - 2, window->r.h - 2);
+	text->bg = -1;
+	text->fg = -1;
 
 	/* draw them */
 	object_draw(root);

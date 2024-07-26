@@ -45,17 +45,35 @@ void object_free(object_t *o)
 /* immediately draw object and all children */
 void object_draw(object_t *o)
 {
-	uint8_t color = vid_cell_color(o->bg, o->fg);
+	/* translate origin from parents */
+	int bg = o->bg;
+	int fg = o->fg;
+	rect_t r = o->r;
+	object_t *parent = o->parent;
+	while (parent != NULL)
+	{
+		if (bg < 0) bg = parent->bg;
+		if (fg < 0) fg = parent->fg;
+		r.x += parent->r.x;
+		r.y += parent->r.y;
+		parent = parent->parent;
+	}
+
+	/* no color was specified */
+	if (bg < 0 || fg < 0)
+		return;
+
+	uint8_t color = vid_cell_color(bg, fg);
 	uint16_t cell = vid_cell(' ', color);
 
 	/* fill color of element */
-	vid_cell_fill(o->r.x, o->r.y, o->r.w, o->r.h, cell);
+	vid_cell_fill(r.x, r.y, r.w, r.h, cell);
 
 	/* write text */
 	if (o->text)
 	{
-		int x = o->r.x;
-		int y = o->r.y;
+		int x = r.x;
+		int y = r.y;
 		for (int i = 0; i < strlen(o->text); i++)
 		{
 			/* handle control characters */
@@ -66,7 +84,7 @@ void object_draw(object_t *o)
 			}
 			else if (o->text[i] == '\r')
 			{
-				x = o->r.x;
+				x = r.x;
 				continue;
 			}
 			else if (o->text[i] == '\t')
@@ -76,14 +94,14 @@ void object_draw(object_t *o)
 			}
 
 			/* automatically wrap text */
-			if (x >= o->r.x + o->r.w)
+			if (x >= r.x + r.w)
 			{
-				x = o->r.x;
+				x = r.x;
 				y += 1;
 			}
 
 			/* gone out of range */
-			if (y >= o->r.y + o->r.h)
+			if (y >= r.y + r.h)
 			{
 				break;
 			}

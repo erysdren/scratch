@@ -40,8 +40,8 @@ typedef struct object {
 	/* drawable fields */
 	char *text;
 	rect_t r;
-	uint8_t bg;
-	uint8_t fg;
+	int bg;
+	int fg;
 } object_t;
 
 /* create new object with specified parent and type */
