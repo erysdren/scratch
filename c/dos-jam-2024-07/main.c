@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 	mouse_hide();
 
 	/* create lua state */
-	L = luaL_newstate();
+	L = lua_newstate(l_memalloc, NULL);
 
 	/* clear screen */
 	vid_framebuffer_clear(PAL_LIGHT_BLUE, PAL_WHITE);

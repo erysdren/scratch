@@ -9,11 +9,12 @@
 #include "ui.h"
 #include "util.h"
 #include "vid.h"
+#include "mem.h"
 
 /* create new object with specified parent */
 object_t *object_new(object_t *parent)
 {
-	object_t *o = calloc(1, sizeof(object_t));
+	object_t *o = memalloc(sizeof(object_t));
 
 	/* initialize fields */
 	LIST_NEW(&o->children);
