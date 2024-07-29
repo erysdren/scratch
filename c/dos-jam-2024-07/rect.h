@@ -2,14 +2,18 @@
 #ifndef _RECT_H_
 #define _RECT_H_
 
+#include <lua.h>
+
 typedef struct point {
-	int x, y;
+	lua_Integer x, y;
 } point_t;
 
 #define print_point(p) printf(#p " x=%04d y=%04d\n", (p)->x, (p)->y)
 
+#define POINT(x, y) (point_t){x, y}
+
 typedef struct rect {
-	int x, y, w, h;
+	lua_Integer x, y, w, h;
 } rect_t;
 
 #define print_rect(r) printf(#r " x=%04d y=%04d w=%04d h=%04d\n", (r)->x, (r)->y, (r)->w, (r)->h)
