@@ -155,6 +155,19 @@ __attribute__((pure)) uint16_t vid_cell(unsigned char c, uint8_t color)
 	return (uint16_t)c | (uint16_t)color << 8;
 }
 
+/* get current text attributes as a packed cell */
+uint8_t vid_get_attributes(void)
+{
+	return vid_cell_color(vid_color_bg, vid_color_fg);
+}
+
+/* set current text attributes */
+void vid_set_attributes(uint8_t bg, uint8_t fg)
+{
+	vid_color_bg = bg;
+	vid_color_fg = fg;
+}
+
 /* put cell at x,y */
 void vid_cell_put(int x, int y, uint16_t cell)
 {

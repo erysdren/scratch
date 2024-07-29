@@ -9,12 +9,55 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#include "luna.h"
 #include "mem.h"
 #include "mouse.h"
 #include "palette.h"
 #include "ui.h"
 #include "util.h"
 #include "vid.h"
+
+enum {
+	ELEMENT_TEXT
+};
+
+typedef struct element {
+	int type;
+	union {
+		struct { char *text; uint8_t color; } text;
+	};
+} element_t;
+
+typedef struct window {
+	element_t **elements;
+	size_t num_elements;
+	char *title;
+	rect_t frame;
+} window_t;
+
+window_t *window_new(const char *title)
+{
+	window_t *window = calloc(1, sizeof(window_t));
+
+	window->title = strdup(title);
+
+	return window;
+}
+
+void element_free(element_t *element)
+{
+	if (element->type == ELEMENT_TEXT)
+		free(element->text.text);
+	free(element);
+}
+
+void window_free(window_t *window)
+{
+	for (size_t i = 0; i < window->num_elements; i++)
+		element_free(window->elements[i]);
+	free(window->title);
+	free(window);
+}
 
 int main(int argc, char **argv)
 {
@@ -29,10 +72,18 @@ int main(int argc, char **argv)
 	mouse_hide();
 
 	/* create lua state */
-	L = lua_newstate(l_memalloc, NULL);
+	L = luaL_newstate();
+	luaL_openlibs(L);
+	luna_openlibs(L);
 
 	/* clear screen */
 	vid_framebuffer_clear(PAL_LIGHT_BLUE, PAL_WHITE);
+
+	/* create clock appl */
+	int clock = appl_new(L, "applets/clock.lua");
+	if (!clock)
+		die("Failed to run \"applets/clock.lua\"");
+	appl_call(L, clock, "spawn");
 
 	/* main loop */
 	while (1)
@@ -51,8 +102,16 @@ int main(int argc, char **argv)
 			break;
 		}
 
+		appl_call(L, clock, "think");
+
 		vid_vsync_wait();
+
+		appl_draw(L, clock);
 	}
+
+	/* delete clock appl */
+	appl_call(L, clock, "despawn");
+	appl_delete(L, clock);
 
 	/* shutdown and clean up */
 	lua_close(L);

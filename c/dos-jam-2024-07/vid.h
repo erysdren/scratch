@@ -47,6 +47,12 @@ __attribute__((pure)) uint8_t vid_cell_color(uint8_t bg, uint8_t fg);
 /* create packed text cell */
 __attribute__((pure)) uint16_t vid_cell(unsigned char c, uint8_t color);
 
+/* get current text attributes as a packed cell */
+uint8_t vid_get_attributes(void);
+
+/* set current text attributes */
+void vid_set_attributes(uint8_t bg, uint8_t fg);
+
 /* put cell at x,y */
 void vid_cell_put(int x, int y, uint16_t cell);
 
