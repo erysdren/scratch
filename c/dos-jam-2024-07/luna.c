@@ -15,9 +15,9 @@
 static int luna_drawstring(lua_State *L)
 {
 	const char *s = luaL_checkstring(L, 1);
-	lua_Integer x = luaL_checkinteger(L, 2);
-	lua_Integer y = luaL_checkinteger(L, 3);
-	uint8_t attr = vid_get_attributes();
+	lua_Integer c = luaL_checkinteger(L, 2);
+	lua_Integer x = luaL_checkinteger(L, 3);
+	lua_Integer y = luaL_checkinteger(L, 4);
 	char *ptr = (char *)s;
 	lua_Integer sx = x;
 
@@ -47,7 +47,8 @@ static int luna_drawstring(lua_State *L)
 		if (x >= VID_WIDTH || y >= VID_HEIGHT)
 			break;
 
-		vid_cell_put(x, y, vid_cell(*ptr, attr));
+		vid_put_code(x, y, *ptr);
+		vid_put_fg(x, y, c);
 
 		x += 1;
 		ptr++;
@@ -56,7 +57,21 @@ static int luna_drawstring(lua_State *L)
 	return 0;
 }
 
+static int luna_drawfill(lua_State *L)
+{
+	lua_Integer c = luaL_checkinteger(L, 1);
+	lua_Integer x = luaL_checkinteger(L, 2);
+	lua_Integer y = luaL_checkinteger(L, 3);
+	lua_Integer w = luaL_checkinteger(L, 4);
+	lua_Integer h = luaL_checkinteger(L, 5);
+
+	vid_fill_bg(x, y, w, h, c);
+
+	return 0;
+}
+
 static luaL_Reg luna_methods[] = {
+	{"drawfill", luna_drawfill},
 	{"drawstring", luna_drawstring},
 	{NULL, NULL}
 };

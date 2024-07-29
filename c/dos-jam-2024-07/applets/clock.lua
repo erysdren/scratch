@@ -20,5 +20,6 @@ end
 -- draw(): called whenever a redraw is required
 function appl:draw(w, h)
 	-- draw time string in the bottom right corner of the desktop
-	luna.drawstring(self.time, w - #self.time, h - 1)
+	luna.drawfill(0, w - #self.time, h - 1, #self.time, 1)
+	luna.drawstring(self.time, 10, w - #self.time, h - 1)
 end

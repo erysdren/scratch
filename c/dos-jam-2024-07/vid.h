@@ -59,6 +59,13 @@ void vid_cell_put(int x, int y, uint16_t cell);
 /* fill cells at x,y with width and height */
 void vid_cell_fill(int x, int y, int w, int h, uint16_t cell);
 
+void vid_put_bg(int x, int y, uint8_t c);
+void vid_put_fg(int x, int y, uint8_t c);
+void vid_put_code(int x, int y, unsigned char c);
+void vid_fill_bg(int x, int y, int w, int h, uint8_t c);
+void vid_fill_fg(int x, int y, int w, int h, uint8_t c);
+void vid_fill_code(int x, int y, int w, int h, unsigned char c);
+
 /* set cursor position */
 void vid_cursor_set_position(uint8_t x, uint8_t y);
 

@@ -20,8 +20,6 @@
 #include "font8x8.xbm"
 
 static uint8_t vid_mode_old = 0x02;
-static uint8_t vid_color_bg = 0x00;
-static uint8_t vid_color_fg = 0x0F;
 
 /* start video system */
 void vid_init(void)
@@ -80,8 +78,6 @@ uint8_t *vid_framebuffer_get(void)
 /* clear video framebuffer */
 void vid_framebuffer_clear(uint8_t bg, uint8_t fg)
 {
-	vid_color_bg = bg;
-	vid_color_fg = fg;
 	memset16(vid_framebuffer_get(), vid_cell(' ', vid_cell_color(bg, fg)), VID_WIDTH * VID_HEIGHT);
 }
 
@@ -155,19 +151,6 @@ __attribute__((pure)) uint16_t vid_cell(unsigned char c, uint8_t color)
 	return (uint16_t)c | (uint16_t)color << 8;
 }
 
-/* get current text attributes as a packed cell */
-uint8_t vid_get_attributes(void)
-{
-	return vid_cell_color(vid_color_bg, vid_color_fg);
-}
-
-/* set current text attributes */
-void vid_set_attributes(uint8_t bg, uint8_t fg)
-{
-	vid_color_bg = bg;
-	vid_color_fg = fg;
-}
-
 /* put cell at x,y */
 void vid_cell_put(int x, int y, uint16_t cell)
 {
@@ -182,6 +165,61 @@ void vid_cell_fill(int x, int y, int w, int h, uint16_t cell)
 	{
 		uint8_t *ofs = vid_framebuffer_get() + yy * VID_PITCH + x * VID_BYTES_PER_PIXEL;
 		memset16(ofs, cell, w);
+	}
+}
+
+#define ADD_FG(cell, color) (((cell) & ~(0x0F << 8)) | (((color) & 0x0F) << 8))
+#define ADD_BG(cell, color) (((cell) & ~(0x0F << 12)) | (((color) & 0x0F) << 12))
+#define ADD_CODE(cell, code) (((cell) & ~(0xFF)) | (((code) & 0xFF)))
+
+void vid_put_bg(int x, int y, uint8_t c)
+{
+	uint16_t *ofs = (uint16_t *)(vid_framebuffer_get() + y * VID_PITCH + x * VID_BYTES_PER_PIXEL);
+	*ofs = ADD_BG(*ofs, c);
+}
+
+void vid_put_fg(int x, int y, uint8_t c)
+{
+	uint16_t *ofs = (uint16_t *)(vid_framebuffer_get() + y * VID_PITCH + x * VID_BYTES_PER_PIXEL);
+	*ofs = ADD_FG(*ofs, c);
+}
+
+void vid_put_code(int x, int y, unsigned char c)
+{
+	uint16_t *ofs = (uint16_t *)(vid_framebuffer_get() + y * VID_PITCH + x * VID_BYTES_PER_PIXEL);
+	*ofs = ADD_CODE(*ofs, c);
+}
+
+void vid_fill_bg(int x, int y, int w, int h, uint8_t c)
+{
+	for (int yy = y; yy < y + h; yy++)
+	{
+		for (int xx = x; xx < x + w; xx++)
+		{
+			vid_put_bg(xx, yy, c);
+		}
+	}
+}
+
+void vid_fill_fg(int x, int y, int w, int h, uint8_t c)
+{
+	for (int yy = y; yy < y + h; yy++)
+	{
+		for (int xx = x; xx < x + w; xx++)
+		{
+			vid_put_fg(xx, yy, c);
+		}
+	}
+}
+
+void vid_fill_code(int x, int y, int w, int h, unsigned char c)
+{
+	for (int yy = y; yy < y + h; yy++)
+	{
+		for (int xx = x; xx < x + w; xx++)
+		{
+			vid_put_code(xx, yy, c);
+		}
 	}
 }
 
