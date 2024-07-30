@@ -1,21 +1,10 @@
--- o sweet luna: hello world example appl
+-- o sweet luna: hello world appl
 
 function appl:spawn()
-	self.grabbed = false
-	return 0
+	self.hello = "hello world!"
 end
 
-function appl:event(event)
-	if event.type == "mouse" then
-		if event.mouse.button > 0 then
-			self.grabbed = true
-		else
-			self.grabbed = false
-		end
-	end
-	return 0
-end
-
-function appl:despawn()
-
+function appl:draw(w, h)
+	luna.drawfill(15, 4, 4, #self.hello + 2, 3)
+	luna.drawstring(self.hello, 0, 5, 5)
 end

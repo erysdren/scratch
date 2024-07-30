@@ -112,14 +112,12 @@ int appl_new(lua_State *L, const char *filename)
 	/* run setup script */
 	lua_rawgeti(L, LUA_REGISTRYINDEX, appl);
 	lua_setglobal(L, "appl");
-	if (luaL_dofile(L, filename) != LUA_OK)
+	luaL_loadfile(L, filename);
+	if (lua_pcall(L, 0, 0, 0) != LUA_OK)
 	{
 		appl_delete(L, appl);
 		return 0;
 	}
-
-	/* ignore return values */
-	lua_settop(L, 0);
 
 	/* return absolute reference */
 	return appl;

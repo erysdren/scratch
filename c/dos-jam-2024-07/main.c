@@ -17,46 +17,67 @@
 #include "util.h"
 #include "vid.h"
 
-enum {
-	ELEMENT_TEXT
-};
+#define NUM_APPLS (32)
 
-typedef struct element {
-	int type;
-	union {
-		struct { char *text; uint8_t color; } text;
-	};
-} element_t;
+typedef struct appl {
+	int reg;
+	int z;
+} appl_t;
 
-typedef struct window {
-	element_t **elements;
-	size_t num_elements;
-	char *title;
-	rect_t frame;
-} window_t;
+static int num_appls = 0;
+static appl_t appls[NUM_APPLS];
 
-window_t *window_new(const char *title)
+int spawn_appl(lua_State *L, const char *filename)
 {
-	window_t *window = calloc(1, sizeof(window_t));
+	if (num_appls >= NUM_APPLS)
+		die("No more space for appls!");
 
-	window->title = strdup(title);
+	appls[num_appls].reg = appl_new(L, filename);
+	if (!appls[num_appls].reg)
+		die("Failed to load \"%s\"", filename);
 
-	return window;
+	appls[num_appls].z = 0;
+
+	appl_call(L, appls[num_appls].reg, "spawn");
+
+	return num_appls++;
 }
 
-void element_free(element_t *element)
+int compare_appl(const void *a, const void *b)
 {
-	if (element->type == ELEMENT_TEXT)
-		free(element->text.text);
-	free(element);
+	return ((appl_t *)a)->z - ((appl_t *)b)->z;
 }
 
-void window_free(window_t *window)
+void sort_appls(void)
 {
-	for (size_t i = 0; i < window->num_elements; i++)
-		element_free(window->elements[i]);
-	free(window->title);
-	free(window);
+	qsort(appls, num_appls, sizeof(appl_t), compare_appl);
+}
+
+void draw_appls(lua_State *L)
+{
+	sort_appls();
+
+	for (int i = 0; i < num_appls; i++)
+	{
+		appl_draw(L, appls[i].reg);
+	}
+}
+
+void think_appls(lua_State *L)
+{
+	for (int i = 0; i < num_appls; i++)
+	{
+		appl_call(L, appls[i].reg, "think");
+	}
+}
+
+void delete_appls(lua_State *L)
+{
+	for (int i = 0; i < num_appls; i++)
+	{
+		appl_call(L, appls[i].reg, "despawn");
+		appl_delete(L, appls[i].reg);
+	}
 }
 
 int main(int argc, char **argv)
@@ -79,11 +100,9 @@ int main(int argc, char **argv)
 	/* clear screen */
 	vid_framebuffer_clear(PAL_LIGHT_BLUE, PAL_WHITE);
 
-	/* create clock appl */
-	int clock = appl_new(L, "applets/clock.lua");
-	if (!clock)
-		die("Failed to run \"applets/clock.lua\"");
-	appl_call(L, clock, "spawn");
+	/* spawn some appls */
+	spawn_appl(L, "applets/hello.lua");
+	spawn_appl(L, "applets/clock.lua");
 
 	/* main loop */
 	while (1)
@@ -102,18 +121,15 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		appl_call(L, clock, "think");
+		think_appls(L);
 
 		vid_vsync_wait();
 
-		appl_draw(L, clock);
+		draw_appls(L);
 	}
 
-	/* delete clock appl */
-	appl_call(L, clock, "despawn");
-	appl_delete(L, clock);
-
 	/* shutdown and clean up */
+	delete_appls(L);
 	lua_close(L);
 	vid_quit();
 
