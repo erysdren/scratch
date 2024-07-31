@@ -11,6 +11,36 @@
 
 #include "luna.h"
 #include "vid.h"
+#include "mem.h"
+
+/*
+ *
+ * stencil buffer
+ *
+ */
+
+uint8_t CURRENT_Z = 0;
+
+static uint8_t stencil[VID_HEIGHT][VID_WIDTH];
+
+void stencil_clear(uint8_t val)
+{
+	memset8(stencil, val, sizeof(stencil));
+}
+
+void stencil_fill(int x, int y, int w, int h, uint8_t val)
+{
+	for (int yy = y; yy < y + h; yy++)
+	{
+		memset8(&stencil[yy][x], val, w);
+	}
+}
+
+/*
+ *
+ * lua implementation
+ *
+ */
 
 static int luna_drawstring(lua_State *L)
 {
@@ -47,8 +77,12 @@ static int luna_drawstring(lua_State *L)
 		if (x >= VID_WIDTH || y >= VID_HEIGHT)
 			break;
 
-		vid_put_code(x, y, *ptr);
-		vid_put_fg(x, y, c);
+		if (CURRENT_Z >= stencil[y][x])
+		{
+			vid_put_code(x, y, *ptr);
+			vid_put_fg(x, y, c);
+			stencil[y][x] = CURRENT_Z;
+		}
 
 		x += 1;
 		ptr++;
@@ -65,7 +99,17 @@ static int luna_drawfill(lua_State *L)
 	lua_Integer w = luaL_checkinteger(L, 4);
 	lua_Integer h = luaL_checkinteger(L, 5);
 
-	vid_fill_bg(x, y, w, h, c);
+	for (lua_Integer yy = y; yy < y + h; yy++)
+	{
+		for (lua_Integer xx = x; xx < x + w; xx++)
+		{
+			if (CURRENT_Z >= stencil[yy][xx])
+			{
+				vid_put_bg(xx, yy, c);
+				stencil[yy][xx] = CURRENT_Z;
+			}
+		}
+	}
 
 	return 0;
 }
@@ -94,6 +138,12 @@ void luna_openlibs(lua_State *L)
 {
 	luaL_requiref(L, LUA_LUNALIBNAME, luaopen_luna, 1);
 }
+
+/*
+ *
+ * appl handling
+ *
+ */
 
 int appl_new(lua_State *L, const char *filename)
 {

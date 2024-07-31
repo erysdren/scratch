@@ -17,7 +17,8 @@
 #include "util.h"
 #include "vid.h"
 
-#define NUM_APPLS (32)
+/* 255 max, so 0 means none */
+#define NUM_APPLS UINT8_MAX
 
 typedef struct appl {
 	int reg;
@@ -55,10 +56,13 @@ void sort_appls(void)
 
 void draw_appls(lua_State *L)
 {
+	vid_framebuffer_clear(PAL_LIGHT_BLUE, PAL_WHITE);
+	stencil_clear(0x00);
 	sort_appls();
 
-	for (int i = 0; i < num_appls; i++)
+	for (int i = num_appls; i >= 0; --i)
 	{
+		CURRENT_Z = appls[i].z;
 		appl_draw(L, appls[i].reg);
 	}
 }
@@ -97,12 +101,14 @@ int main(int argc, char **argv)
 	luaL_openlibs(L);
 	luna_openlibs(L);
 
-	/* clear screen */
-	vid_framebuffer_clear(PAL_LIGHT_BLUE, PAL_WHITE);
-
 	/* spawn some appls */
-	spawn_appl(L, "applets/hello.lua");
-	spawn_appl(L, "applets/clock.lua");
+	int test1a = spawn_appl(L, "applets/test1a.lua");
+	int test1b = spawn_appl(L, "applets/test1b.lua");
+	int clock = spawn_appl(L, "applets/clock.lua");
+
+	appls[test1a].z = 2;
+	appls[test1b].z = 5;
+	appls[clock].z = 1;
 
 	/* main loop */
 	while (1)
@@ -124,7 +130,6 @@ int main(int argc, char **argv)
 		think_appls(L);
 
 		vid_vsync_wait();
-
 		draw_appls(L);
 	}
 
