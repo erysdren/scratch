@@ -8,6 +8,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include <unistd.h>
+
 #include <dos.h>
 #include <io.h>
 #include <conio.h>
@@ -34,11 +36,36 @@ typedef struct rect {
 	lua_Integer x, y, w, h;
 } rect_t;
 
+typedef struct appl {
+	char *name;
+	rect_t frame;
+	int reg;
+	int z;
+} appl_t;
+
 /*
  *
  * luna.c
  *
  */
+
+/* register new appl and get handle (or -1 for error) */
+int appl_register(lua_State *L, const char *name);
+
+/* unregister appl by handle */
+void appl_unregister(lua_State *L, int reg);
+
+/* create new appl and get structure (or NULL for error) */
+appl_t *appl_new(lua_State *L, const char *name);
+
+/* delete appl and free memory */
+void appl_delete(lua_State *L, appl_t **appl);
+
+/* call function on appl */
+int appl_call(lua_State *L, appl_t *appl, const char *func);
+
+/* call draw function on appl */
+int appl_draw(lua_State *L, appl_t *appl);
 
 /* open appl lib */
 #define LUA_APPLLIBNAME "appl"
@@ -103,6 +130,8 @@ void points_to_rect(rect_t *r, point_t *p0, point_t *p1);
 __attribute__((pure)) int imin(int x, int y);
 __attribute__((pure)) int imax(int x, int y);
 __attribute__((pure)) int iclamp(int i, int min, int max);
+
+int file_exists(const char *filename);
 
 void die(const char *fmt, ...);
 
@@ -180,5 +209,14 @@ void vid_stencil_set(int x, int y, int w, int h);
 
 /* set coordinate offset */
 void vid_offset_set(int x, int y);
+
+/* clear zbuffer */
+void vid_zbuffer_clear(uint8_t v);
+
+/* fill zbuffer area */
+void vid_zbuffer_fill(int x, int y, int w, int h, uint8_t v);
+
+/* set current zbuffer value for all draw operations */
+void vid_zbuffer_set(uint8_t v);
 
 #endif /* _LUNA_H_ */

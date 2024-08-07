@@ -7,6 +7,141 @@
  *
  */
 
+/* register new appl and get handle (or -1 for error) */
+int appl_register(lua_State *L, const char *name)
+{
+	static char script[256];
+	int reg = -1;
+
+	/* make full script filename */
+	snprintf(script, sizeof(script), "appls/%s.lua", name);
+	if (!file_exists(script))
+	{
+		luaL_error(L, "Appl \"%s\" does not exist or is not readable", name);
+		goto fail;
+	}
+
+	/* create blank table for appl data */
+	lua_newtable(L);
+
+	/* set appl metatable */
+	luaL_getmetatable(L, LUA_APPLLIBNAME);
+	lua_setmetatable(L, -2);
+
+	/* create absolute reference */
+	reg = luaL_ref(L, LUA_REGISTRYINDEX);
+
+	/* run setup script */
+	lua_rawgeti(L, LUA_REGISTRYINDEX, reg);
+	lua_setglobal(L, LUA_APPLLIBNAME);
+	if (luaL_loadfile(L, script) != LUA_OK)
+		goto fail;
+	if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+		goto fail;
+
+	goto done;
+
+fail:
+	appl_unregister(L, reg);
+done:
+	return reg;
+}
+
+/* unregister appl by handle */
+void appl_unregister(lua_State *L, int reg)
+{
+	luaL_unref(L, LUA_REGISTRYINDEX, reg);
+}
+
+/* create new appl and get structure */
+appl_t *appl_new(lua_State *L, const char *name)
+{
+	appl_t *appl = NULL;
+	int reg = appl_register(L, name);
+	if (reg == -1)
+		goto fail;
+
+	appl = calloc(1, sizeof(appl_t));
+	if (!appl)
+	{
+		luaL_error(L, "Memory allocation failed on %zu bytes", sizeof(appl_t));
+		goto fail;
+	}
+
+	appl->name = strdup(name);
+	appl->frame.x = 2;
+	appl->frame.y = 2;
+	appl->frame.w = 16;
+	appl->frame.h = 8;
+	appl->z = 1;
+	appl->reg = reg;
+
+	goto done;
+
+fail:
+	if (appl) free(appl);
+	appl = NULL;
+done:
+	return appl;
+}
+
+/* delete appl and free memory */
+void appl_delete(lua_State *L, appl_t **appl)
+{
+	appl_unregister(L, (*appl)->reg);
+	free((*appl)->name);
+	free(*appl);
+	*appl = NULL;
+}
+
+/* call function on appl */
+int appl_call(lua_State *L, appl_t *appl, const char *func)
+{
+	if (lua_rawgeti(L, LUA_REGISTRYINDEX, appl->reg))
+	{
+		if (lua_getfield(L, -1, func))
+		{
+			if (lua_isfunction(L, -1))
+			{
+				lua_rawgeti(L, LUA_REGISTRYINDEX, appl->reg);
+				if (lua_pcall(L, 1, 0, 0) != LUA_OK)
+					return -1;
+				else
+					return 0;
+			}
+		}
+	}
+
+	return -1;
+}
+
+/* call draw function on appl */
+int appl_draw(lua_State *L, appl_t *appl)
+{
+	if (lua_rawgeti(L, LUA_REGISTRYINDEX, appl->reg))
+	{
+		if (lua_getfield(L, -1, "draw"))
+		{
+			if (lua_isfunction(L, -1))
+			{
+				vid_zbuffer_set(appl->z);
+				vid_offset_set(appl->frame.x, appl->frame.y);
+				vid_stencil_set(appl->frame.x, appl->frame.y, appl->frame.w, appl->frame.h);
+				lua_rawgeti(L, LUA_REGISTRYINDEX, appl->reg);
+				lua_pushinteger(L, appl->frame.w);
+				lua_pushinteger(L, appl->frame.h);
+				if (lua_pcall(L, 3, 0, 0) != LUA_OK)
+					return -1;
+				else
+					return 0;
+			}
+		}
+	}
+
+	return -1;
+}
+
+/* open appl lib */
 int luaopen_appl(lua_State *L)
 {
 	luaL_newmetatable(L, LUA_APPLLIBNAME);

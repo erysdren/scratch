@@ -16,6 +16,11 @@ __attribute__((pure)) int iclamp(int i, int min, int max)
 	return imax(imin(i, max), min);
 }
 
+int file_exists(const char *filename)
+{
+	return access(filename, R_OK) == 0 ? 1 : 0;
+}
+
 void die(const char *fmt, ...)
 {
 	static char error[2048];

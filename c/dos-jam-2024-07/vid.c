@@ -5,6 +5,8 @@
 static uint8_t vid_mode_old = 0x02;
 static rect_t stencil;
 static point_t offset;
+static uint8_t current_z = 0;
+static uint8_t zbuffer[VID_HEIGHT][VID_WIDTH];
 
 /* start video system */
 void vid_init(void)
@@ -46,6 +48,7 @@ void vid_init(void)
 	/* setup defaults */
 	vid_stencil_set(0, 0, VID_WIDTH, VID_HEIGHT);
 	vid_offset_set(0, 0);
+	vid_zbuffer_clear(0);
 }
 
 /* shutdown video system */
@@ -161,7 +164,12 @@ void vid_fill_bg(int x, int y, int w, int h, uint8_t c)
 	{
 		for (int xx = x; xx < x + w; xx++)
 		{
-			vid_put_bg(xx, yy, c);
+			/* check z */
+			if (zbuffer[yy][xx] <= current_z)
+			{
+				vid_put_bg(xx, yy, c);
+				zbuffer[yy][xx] = current_z;
+			}
 		}
 	}
 }
@@ -178,7 +186,12 @@ void vid_fill_fg(int x, int y, int w, int h, uint8_t c)
 	{
 		for (int xx = x; xx < x + w; xx++)
 		{
-			vid_put_fg(xx, yy, c);
+			/* check z */
+			if (zbuffer[yy][xx] <= current_z)
+			{
+				vid_put_fg(xx, yy, c);
+				zbuffer[yy][xx] = current_z;
+			}
 		}
 	}
 }
@@ -195,7 +208,12 @@ void vid_fill_code(int x, int y, int w, int h, unsigned char c)
 	{
 		for (int xx = x; xx < x + w; xx++)
 		{
-			vid_put_code(xx, yy, c);
+			/* check z */
+			if (zbuffer[yy][xx] <= current_z)
+			{
+				vid_put_code(xx, yy, c);
+				zbuffer[yy][xx] = current_z;
+			}
 		}
 	}
 }
@@ -236,8 +254,13 @@ void vid_put_string(int x, int y, uint8_t c, const char *s)
 		/* off screen, but could come into view */
 		if (x >= stencil.x && y >= stencil.y)
 		{
-			vid_put_code(x, y, *ptr);
-			vid_put_fg(x, y, c);
+			/* check z */
+			if (zbuffer[y][x] <= current_z)
+			{
+				vid_put_code(x, y, *ptr);
+				vid_put_fg(x, y, c);
+				zbuffer[y][x] = current_z;
+			}
 		}
 
 		x += 1;
@@ -272,4 +295,25 @@ void vid_offset_set(int x, int y)
 {
 	offset.x = x;
 	offset.y = y;
+}
+
+/* clear zbuffer */
+void vid_zbuffer_clear(uint8_t v)
+{
+	memset8(zbuffer, v, sizeof(zbuffer));
+}
+
+/* fill zbuffer area */
+void vid_zbuffer_fill(int x, int y, int w, int h, uint8_t v)
+{
+	for (int yy = y; yy < y + h; yy++)
+	{
+		memset8(&zbuffer[yy][x], v, w);
+	}
+}
+
+/* set current zbuffer value for all draw operations */
+void vid_zbuffer_set(uint8_t v)
+{
+	current_z = v;
 }
