@@ -22,10 +22,10 @@ int luaopen_appl(lua_State *L)
 /* draw string with specified color */
 static int L_drawstring(lua_State *L)
 {
-	const char *s = luaL_checkstring(L, 1);
-	lua_Integer c = luaL_checkinteger(L, 2);
-	lua_Integer x = luaL_checkinteger(L, 3);
-	lua_Integer y = luaL_checkinteger(L, 4);
+	lua_Integer x = luaL_checkinteger(L, 1);
+	lua_Integer y = luaL_checkinteger(L, 2);
+	lua_Integer c = luaL_checkinteger(L, 3);
+	const char *s = luaL_checkstring(L, 4);
 
 	vid_put_string(x, y, c, s);
 
@@ -35,11 +35,11 @@ static int L_drawstring(lua_State *L)
 /* draw background color fill */
 static int L_drawfill(lua_State *L)
 {
-	lua_Integer c = luaL_checkinteger(L, 1);
-	lua_Integer x = luaL_checkinteger(L, 2);
-	lua_Integer y = luaL_checkinteger(L, 3);
-	lua_Integer w = luaL_checkinteger(L, 4);
-	lua_Integer h = luaL_checkinteger(L, 5);
+	lua_Integer x = luaL_checkinteger(L, 1);
+	lua_Integer y = luaL_checkinteger(L, 2);
+	lua_Integer w = luaL_checkinteger(L, 3);
+	lua_Integer h = luaL_checkinteger(L, 4);
+	lua_Integer c = luaL_checkinteger(L, 5);
 
 	vid_fill_bg(x, y, w, h, c);
 
