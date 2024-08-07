@@ -1,61 +1,46 @@
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-
-#include <dos.h>
-#include <io.h>
-#include <conio.h>
-#include <dpmi.h>
-#include <go32.h>
-#include <sys/nearptr.h>
-#include <sys/farptr.h>
-
-#include "mouse.h"
-#include "util.h"
+#include "luna.h"
 
 /* enable mouse input */
 void mouse_enable(void)
 {
-	union REGS r;
+	__dpmi_regs r;
 
-	r.w.ax = 0x00;
-	int86(0x33, &r, &r);
+	r.x.ax = 0x00;
+	__dpmi_int(0x33, &r);
 
-	if (r.w.ax != 0xFFFF)
+	if (r.x.ax != 0xFFFF)
 		die("Mouse driver not found");
 }
 
 /* show mouse cursor */
 void mouse_show(void)
 {
-	union REGS r;
+	__dpmi_regs r;
 
-	r.w.ax = 0x01;
-	int86(0x33, &r, &r);
+	r.x.ax = 0x01;
+	__dpmi_int(0x33, &r);
 }
 
 /* hide mouse cursor */
 void mouse_hide(void)
 {
-	union REGS r;
+	__dpmi_regs r;
 
-	r.w.ax = 0x02;
-	int86(0x33, &r, &r);
+	r.x.ax = 0x02;
+	__dpmi_int(0x33, &r);
 }
 
 /* read mouse position and returns button mask */
 int16_t mouse_read(int16_t *x, int16_t *y)
 {
-	union REGS r;
+	__dpmi_regs r;
 
-	r.w.ax = 0x03;
-	int86(0x33, &r, &r);
+	r.x.ax = 0x03;
+	__dpmi_int(0x33, &r);
 
-	if (x) *x = r.w.cx;
-	if (y) *y = r.w.dx;
+	if (x) *x = r.x.cx;
+	if (y) *y = r.x.dx;
 
-	return r.w.bx;
+	return r.x.bx;
 }

@@ -1,25 +1,10 @@
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-
-#include <dos.h>
-#include <io.h>
-#include <conio.h>
-#include <dpmi.h>
-#include <go32.h>
-#include <sys/nearptr.h>
-#include <sys/farptr.h>
-
-#include "mem.h"
-#include "util.h"
-#include "vid.h"
-
-#include "font8x8.xbm"
+#include "luna.h"
+#include "ada8x8.xbm"
 
 static uint8_t vid_mode_old = 0x02;
+static rect_t stencil;
+static point_t offset;
 
 /* start video system */
 void vid_init(void)
@@ -38,7 +23,7 @@ void vid_init(void)
 	__dpmi_int(0x10, &r);
 
 	/* change font to ada's 8x8 font */
-	dosmemput(font8x8_bits, sizeof(font8x8_bits), __tb);
+	dosmemput(ada8x8_bits, sizeof(ada8x8_bits), __tb);
 	r.x.ax = 0x1110;
 	r.x.es = __tb >> 4;
 	r.x.bp = __tb & 0x0f;
@@ -57,6 +42,10 @@ void vid_init(void)
 	r.h.ah = 0x01;
 	r.x.cx = 0x0007;
 	__dpmi_int(0x10, &r);
+
+	/* setup defaults */
+	vid_stencil_set(0, 0, VID_WIDTH, VID_HEIGHT);
+	vid_offset_set(0, 0);
 }
 
 /* shutdown video system */
@@ -75,27 +64,21 @@ uint8_t *vid_framebuffer_get(void)
 	return (uint8_t *)0xB8000 + __djgpp_conventional_base;
 }
 
-/* clear video framebuffer */
-void vid_framebuffer_clear(uint8_t bg, uint8_t fg)
-{
-	memset16(vid_framebuffer_get(), vid_cell(' ', vid_cell_color(bg, fg)), VID_WIDTH * VID_HEIGHT);
-}
-
 /* set video mode */
 void vid_mode_set(uint8_t mode)
 {
-	union REGS r;
+	__dpmi_regs r;
 	r.h.ah = 0x00;
 	r.h.al = mode;
-	int86(0x10, &r, &r);
+	__dpmi_int(0x10, &r);
 }
 
 /* get current video mode */
 uint8_t vid_mode_get(void)
 {
-	union REGS r;
+	__dpmi_regs r;
 	r.h.ah = 0x0f;
-	int86(0x10, &r, &r);
+	__dpmi_int(0x10, &r);
 	return r.h.al;
 }
 
@@ -109,19 +92,19 @@ void vid_vsync_wait(void)
 /* set palette color */
 void vid_palette_set_color(int i, uint8_t red, uint8_t grn, uint8_t blu)
 {
-	union REGS r;
+	__dpmi_regs r;
 	static const uint16_t color_registers[16] = {
 		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07,
 		0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F
 	};
 
-	r.w.ax = 0x1010;
-	r.w.bx = color_registers[i];
+	r.x.ax = 0x1010;
+	r.x.bx = color_registers[i];
 	r.h.dh = red;
 	r.h.ch = grn;
 	r.h.cl = blu;
 
-	int86(0x10, &r, &r);
+	__dpmi_int(0x10, &r);
 }
 
 /* set palette of N colors */
@@ -139,59 +122,41 @@ void vid_palette_set(int num_colors, uint8_t *colors)
 	}
 }
 
-/* create packed text cell color */
-__attribute__((pure)) uint8_t vid_cell_color(uint8_t bg, uint8_t fg)
-{
-	return fg | bg << 4;
-}
-
-/* create packed text cell */
-__attribute__((pure)) uint16_t vid_cell(unsigned char c, uint8_t color)
-{
-	return (uint16_t)c | (uint16_t)color << 8;
-}
-
-/* put cell at x,y */
-void vid_cell_put(int x, int y, uint16_t cell)
-{
-	uint16_t *ofs = (uint16_t *)(vid_framebuffer_get() + y * VID_PITCH + x * VID_BYTES_PER_PIXEL);
-	*ofs = cell;
-}
-
-/* fill cells at x,y with width and height */
-void vid_cell_fill(int x, int y, int w, int h, uint16_t cell)
-{
-	for (int yy = y; yy < y + h; yy++)
-	{
-		uint8_t *ofs = vid_framebuffer_get() + yy * VID_PITCH + x * VID_BYTES_PER_PIXEL;
-		memset16(ofs, cell, w);
-	}
-}
-
-#define ADD_FG(cell, color) (((cell) & ~(0x0F << 8)) | (((color) & 0x0F) << 8))
+/* put background color at x/y */
 #define ADD_BG(cell, color) (((cell) & ~(0x0F << 12)) | (((color) & 0x0F) << 12))
-#define ADD_CODE(cell, code) (((cell) & ~(0xFF)) | (((code) & 0xFF)))
-
 void vid_put_bg(int x, int y, uint8_t c)
 {
 	uint16_t *ofs = (uint16_t *)(vid_framebuffer_get() + y * VID_PITCH + x * VID_BYTES_PER_PIXEL);
 	*ofs = ADD_BG(*ofs, c);
 }
+#undef ADD_BG
 
+/* put foreground color at x/y */
+#define ADD_FG(cell, color) (((cell) & ~(0x0F << 8)) | (((color) & 0x0F) << 8))
 void vid_put_fg(int x, int y, uint8_t c)
 {
 	uint16_t *ofs = (uint16_t *)(vid_framebuffer_get() + y * VID_PITCH + x * VID_BYTES_PER_PIXEL);
 	*ofs = ADD_FG(*ofs, c);
 }
+#undef ADD_FG
 
+/* put foreground character at x/y */
+#define ADD_CODE(cell, code) (((cell) & ~(0xFF)) | (((code) & 0xFF)))
 void vid_put_code(int x, int y, unsigned char c)
 {
 	uint16_t *ofs = (uint16_t *)(vid_framebuffer_get() + y * VID_PITCH + x * VID_BYTES_PER_PIXEL);
 	*ofs = ADD_CODE(*ofs, c);
 }
+#undef ADD_CODE
 
+/* fill background color rect at x/y */
 void vid_fill_bg(int x, int y, int w, int h, uint8_t c)
 {
+	x = imax(x + offset.x, stencil.x);
+	y = imax(y + offset.y, stencil.y);
+	w = imin(x + w, stencil.x + stencil.w) - x;
+	h = imin(y + h, stencil.y + stencil.h) - y;
+
 	for (int yy = y; yy < y + h; yy++)
 	{
 		for (int xx = x; xx < x + w; xx++)
@@ -201,8 +166,14 @@ void vid_fill_bg(int x, int y, int w, int h, uint8_t c)
 	}
 }
 
+/* fill foreground color rect at x/y */
 void vid_fill_fg(int x, int y, int w, int h, uint8_t c)
 {
+	x = imax(x + offset.x, stencil.x);
+	y = imax(y + offset.y, stencil.y);
+	w = imin(x + w, stencil.x + stencil.w) - x;
+	h = imin(y + h, stencil.y + stencil.h) - y;
+
 	for (int yy = y; yy < y + h; yy++)
 	{
 		for (int xx = x; xx < x + w; xx++)
@@ -212,8 +183,14 @@ void vid_fill_fg(int x, int y, int w, int h, uint8_t c)
 	}
 }
 
+/* fill foreground character rect at x/y */
 void vid_fill_code(int x, int y, int w, int h, unsigned char c)
 {
+	x = imax(x + offset.x, stencil.x);
+	y = imax(y + offset.y, stencil.y);
+	w = imin(x + w, stencil.x + stencil.w) - x;
+	h = imin(y + h, stencil.y + stencil.h) - y;
+
 	for (int yy = y; yy < y + h; yy++)
 	{
 		for (int xx = x; xx < x + w; xx++)
@@ -223,13 +200,76 @@ void vid_fill_code(int x, int y, int w, int h, unsigned char c)
 	}
 }
 
+/* draw string at x/y */
+void vid_put_string(int x, int y, uint8_t c, const char *s)
+{
+	char *ptr = (char *)s;
+	int sx = x;
+
+	/* add offset */
+	x += offset.x;
+	y += offset.y;
+
+	while (*ptr)
+	{
+		/* handle control characters */
+		if (*ptr == '\n')
+		{
+			y += 1;
+			goto next;
+		}
+		else if (*ptr == '\r')
+		{
+			x = sx;
+			goto next;
+		}
+		else if (*ptr == '\t')
+		{
+			x += 4;
+			goto next;
+		}
+
+		/* gone out of range */
+		if (x >= stencil.x + stencil.w || y >= stencil.y + stencil.h)
+			break;
+
+		/* off screen, but could come into view */
+		if (x >= stencil.x && y >= stencil.y)
+		{
+			vid_put_code(x, y, *ptr);
+			vid_put_fg(x, y, c);
+		}
+
+		x += 1;
+
+next:
+		ptr++;
+	}
+}
+
 /* set cursor position */
 void vid_cursor_set_position(uint8_t x, uint8_t y)
 {
-	union REGS r;
+	__dpmi_regs r;
 	r.h.ah = 0x02;
 	r.h.bh = 0x00;
 	r.h.dh = y;
 	r.h.dl = x;
-	int86(0x10, &r, &r);
+	__dpmi_int(0x10, &r);
+}
+
+/* set stencil dimensions */
+void vid_stencil_set(int x, int y, int w, int h)
+{
+	stencil.x = x;
+	stencil.y = y;
+	stencil.w = w;
+	stencil.h = h;
+}
+
+/* set coordinate offset */
+void vid_offset_set(int x, int y)
+{
+	offset.x = x;
+	offset.y = y;
 }

@@ -1,12 +1,5 @@
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-
-#include "rect.h"
-#include "util.h"
+#include "luna.h"
 
 /* returns 1 if r0 fully contains r1 */
 int rect_contains(rect_t *r0, rect_t *r1)

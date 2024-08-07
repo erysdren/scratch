@@ -1,11 +1,5 @@
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-
-#include "vid.h"
+#include "luna.h"
 
 __attribute__((pure)) int imin(int x, int y)
 {
@@ -35,4 +29,40 @@ void die(const char *fmt, ...)
 
 	fprintf(stderr, "%s\n", error);
 	exit(1);
+}
+
+void *memset8(void *dest, uint8_t val, size_t n)
+{
+	asm (
+		"rep stosb\n\t"
+		:
+		: "a" (val), "c" (n), "D" (dest)
+		: "memory"
+	);
+
+	return dest;
+}
+
+void *memset16(void *dest, uint16_t val, size_t n)
+{
+	asm (
+		"rep stosw\n\t"
+		:
+		: "a" (val), "c" (n), "D" (dest)
+		: "memory"
+	);
+
+	return dest;
+}
+
+void *memset32(void *dest, uint32_t val, size_t n)
+{
+	asm (
+		"rep stosl\n\t"
+		:
+		: "a" (val), "c" (n), "D" (dest)
+		: "memory"
+	);
+
+	return dest;
 }
