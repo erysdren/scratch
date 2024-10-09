@@ -5,6 +5,6 @@ function appl:spawn()
 end
 
 function appl:draw(w, h)
-	luna.drawfill(14, 3, 3, #self.hello + 2, 3)
-	luna.drawstring(self.hello, 0, 4, 4)
+	luna.drawfill(0, 0, #self.hello + 2, 3, 14)
+	luna.drawstring(1, 1, 0, self.hello)
 end
