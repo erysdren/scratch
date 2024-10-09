@@ -27,6 +27,7 @@ derivatives or components of.
 /c/fixed_point_math/*
 /c/formats/*
 /c/fs/*
+/c/gles2/*
 /c/gunpoint/*
 /c/lev_tool/*
 /c/lmke/*
