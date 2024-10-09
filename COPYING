@@ -13,6 +13,7 @@ derivatives or components of.
 |    MIT                                             /licenses/LICENSE.MIT    |
 +-----------------------------------------------------------------------------+
 
+/c/arena/*
 /c/brender/*
 /c/cpu8086/*
 /c/csg/*
