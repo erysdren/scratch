@@ -31,16 +31,15 @@ SOFTWARE.
 
 #include "erysdren_utils.h"
 
-void die(const char *s, ...)
+void die(const char *fmt, ...)
 {
-	static char buffer[2048];
-	va_list list;
+	va_list ap;
 
-	va_start(list, s);
-	vsnprintf(buffer, sizeof(buffer), s, list);
-	va_end(list);
-
-	fprintf(stderr, "%s\n", buffer);
+	va_start(ap, s);
+	vfprintf(stderr, fmt, ap);
+	fputc('\n', stderr);
+	fflush(stderr);
+	va_end(ap);
 
 	exit(1);
 }
