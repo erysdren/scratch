@@ -39,6 +39,7 @@ derivatives or components of.
 /imhex/*
 /lua/brender/*
 /python/finger/*
+/python/songlength/*
 /python/tmj2map/*
 
 +-----------------------------------------------------------------------------+
