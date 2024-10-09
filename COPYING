@@ -25,6 +25,7 @@ derivatives or components of.
 /c/eui/*
 /c/fixed_point_math/*
 /c/formats/*
+/c/fs/*
 /c/gunpoint/*
 /c/lev_tool/*
 /c/ne_tool/*
