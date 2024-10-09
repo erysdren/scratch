@@ -46,6 +46,7 @@ derivatives or components of.
 /c/upkg/*
 /c/vga2rgb/*
 /c/wmd/*
+/flipper/*
 /imhex/*
 /lua/brender/*
 /python/finger/*

@@ -1,0 +1,10 @@
+App(
+	appid="qcvm_test",
+	name="QCVM Test",
+	apptype=FlipperAppType.EXTERNAL,
+	entry_point="app_main",
+	stack_size=2*1024,
+	fap_category="Games",
+	fap_icon="qcvm_test.png",
+	fap_file_assets="data"
+)
