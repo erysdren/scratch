@@ -48,6 +48,7 @@ derivatives or components of.
 /c/upkg/*
 /c/vga2rgb/*
 /c/wmd/*
+/c/xpicsdat/*
 /flipper/*
 /imhex/*
 /lua/brender/*
