@@ -15,14 +15,14 @@ doc: |
   https://erysdren.me/
 
 seq:
-      - id: version
-        type: s4
-      - id: start_position
-        type: vec3l
-      - id: start_angle
-        type: s2
-      - id: start_sector
-        type: s2
+  - id: version
+    type: s4
+  - id: start_position
+    type: vec3l
+  - id: start_angle
+    type: s2
+  - id: start_sector
+    type: s2
   - id: num_sectors
     type: s2
   - id: sectors
