@@ -7,4 +7,4 @@ are organized by programming language.
 The subdirectories in this repository may fall under different licenses, please
 see [COPYING](./COPYING) for details.
 
-Copyright (c) 2023-2024 erysdren (it/she/they)
+Copyright (c) 2022-2025 erysdren (it/its)
