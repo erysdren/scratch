@@ -18,7 +18,7 @@ seq:
   - id: magic
     contents: "KenSilverman"
   - id: num_files
-    type: u4
+    type: s4
   - id: entries
     type: entry
     repeat: expr
@@ -32,4 +32,4 @@ types:
         encoding: ascii
         size: 12
       - id: len_file
-        type: u4
+        type: s4

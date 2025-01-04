@@ -17,6 +17,7 @@ doc: |
 seq:
   - id: version
     type: s4
+    valid: 7
   - id: start_position
     type: vec3l
   - id: start_angle
@@ -45,9 +46,9 @@ seq:
 types:
   sector:
     seq:
-      - id: wall_pointer
+      - id: first_wall
         type: s2
-      - id: wall_num
+      - id: num_walls
         type: s2
       - id: ceiling_z
         type: s4

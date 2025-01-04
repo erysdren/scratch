@@ -17,13 +17,14 @@ doc: |
 
 seq:
   - id: version
-    type: u4
+    type: s4
+    valid: 1
   - id: num_tiles
-    type: u4
+    type: s4
   - id: tile_id_start
-    type: u4
+    type: s4
   - id: tile_id_end
-    type: u4
+    type: s4
   - id: tile_sizes_x
     type: u2
     repeat: expr
