@@ -19,9 +19,9 @@ seq:
   - id: rle_tag
     type: str
     valid: 0xABCD
-    doc: RLE compression tag, also serves as magic identifier.
+    doc: RLE compression tag (also serves as magic identifier)
   - id: map_offsets
     type: s4
     repeat: expr
     repeat-expr: 100
-    doc: Byte offsets to the level data in the associated MAPTEMP file.
+    doc: Byte offsets to the level data in the associated MAPTEMP file

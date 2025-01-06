@@ -18,7 +18,7 @@ doc-ref:
 seq:
   - id: magic
     contents: "TED5v1.0"
-    doc: Magic identifier.
+    doc: Magic identifier
 
 types:
   map:
@@ -26,16 +26,25 @@ types:
       - id: ofs_planes
         type: s4
         repeat: expr
-        repeat-expr: 3
+        repeat-expr: num_planes
+        doc: Offsets to plane arrays
       - id: len_planes
         type: u2
         repeat: expr
-        repeat-expr: 3
+        repeat-expr: num_planes
+        doc: Sizes of plane arrays
       - id: width
         type: u2
+        doc: Map width in tiles
       - id: height
         type: u2
+        doc: Map height in tiles
       - id: name
         type: strz
         encoding: ascii
         size: 16
+        doc: Map name
+    instances:
+      num_planes:
+        value: 3
+        doc: Number of planes per map
