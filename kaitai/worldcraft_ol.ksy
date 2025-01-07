@@ -25,6 +25,7 @@ seq:
   - id: notes
     type: strz
     encoding: ascii
+    size: 501
 
 types:
 
