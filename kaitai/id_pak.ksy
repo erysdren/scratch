@@ -1,7 +1,6 @@
 meta:
-  id: quake_pak
-  title: Quake PAK
-  application: Quake
+  id: id_pak
+  title: id Software PAK
   file-extension: pak
   license: CC0-1.0
   endian: le

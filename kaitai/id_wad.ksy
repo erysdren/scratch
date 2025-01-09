@@ -1,6 +1,6 @@
 meta:
-  id: wad
-  title: Where's All the Data
+  id: id_wad
+  title: id Software WAD
   file-extension:
     - wad
     - rts
