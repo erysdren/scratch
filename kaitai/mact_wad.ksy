@@ -40,9 +40,44 @@ types:
         type:
           switch-on: type
           cases:
+            1: pic
+            2: lpic
+            3: lpic
+            4: post
             8: palette
             11: miptex
             17: colormap
+
+  pic:
+    seq:
+      - id: width
+        type: s2
+      - id: height
+        type: s2
+      - id: pixels
+        size: width * height
+
+  lpic:
+    seq:
+      - id: width
+        type: s2
+      - id: height
+        type: s2
+      - id: origin_x
+        type: s2
+      - id: origin_y
+        type: s2
+      - id: pixels
+        size: width * height
+
+  post:
+    seq:
+      - id: width
+        type: s2
+      - id: height
+        type: s2
+      - id: pixels
+        size: width * height
 
   palette:
     seq:
