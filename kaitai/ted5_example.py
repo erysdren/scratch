@@ -4,8 +4,8 @@
 from kaitaistruct import KaitaiStream
 from ted5 import Ted5
 
-maptempFile = open("untracked/examples/MAPTEMP.WL1", "rb")
-mapheadFile = open("untracked/examples/MAPHEAD.WL1", "rb")
+maptempFile = open("MAPTEMP.WL1", "rb")
+mapheadFile = open("MAPHEAD.WL1", "rb")
 
 maptemp = KaitaiStream(maptempFile)
 maphead = KaitaiStream(mapheadFile)
