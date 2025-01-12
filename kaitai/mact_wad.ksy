@@ -42,8 +42,7 @@ types:
           cases:
             1: pic
             2: lpic
-            3: lpic
-            4: post
+            3: post
             8: palette
             11: miptex
             17: colormap
