@@ -65,14 +65,6 @@ instances:
     value: 100
     doc: Standard number of maps per mapset
 
-  map_width:
-    value: 128
-    doc: Standard map width in tiles
-
-  map_height:
-    value: 128
-    doc: Standard map height in tiles
-
   info_headers:
     pos: ofs_info_headers
     type: info_header
@@ -81,6 +73,15 @@ instances:
     if: is_ludicrous
 
 types:
+
+  plane:
+    params:
+      - id: index
+        type: s4
+    instances:
+      body:
+        pos: _parent.ofs_planes[index]
+        size: _parent.len_planes[index]
 
   map:
     seq:
@@ -95,38 +96,27 @@ types:
         doc: RLE encoding tag
       - id: flags
         type: u4
-      - id: ofs_walls
+        doc: Map flags
+      - id: ofs_planes
         type: u4
-        doc: Offset to RLE-encoded walls plane
-      - id: ofs_sprites
+        repeat: expr
+        repeat-expr: num_planes
+        doc: Offsets to RLE-encoded plane arrays
+      - id: len_planes
         type: u4
-        doc: Offset to RLE-encoded sprites plane
-      - id: ofs_infos
-        type: u4
-        doc: Offset to RLE-encoded infos plane
-      - id: len_walls
-        type: u4
-        doc: Size of RLE-encoded walls plane
-      - id: len_sprites
-        type: u4
-        doc: Size of RLE-encoded sprites plane
-      - id: len_infos
-        type: u4
-        doc: Size of RLE-encoded infos plane
+        repeat: expr
+        repeat-expr: num_planes
+        doc: Sizes of RLE-encoded plane arrays
       - id: name
         type: strz
         encoding: ascii
         size: 24
+        doc: Map name
     instances:
-      walls:
-        pos: ofs_walls
-        size: len_walls
-      sprites:
-        pos: ofs_sprites
-        size: len_sprites
-      infos:
-        pos: ofs_infos
-        size: len_infos
+      planes:
+        type: plane(_index)
+        repeat: expr
+        repeat-expr: num_planes
       open_pushwalls_in_commbat:
         value: flags & 1
         doc: If true, then all pushwalls must automatically open in COMM-BAT mode
@@ -136,6 +126,15 @@ types:
       is_registered:
         value: tag == 0x4344
         doc: If true, then this map came from a registered version of ROTT
+      width:
+        value: 128
+        doc: Map width in tiles
+      height:
+        value: 128
+        doc: Map height in tiles
+      num_planes:
+        value: 3
+        doc: Number of planes per map
 
   info_header:
     seq:
