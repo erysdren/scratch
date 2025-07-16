@@ -102,3 +102,12 @@
 /python/col2map/**/*.col
 /python/col2map/**/*.ksy
 
+# cpj2iqe
+/python/cpj2iqe/formats/
+/python/cpj2iqe/format_declarations/
+/python/cpj2iqe/kaitaistruct.py
+/python/cpj2iqe/cpj_utils.py
+/python/cpj2iqe/**/*.iqe
+/python/cpj2iqe/**/*.iqm
+/python/cpj2iqe/**/*.qc
+/python/cpj2iqe/**/*.cpj
