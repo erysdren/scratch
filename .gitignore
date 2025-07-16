@@ -85,3 +85,20 @@
 # unwal
 /c/unwal/unwal
 /c/unwal/*.wal
+
+# col2map
+/python/col2map/kaitaistruct.py
+/python/col2map/renderware_binary_stream.py
+/python/col2map/gta3_col.py
+/python/col2map/gta3_dir.py
+/python/col2map/**/*.dir
+/python/col2map/**/*.iqe
+/python/col2map/**/*.iqm
+/python/col2map/**/*.map
+/python/col2map/**/*.hmp
+/python/col2map/**/*.hms
+/python/col2map/**/*.ipl
+/python/col2map/**/*.ide
+/python/col2map/**/*.col
+/python/col2map/**/*.ksy
+
