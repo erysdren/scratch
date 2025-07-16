@@ -5,6 +5,9 @@
 # cmake builds
 /**/cmake-build*/
 
+# python
+/**/__pycache__/
+
 # tiled
 *.tiled-session
 
