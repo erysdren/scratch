@@ -70,6 +70,7 @@ derivatives or components of.
 /bash/*
 /kaitai/*
 /c/named_arguments/*
+/tcl/*
 
 +-----------------------------------------------------------------------------+
 |    CC BY 4.0                                       /licenses/LICENSE.CCBY   |
