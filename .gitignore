@@ -111,3 +111,13 @@
 /python/cpj2iqe/**/*.iqm
 /python/cpj2iqe/**/*.qc
 /python/cpj2iqe/**/*.cpj
+
+# psk2iqe
+/python/psk2iqe/kaitaistruct.py
+/python/psk2iqe/unreal_psk.py
+/python/psk2iqe/unreal_psk.ksy
+/python/psk2iqe/**/*.iqe
+/python/psk2iqe/**/*.iqm
+/python/psk2iqe/**/*.psa
+/python/psk2iqe/**/*.png
+/python/psk2iqe/**/*.psk
